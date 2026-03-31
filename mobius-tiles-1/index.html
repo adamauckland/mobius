@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="./src/style.css">
+    <title>Excalibur + Vite</title>
+    <style>
+      html, body { margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; }
+      #cnv { display: block; width: 100vw; height: 100vh; }
+      #start-screen {
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        background: #131617; color: #d0e3e9; font-family: monospace; z-index: 1000;
+      }
+      #start-screen h1 { font-size: 48px; margin-bottom: 32px; }
+      #start-screen label { font-size: 18px; margin-bottom: 8px; }
+      #seed-input {
+        font-family: monospace; font-size: 24px; text-align: center;
+        padding: 8px 16px; width: 200px; margin-bottom: 24px;
+        background: #34393c; color: #d0e3e9; border: 2px solid #5e676b;
+      }
+      #btn-start {
+        font-family: monospace; font-size: 24px; padding: 12px 48px;
+        background: #5e676b; color: #d0e3e9; border: none; cursor: pointer;
+      }
+      #btn-start:hover { background: #929fa4; color: #131617; }
+    </style>
+  </head>
+  <body>
+    <div id="start-screen">
+      <h1>MOBIUS</h1>
+      <label for="seed-input">Map Seed</label>
+      <input id="seed-input" type="text" />
+      <button id="btn-start">START</button>
+    </div>
+    <script type="module" src="./src/main2.ts"></script>
+    <canvas id='cnv'> </canvas>
+  </body>
+</html>

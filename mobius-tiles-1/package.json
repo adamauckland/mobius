@@ -1,7 +1,7 @@
 {
-  "name": "template-ts-vite",
-  "version": "1.2.0",
-  "description": "Excalibur TypeScript template for Vite",
+  "name": "mobius-tiles-1",
+  "version": "0.0.0",
+  "description": "",
   "main": "src/main.ts",
   "scripts": {
     "dev": "vite",
@@ -11,23 +11,19 @@
     "test": "npm run build && npx playwright test",
     "test:integration-update": "npx playwright test --update-snapshots"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/excaliburjs/template-ts-vite.git"
-  },
+  "repository": {},
   "keywords": [
     "excalibur",
     "excaliburjs",
     "vite",
     "game-engine"
   ],
-  "author": "Erik Onarheim",
-  "license": "BSD-2-Clause",
-  "bugs": {
-    "url": "https://github.com/excaliburjs/template-ts-vite/issues"
-  },
-  "homepage": "https://github.com/excaliburjs/template-ts-vite#readme",
+  "author": "",
+  "license": "",
+  "bugs": {},
+  "homepage": "",
   "dependencies": {
+    "@excaliburjs/plugin-pathfinding": "^0.32.0",
     "excalibur": "0.32.0"
   },
   "devDependencies": {

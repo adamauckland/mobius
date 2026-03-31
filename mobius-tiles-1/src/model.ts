@@ -1,0 +1,22 @@
+import { resetDijkstraGraph } from "./pathfinding";
+
+export const model = {
+  hudWidth: 800,
+  hudHeight: 600,
+  currentTileIndex: 0,
+  targetTileIndex: 0,
+  movesRemaining: 0,
+  showHUD: false,
+
+  showWarning: false,
+  warningColor: "white",
+  warningText: "CLICKING A TREE WILL BE IGNORED",
+  inputDiagonal: true,
+  inputAlgo: undefined as HTMLInputElement | undefined,
+  algoDuration: "0.0",
+  isRecording: false,
+  isReplaying: false,
+  diagClicked: () => {
+    resetDijkstraGraph();
+  },
+};
