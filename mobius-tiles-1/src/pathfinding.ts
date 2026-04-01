@@ -84,6 +84,12 @@ export function handleTileClick(targetTileIndex: number, targetPlayer: Player) {
   const playerTileIndex = isMoving
     ? targetPlayer.currentMoveTileIndex
     : targetPlayer.logicalTileIndex;
+
+  // Guard: both indices must be within the grid
+  const totalTiles = GRID_COLS * GRID_ROWS;
+  if (playerTileIndex < 0 || playerTileIndex >= totalTiles) return;
+  if (targetTileIndex < 0 || targetTileIndex >= totalTiles) return;
+
   const letDiag = model.inputDiagonal ? true : false;
 
   // pick which algorithm

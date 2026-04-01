@@ -1,13 +1,20 @@
-import { Vector } from "excalibur";
+import { Vector, Actor, Circle, Color } from "excalibur";
 import { Player, player } from "./chap";
 import { plrWalk, plrImage } from "./resources";
 import { GameRecorder, type GameRecording } from "./recorder";
-import { GRID_COLS, GRID_ROWS, START_POS_X, START_POS_Y, START_TILE_INDEX } from "./tiledata";
+import {
+  GRID_COLS,
+  GRID_ROWS,
+  START_POS_X,
+  START_POS_Y,
+  START_TILE_INDEX,
+} from "./tiledata";
 import { model } from "./model";
 import { game } from "./game";
 import { handleTileClick } from "./pathfinding";
 import { resetRocks } from "./worldObjects";
 import { resetGameTimer } from "./main2";
+import { Z_PLAYER_BASE, Z_RIPPLE } from "./zIndex";
 
 export interface PlayerEntry {
   player: Player;
@@ -17,7 +24,10 @@ export interface PlayerEntry {
 
 // Wire first player's portal callback — only triggers if this player is the active (recording) one
 player.onReachedPortal = () => {
-  if (activeEntry().player === player) { stopAndSpawnNext(); return true; }
+  if (activeEntry().player === player) {
+    stopAndSpawnNext();
+    return true;
+  }
   return false;
 };
 
@@ -76,7 +86,10 @@ export function stopAndSpawnNext() {
     plrImage,
   );
   newPlayer.onReachedPortal = () => {
-    if (activeEntry().player === newPlayer) { stopAndSpawnNext(); return true; }
+    if (activeEntry().player === newPlayer) {
+      stopAndSpawnNext();
+      return true;
+    }
     return false;
   };
   game.add(newPlayer);
@@ -90,7 +103,7 @@ export function stopAndSpawnNext() {
 
   // Set z-ordering: oldest player lowest, newest on top (all above rocks at z:1)
   for (let i = 0; i < entries.length; i++) {
-    entries[i].player.z = 2 + i;
+    entries[i].player.z = Z_PLAYER_BASE + i;
   }
 
   // Replay all previous players, start recording the new one
@@ -100,21 +113,40 @@ export function stopAndSpawnNext() {
 
   // Follow the new player
   game.currentScene.camera.strategy.radiusAroundActor(newPlayer, 100);
+}
 
+function showTapRipple(worldPos: Vector) {
+  const ripple = new Actor({
+    pos: worldPos.clone(),
+    z: Z_RIPPLE,
+  });
+  const circle = new Circle({ radius: 2, color: Color.fromHex("#ffffff80") });
+  ripple.graphics.use(circle);
+  game.add(ripple);
+  ripple.actions
+    .scaleTo(new Vector(1.5, 1.5), new Vector(40, 40))
+    .callMethod(() => ripple.kill());
+  ripple.actions.fade(0, 50);
+}
+
+function handlePointerDown(worldPos: Vector) {
+  const tile = game.currentScene.tileMaps[0].getTileByPoint(worldPos);
+  if (!tile) return;
+  if (tile.x < 0 || tile.x >= GRID_COLS || tile.y < 0 || tile.y >= GRID_ROWS)
+    return;
+  const targetTileIndex = tile.x + tile.y * GRID_COLS;
+
+  const active = activeEntry();
+
+  showTapRipple(worldPos);
+
+  active.recorder.recordClick(targetTileIndex);
+  handleTileClick(targetTileIndex, active.player);
 }
 
 export function setupClickHandler() {
   game.input.pointers.primary.on("down", (evt) => {
     if (evt.worldPos == undefined) return;
-
-    const tile = game.currentScene.tileMaps[0].getTileByPoint(evt.worldPos);
-    if (!tile) return;
-    if (tile.x < 0 || tile.x >= GRID_COLS || tile.y < 0 || tile.y >= GRID_ROWS) return;
-    const targetTileIndex = tile.x + tile.y * GRID_COLS;
-
-    const active = activeEntry();
-
-    active.recorder.recordClick(targetTileIndex);
-    handleTileClick(targetTileIndex, active.player);
+    handlePointerDown(evt.worldPos);
   });
 }

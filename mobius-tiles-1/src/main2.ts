@@ -28,6 +28,7 @@ import { model } from "./model";
 import { initPathfinding } from "./pathfinding";
 import { activeEntry, setupClickHandler } from "./playerManager";
 import { spawnRocks, spawnCollectables, getScore } from "./worldObjects";
+import { Z_TREES, Z_HUD, Z_COUNTDOWN } from "./zIndex";
 
 // Seed management
 const seedInput = document.getElementById("seed-input") as HTMLInputElement;
@@ -95,7 +96,7 @@ function startGame() {
         pos: vec(tx * 16 + 8, ty * 16 + 16),
         width: 16,
         height: 16,
-        z: 0.5,
+        z: Z_TREES,
         anchor: vec(0.5, 1),
       });
       const treeSprite = TileSheet.getSprite(3, 0);
@@ -138,7 +139,7 @@ function startGame() {
   });
   const timerLabel = new ScreenElement({
     pos: vec(10, 10),
-    z: 100,
+    z: Z_HUD,
   });
   timerLabel.graphics.use(timerText);
   game.add(timerLabel);
@@ -156,7 +157,7 @@ function startGame() {
   });
   const scoreLabel = new ScreenElement({
     pos: vec(10, 30),
-    z: 100,
+    z: Z_HUD,
   });
   scoreLabel.graphics.use(scoreText);
   game.add(scoreLabel);
@@ -175,7 +176,7 @@ function startGame() {
   const countdownText = new Text({ text: "3", font: countdownFont });
   const countdownLabel = new ScreenElement({
     pos: vec(game.drawWidth / 2, game.drawHeight / 2),
-    z: 200,
+    z: Z_COUNTDOWN,
   });
   countdownLabel.graphics.use(countdownText);
   game.add(countdownLabel);
@@ -185,15 +186,16 @@ function startGame() {
     countdown--;
     if (countdown > 0) {
       countdownText.text = String(countdown);
-    } else if (countdown === 0) {
-      countdownText.text = "GO!";
     } else {
       clearInterval(countdownInterval);
-      countdownLabel.kill();
+      countdownText.text = "GO!";
 
-      // Start the game clock and enable input
+      // Start the game clock and enable input immediately at "GO!"
       gameStartTime = performance.now();
       setupClickHandler();
+
+      // Remove the "GO!" text after a short delay
+      setTimeout(() => countdownLabel.kill(), 500);
     }
   }, 1000);
 

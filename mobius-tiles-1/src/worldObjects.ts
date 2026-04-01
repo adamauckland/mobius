@@ -2,6 +2,7 @@ import { Actor, Vector } from "excalibur";
 import { rlSS } from "./resources";
 import { GRID_COLS, Grass, tiles, seededRandom, START_TILE_INDEX } from "./tiledata";
 import { game } from "./game";
+import { Z_ROCKS, Z_COLLECTABLES } from "./zIndex";
 import { Player } from "./chap";
 
 export interface Rock {
@@ -76,7 +77,7 @@ export function spawnRocks(count: number) {
       pos: new Vector(x * 16 + 8, y * 16 + 8),
       width: 16,
       height: 16,
-      z: 1,
+      z: Z_ROCKS,
     });
     actor.graphics.use(rlSS.getSprite(1, 28)); // rock sprite from roguelike sheet
 
@@ -146,7 +147,7 @@ export function spawnCollectables(count: number) {
       pos: new Vector(x * 16 + 8, y * 16 + 8),
       width: 16,
       height: 16,
-      z: 0.5,
+      z: Z_COLLECTABLES,
     });
     actor.graphics.use(rlSS.getSprite(11, 28)); // gem/coin sprite
     // Gentle bob animation

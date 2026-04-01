@@ -4,6 +4,7 @@ import { GRID_COLS, portalTileIndex, START_POS_X, START_POS_Y, START_TILE_INDEX 
 import { plrWalk, plrImage } from "./resources";
 import type { Rock } from "./worldObjects";
 import { dropRockAtTile, tryCollectAtTile } from "./worldObjects";
+import { Z_PLAYER_BASE } from "./zIndex";
 
 // create and configure player, and his action buffer
 
@@ -104,7 +105,7 @@ export class Player extends Actor {
 }
 
 export let player = new Player(
-  { pos: new Vector(START_POS_X, START_POS_Y), width: 16, height: 16, z: 2 },
+  { pos: new Vector(START_POS_X, START_POS_Y), width: 16, height: 16, z: Z_PLAYER_BASE },
   plrWalk,
   plrImage,
 );
