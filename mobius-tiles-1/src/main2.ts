@@ -257,7 +257,7 @@ export function resetGameTimer() {
 const loader = new Loader();
 loader.suppressPlayButton = true;
 for (const resource of Object.values(Resources)) loader.addResource(resource);
-await game.start(loader);
+game.start(loader).catch(console.error);
 model.showHUD = true;
 
 btnStart.addEventListener("click", startGame);
