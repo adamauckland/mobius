@@ -115,7 +115,10 @@ function startGame() {
   // Add scene elements
   game.add(tilemap);
   game.currentScene.camera.zoom = 2;
-  const cameraRadius = Math.min(game.drawWidth, game.drawHeight) / game.currentScene.camera.zoom * 0.25;
+  const cameraRadius =
+    (Math.min(game.drawWidth, game.drawHeight) /
+      game.currentScene.camera.zoom) *
+    0.25;
   game.currentScene.camera.strategy.radiusAroundActor(player, cameraRadius);
   game.add(player);
 
@@ -131,42 +134,50 @@ function startGame() {
   const timerText = new Text({
     text: "0:00.0",
     font: new Font({
-      size: 16,
+      size: 32,
       unit: FontUnit.Px,
       family: "monospace",
       color: Color.White,
+      textAlign: TextAlign.Center,
       shadow: { blur: 2, offset: vec(1, 1), color: Color.Black },
     }),
   });
   const timerLabel = new ScreenElement({
-    pos: vec(10, 10),
+    pos: vec(0, 10),
     z: Z_HUD,
   });
   timerLabel.graphics.use(timerText);
+  timerLabel.on("preupdate", () => {
+    timerLabel.pos.x = game.screen.resolution.width / 2;
+  });
   game.add(timerLabel);
 
   // Score display
   const scoreText = new Text({
-    text: "Score: 0",
+    text: "0",
     font: new Font({
-      size: 16,
+      size: 24,
       unit: FontUnit.Px,
       family: "monospace",
       color: Color.White,
+      textAlign: TextAlign.Right,
       shadow: { blur: 2, offset: vec(1, 1), color: Color.Black },
     }),
   });
   const scoreLabel = new ScreenElement({
-    pos: vec(10, 30),
+    pos: vec(0, 10),
     z: Z_HUD,
   });
   scoreLabel.graphics.use(scoreText);
+  scoreLabel.on("preupdate", () => {
+    scoreLabel.pos.x = game.screen.resolution.width - 10;
+  });
   game.add(scoreLabel);
   let displayedScore = 0;
 
   // Countdown before game starts
   const countdownFont = new Font({
-    size: 64,
+    size: 200,
     unit: FontUnit.Px,
     family: "monospace",
     color: Color.White,
@@ -186,14 +197,23 @@ function startGame() {
   });
   game.add(countdownLabel);
 
+  function popIn() {
+    countdownLabel.scale.x = 0.3;
+    countdownLabel.scale.y = 0.3;
+    countdownLabel.actions.scaleTo(vec(1, 1), vec(3, 3));
+  }
+  popIn();
+
   let countdown = 3;
   const countdownInterval = setInterval(() => {
     countdown--;
     if (countdown > 0) {
       countdownText.text = String(countdown);
+      popIn();
     } else {
       clearInterval(countdownInterval);
       countdownText.text = "GO!";
+      popIn();
 
       // Start the game clock and enable input immediately at "GO!"
       gameStartTime = performance.now();
@@ -210,10 +230,10 @@ function startGame() {
     const mins = Math.floor(elapsed / 60000);
     const secs = Math.floor((elapsed % 60000) / 1000);
     const tenths = Math.floor((elapsed % 1000) / 100);
-    timerText.text = `${mins}:${secs.toString().padStart(2, "0")}:${tenths}`;
+    timerText.text = `${mins}:${secs.toString().padStart(2, "0")}.${tenths}`;
     const targetScore = getScore();
     if (displayedScore < targetScore) displayedScore++;
-    scoreText.text = `Score: ${displayedScore}`;
+    scoreText.text = `${displayedScore}`;
   });
 }
 
