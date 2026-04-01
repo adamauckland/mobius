@@ -16,6 +16,7 @@ import { Resources, TileSheet, rlSS } from "./resources";
 import {
   Tree,
   Portal,
+  Barrier,
   tiles,
   GRID_COLS,
   GRID_ROWS,
@@ -28,6 +29,7 @@ import { model } from "./model";
 import { initPathfinding } from "./pathfinding";
 import { activeEntry, setupClickHandler } from "./playerManager";
 import { spawnRocks, spawnCollectables, getScore } from "./worldObjects";
+import { initBarriers, spawnBarriers } from "./barriers";
 import { Z_TREES, Z_HUD, Z_COUNTDOWN } from "./zIndex";
 
 // Seed management
@@ -78,6 +80,10 @@ function startGame() {
       tile.addGraphic(TileSheet.getSprite(0, 0)); // ground under tree
       tile.solid = true;
       // tree sprite is drawn by the swaying Actor overlay, not the tilemap
+    } else if (tiles[tileIndex] instanceof Barrier) {
+      tile.addGraphic(TileSheet.getSprite(0, 0)); // ground under barrier
+      tile.solid = true;
+      // barrier sprite is drawn by a separate Actor overlay
     } else {
       tile.addGraphic(sprite);
     }
@@ -125,6 +131,10 @@ function startGame() {
   // Start recording
   activeEntry().recorder.startRecording();
   model.isRecording = true;
+
+  // Spawn barriers and switches
+  initBarriers(tilemap);
+  spawnBarriers();
 
   // Spawn rocks
   spawnRocks(5);

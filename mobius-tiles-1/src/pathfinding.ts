@@ -6,7 +6,7 @@ import {
   GraphNode,
 } from "@excaliburjs/plugin-pathfinding";
 import { TileMap } from "excalibur";
-import { Tree, tiles, GRID_COLS, GRID_ROWS } from "./tiledata";
+import { Tree, Barrier, tiles, GRID_COLS, GRID_ROWS } from "./tiledata";
 import { Player } from "./chap";
 import { model } from "./model";
 import { getRockAtTile, pickUpRock, dropRock } from "./worldObjects";
@@ -22,9 +22,25 @@ let myGraphTileMap: GraphTileMap = {
 myDijkstraGraph.addTileMap(myGraphTileMap, true);
 
 let myGraph: ExcaliburAStar;
+let storedTilemap: TileMap;
 
 export function initPathfinding(tilemap: TileMap) {
+  storedTilemap = tilemap;
   myGraph = new ExcaliburAStar(tilemap);
+}
+
+/** Rebuild both pathfinding graphs after barrier tiles change. */
+export function rebuildPathfinding() {
+  myGraphTileMap = {
+    name: "myGraph",
+    tiles: [...tiles],
+    rows: GRID_ROWS,
+    cols: GRID_COLS,
+  };
+  resetDijkstraGraph();
+  if (storedTilemap) {
+    myGraph = new ExcaliburAStar(storedTilemap);
+  }
 }
 
 export function resetDijkstraGraph() {
@@ -49,21 +65,36 @@ function showWarning() {
 export function handleTileClick(targetTileIndex: number, targetPlayer: Player) {
   model.targetTileIndex = targetTileIndex;
 
-  // guard: tree tiles are not valid targets
+  // guard: solid tiles are not valid targets
   if (tiles[targetTileIndex] instanceof Tree) {
     model.warningText = "CLICKING A TREE WILL BE IGNORED";
     showWarning();
     return;
   }
+  const barrierTile = tiles[targetTileIndex];
+  if (barrierTile instanceof Barrier && barrierTile.collider) {
+    model.warningText = "BARRIER IS LOCKED — FIND THE SWITCH";
+    showWarning();
+    return;
+  }
 
   // If carrying a rock and clicking the player's own tile, drop it
-  const playerTileIdle = targetPlayer.actions.getQueue().hasNext()
-    ? targetPlayer.currentMoveTileIndex
-    : targetPlayer.logicalTileIndex;
+  const idleMoving = targetPlayer.actions.getQueue().hasNext();
+  let playerTileIdle: number;
+  if (idleMoving) {
+    playerTileIdle = targetPlayer.currentMoveTileIndex;
+  } else {
+    const itx = Math.floor(targetPlayer.pos.x / 16);
+    const ity = Math.floor(targetPlayer.pos.y / 16);
+    playerTileIdle = itx + ity * GRID_COLS;
+  }
   if (targetPlayer.carriedRock && targetTileIndex === playerTileIdle) {
     dropRock(targetPlayer);
     return;
   }
+
+  // Clear stale arrival callback — a new click replaces the old destination
+  targetPlayer.onArriveAtTile = null;
 
   // Check if there's a rock at the target tile — pathfind to it then pick up on arrival
   const rock = getRockAtTile(targetTileIndex);
@@ -79,11 +110,19 @@ export function handleTileClick(targetTileIndex: number, targetPlayer: Player) {
   // Clear remaining path — the player will finish its current tile move then start the new path
   targetPlayer.playerActionBuffer = [];
 
-  // Path starts from the tile the player is currently moving toward (or on if idle)
+  // Path starts from the tile the player is currently moving toward (or on if idle).
+  // When idle, derive from actual pixel position — NOT logicalTileIndex — because
+  // logicalTileIndex is set to the *destination* as soon as a path is calculated,
+  // which may not match the player's physical position if clicks arrive between frames.
   const isMoving = targetPlayer.actions.getQueue().hasNext();
-  const playerTileIndex = isMoving
-    ? targetPlayer.currentMoveTileIndex
-    : targetPlayer.logicalTileIndex;
+  let playerTileIndex: number;
+  if (isMoving) {
+    playerTileIndex = targetPlayer.currentMoveTileIndex;
+  } else {
+    const tx = Math.floor(targetPlayer.pos.x / 16);
+    const ty = Math.floor(targetPlayer.pos.y / 16);
+    playerTileIndex = tx + ty * GRID_COLS;
+  }
 
   // Guard: both indices must be within the grid
   const totalTiles = GRID_COLS * GRID_ROWS;

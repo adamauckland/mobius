@@ -51,7 +51,26 @@ export class Portal {
   collider: boolean = false;
 }
 
-export let tiles: (Grass | Tree | Portal)[] = [];
+export class Barrier {
+  sprite = [0, 0]; // grass base, overlay added as separate Actor
+  collider: boolean = true;
+  groupId: number;
+  constructor(groupId: number) {
+    this.groupId = groupId;
+  }
+}
+
+export class Switch {
+  sprite = [0, 0]; // grass base, overlay added as separate Actor
+  collider: boolean = false;
+  groupId: number;
+  activated: boolean = false;
+  constructor(groupId: number) {
+    this.groupId = groupId;
+  }
+}
+
+export let tiles: (Grass | Tree | Portal | Barrier | Switch)[] = [];
 export let portalTileIndex = -1;
 
 // Start position — center of the map (pixel coordinates)
@@ -82,6 +101,56 @@ export function generateWorld(seed: number) {
   const portalIdx =
     grassIndices[Math.floor(seededRandom() * grassIndices.length)];
   result[portalIdx] = new Portal();
+
+  // Place barrier groups with corresponding switches
+  const BARRIER_GROUP_COUNT = 3;
+  for (let g = 0; g < BARRIER_GROUP_COUNT; g++) {
+    // Find grass tiles to place barriers on
+    const barrierCandidates = result
+      .map((t, i) => (t instanceof Grass && i !== START_TILE_INDEX ? i : -1))
+      .filter((i) => i !== -1);
+
+    if (barrierCandidates.length === 0) break;
+
+    const startIdx =
+      barrierCandidates[
+        Math.floor(seededRandom() * barrierCandidates.length)
+      ];
+    const startX = startIdx % GRID_COLS;
+    const startY = Math.floor(startIdx / GRID_COLS);
+
+    // Choose direction and length
+    const horizontal = seededRandom() < 0.5;
+    const length = 3 + Math.floor(seededRandom() * 3); // 3–5 tiles
+
+    let placed = 0;
+    for (let j = 0; j < length; j++) {
+      const bx = horizontal ? startX + j : startX;
+      const by = horizontal ? startY : startY + j;
+      if (bx >= GRID_COLS || by >= GRID_ROWS) break;
+      const bi = bx + by * GRID_COLS;
+      if (bi === START_TILE_INDEX) continue;
+      if (result[bi] instanceof Grass) {
+        result[bi] = new Barrier(g);
+        placed++;
+      }
+    }
+
+    if (placed === 0) continue;
+
+    // Place a switch on a random grass tile for this group
+    const switchCandidates = result
+      .map((t, i) => (t instanceof Grass && i !== START_TILE_INDEX ? i : -1))
+      .filter((i) => i !== -1);
+
+    if (switchCandidates.length > 0) {
+      const switchIdx =
+        switchCandidates[
+          Math.floor(seededRandom() * switchCandidates.length)
+        ];
+      result[switchIdx] = new Switch(g);
+    }
+  }
 
   tiles = result;
   portalTileIndex = portalIdx;

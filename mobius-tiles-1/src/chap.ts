@@ -4,6 +4,7 @@ import { GRID_COLS, portalTileIndex, START_POS_X, START_POS_Y, START_TILE_INDEX 
 import { plrWalk, plrImage } from "./resources";
 import type { Rock } from "./worldObjects";
 import { dropRockAtTile, tryCollectAtTile } from "./worldObjects";
+import { tryActivateSwitch } from "./barriers";
 import { Z_PLAYER_BASE } from "./zIndex";
 
 // create and configure player, and his action buffer
@@ -75,6 +76,8 @@ export class Player extends Actor {
         model.movesRemaining--;
         // Check for collectables on this tile
         tryCollectAtTile(node);
+        // Activate any switch on this tile
+        tryActivateSwitch(node);
         // If path is complete, fire arrival callback
         if (this.playerActionBuffer.length === 0 && this.onArriveAtTile) {
           const cb = this.onArriveAtTile;

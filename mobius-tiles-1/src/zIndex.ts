@@ -3,6 +3,7 @@
 
 export const Z_TREES = 0.5;
 export const Z_COLLECTABLES = 0.5;
+export const Z_BARRIERS = 0.75;
 export const Z_ROCKS = 1;
 export const Z_PLAYER_BASE = 2; // players use Z_PLAYER_BASE + index
 export const Z_RIPPLE = 50;
