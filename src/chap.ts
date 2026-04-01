@@ -1,6 +1,6 @@
 import { Actor, Vector, EasingFunctions, Engine, Graphic } from "excalibur";
 import { model } from "./model";
-import { GRID_COLS, portalTileIndex, START_POS_X, START_POS_Y, START_TILE_INDEX } from "./tiledata";
+import { GRID_COLS, portalTileIndices, START_POS_X, START_POS_Y, START_TILE_INDEX } from "./tiledata";
 import { plrWalk, plrImage } from "./resources";
 import type { Rock } from "./worldObjects";
 import { dropRockAtTile, tryCollectAtTile } from "./worldObjects";
@@ -85,13 +85,13 @@ export class Player extends Actor {
           cb();
         }
         // If landing on the portal while carrying a rock, drop it on the previous tile
-        if (node === portalTileIndex && this.carriedRock) {
+        if (portalTileIndices.includes(node) && this.carriedRock) {
           dropRockAtTile(this, this.previousTileIndex);
         }
         // If path is complete and we landed on the portal
         if (
           this.playerActionBuffer.length === 0 &&
-          node === portalTileIndex
+          portalTileIndices.includes(node)
         ) {
           const handled = this.onReachedPortal ? this.onReachedPortal() : false;
           if (!handled) {

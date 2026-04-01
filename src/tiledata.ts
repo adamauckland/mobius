@@ -71,7 +71,7 @@ export class Switch {
 }
 
 export let tiles: (Grass | Tree | Portal | Barrier | Switch)[] = [];
-export let portalTileIndex = -1;
+export let portalTileIndices: number[] = [];
 
 // Start position — center of the map (pixel coordinates)
 export const START_TILE_X = Math.floor(GRID_COLS / 2);
@@ -94,13 +94,18 @@ export function generateWorld(seed: number) {
     }
   }
 
-  // Place a portal on a random grass tile (not the spawn)
+  // Place 4 portals on random grass tiles (not the spawn)
   const grassIndices = result
     .map((t, i) => (t instanceof Grass && i !== START_TILE_INDEX ? i : -1))
     .filter((i) => i !== -1);
-  const portalIdx =
-    grassIndices[Math.floor(seededRandom() * grassIndices.length)];
-  result[portalIdx] = new Portal();
+  const portalIndices: number[] = [];
+  for (let p = 0; p < 4; p++) {
+    if (grassIndices.length === 0) break;
+    const pick = Math.floor(seededRandom() * grassIndices.length);
+    const portalIdx = grassIndices.splice(pick, 1)[0];
+    result[portalIdx] = new Portal();
+    portalIndices.push(portalIdx);
+  }
 
   // Place barrier groups with corresponding switches
   const BARRIER_GROUP_COUNT = 3;
@@ -153,5 +158,5 @@ export function generateWorld(seed: number) {
   }
 
   tiles = result;
-  portalTileIndex = portalIdx;
+  portalTileIndices = portalIndices;
 }
