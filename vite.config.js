@@ -32,7 +32,7 @@ export default defineConfig({
         // to keep vite from bundling ESM together with commonjs
         rollupOptions: {
             output: {
-                format: 'umd'
+                format: 'es'
             }
         }
     }
