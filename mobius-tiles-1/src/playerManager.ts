@@ -112,7 +112,8 @@ export function stopAndSpawnNext() {
   model.isRecording = true;
 
   // Follow the new player
-  game.currentScene.camera.strategy.radiusAroundActor(newPlayer, 100);
+  const cameraRadius = Math.min(game.drawWidth, game.drawHeight) / game.currentScene.camera.zoom * 0.25;
+  game.currentScene.camera.strategy.radiusAroundActor(newPlayer, cameraRadius);
 }
 
 function showTapRipple(worldPos: Vector) {

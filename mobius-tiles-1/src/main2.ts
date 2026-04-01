@@ -114,8 +114,9 @@ function startGame() {
 
   // Add scene elements
   game.add(tilemap);
-  game.currentScene.camera.strategy.radiusAroundActor(player, 100);
   game.currentScene.camera.zoom = 2;
+  const cameraRadius = Math.min(game.drawWidth, game.drawHeight) / game.currentScene.camera.zoom * 0.25;
+  game.currentScene.camera.strategy.radiusAroundActor(player, cameraRadius);
   game.add(player);
 
   // Start recording
@@ -175,10 +176,14 @@ function startGame() {
   });
   const countdownText = new Text({ text: "3", font: countdownFont });
   const countdownLabel = new ScreenElement({
-    pos: vec(game.drawWidth / 2, game.drawHeight / 2),
+    pos: vec(0, 0),
     z: Z_COUNTDOWN,
   });
   countdownLabel.graphics.use(countdownText);
+  countdownLabel.on("preupdate", () => {
+    countdownLabel.pos.x = game.screen.resolution.width / 2;
+    countdownLabel.pos.y = game.screen.resolution.height / 2;
+  });
   game.add(countdownLabel);
 
   let countdown = 3;
