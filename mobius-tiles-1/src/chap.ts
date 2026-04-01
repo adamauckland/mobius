@@ -1,17 +1,17 @@
 import { Actor, Vector, EasingFunctions, Engine, Graphic } from "excalibur";
 import { model } from "./model";
-import { GRID_COLS, portalTileIndex } from "./tiledata";
+import { GRID_COLS, portalTileIndex, START_POS_X, START_POS_Y, START_TILE_INDEX } from "./tiledata";
 import { plrWalk, plrImage } from "./resources";
 import type { Rock } from "./worldObjects";
-import { dropRockAtTile } from "./worldObjects";
+import { dropRockAtTile, tryCollectAtTile } from "./worldObjects";
 
 // create and configure player, and his action buffer
 
 export class Player extends Actor {
   playerActionBuffer: any = [];
   playerActionStatus = "idle";
-  logicalTileIndex = 0; // the tile the player is heading to (or currently on)
-  currentMoveTileIndex = 0; // the tile the player is currently moving toward
+  logicalTileIndex = START_TILE_INDEX;
+  currentMoveTileIndex = START_TILE_INDEX;
   previousTileIndex = 0; // the tile the player was on before the current move
   onReachedPortal: (() => boolean) | null = null; // return true if handled
   carriedRock: Rock | null = null;
@@ -72,6 +72,8 @@ export class Player extends Actor {
       .easeTo(target, 400, EasingFunctions.Linear)
       .callMethod(() => {
         model.movesRemaining--;
+        // Check for collectables on this tile
+        tryCollectAtTile(node);
         // If path is complete, fire arrival callback
         if (this.playerActionBuffer.length === 0 && this.onArriveAtTile) {
           const cb = this.onArriveAtTile;
@@ -102,7 +104,7 @@ export class Player extends Actor {
 }
 
 export let player = new Player(
-  { pos: new Vector(8, 8), width: 16, height: 16, z: 2 },
+  { pos: new Vector(START_POS_X, START_POS_Y), width: 16, height: 16, z: 2 },
   plrWalk,
   plrImage,
 );

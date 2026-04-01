@@ -18,7 +18,7 @@
       #start-screen label { font-size: 18px; margin-bottom: 8px; }
       #seed-input {
         font-family: monospace; font-size: 24px; text-align: center;
-        padding: 8px 16px; width: 200px; margin-bottom: 24px;
+        padding: 8px 16px; width: 200px;
         background: #34393c; color: #d0e3e9; border: 2px solid #5e676b;
       }
       #btn-start {
@@ -32,7 +32,10 @@
     <div id="start-screen">
       <h1>MOBIUS</h1>
       <label for="seed-input">Map Seed</label>
-      <input id="seed-input" type="text" />
+      <div style="display: flex; gap: 8px; margin-bottom: 24px;">
+        <input id="seed-input" type="text" />
+        <button id="btn-new-seed" style="font-family: monospace; font-size: 18px; padding: 8px 16px; background: #34393c; color: #d0e3e9; border: 2px solid #5e676b; cursor: pointer;">New</button>
+      </div>
       <button id="btn-start">START</button>
     </div>
     <script type="module" src="./src/main2.ts"></script>

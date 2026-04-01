@@ -1,25 +1,57 @@
 import "./style.css";
-import { TileMap, Loader, ScreenElement, Text, Font, FontUnit, Color, vec, Actor } from "excalibur";
+import {
+  TileMap,
+  Loader,
+  ScreenElement,
+  Text,
+  Font,
+  FontUnit,
+  Color,
+  vec,
+  Actor,
+  TextAlign,
+  BaseAlign,
+} from "excalibur";
 import { Resources, TileSheet, rlSS } from "./resources";
-import { Tree, Portal, tiles, GRID_COLS, GRID_ROWS, generateWorld, seededRandom } from "./tiledata";
+import {
+  Tree,
+  Portal,
+  tiles,
+  GRID_COLS,
+  GRID_ROWS,
+  generateWorld,
+  COLLECTABLE_COUNT,
+} from "./tiledata";
 import { player } from "./chap";
 import { game } from "./game";
 import { model } from "./model";
 import { initPathfinding } from "./pathfinding";
 import { activeEntry, setupClickHandler } from "./playerManager";
-import { spawnRocks } from "./worldObjects";
+import { spawnRocks, spawnCollectables, getScore } from "./worldObjects";
 
-// Pre-fill seed input with a random number
+// Seed management
 const seedInput = document.getElementById("seed-input") as HTMLInputElement;
-const defaultSeed = Math.floor(Math.random() * 100000);
-seedInput.value = String(defaultSeed);
+const btnNewSeed = document.getElementById("btn-new-seed")!;
+
+function generateNewSeed() {
+  return Math.floor(Math.random() * 100000);
+}
+
+// Load seed from sessionStorage, or generate a new one
+const storedSeed = sessionStorage.getItem("mapSeed");
+seedInput.value = storedSeed ?? String(generateNewSeed());
+
+btnNewSeed.addEventListener("click", () => {
+  seedInput.value = String(generateNewSeed());
+});
 
 // Wait for START button
 const startScreen = document.getElementById("start-screen")!;
 const btnStart = document.getElementById("btn-start")!;
 
 function startGame() {
-  const seed = parseInt(seedInput.value, 10) || defaultSeed;
+  const seed = parseInt(seedInput.value, 10) || generateNewSeed();
+  sessionStorage.setItem("mapSeed", String(seed));
 
   // Generate world from seed
   generateWorld(seed);
@@ -42,10 +74,12 @@ function startGame() {
       tiles[tileIndex].sprite[1],
     );
     if (tiles[tileIndex] instanceof Tree) {
-      tile.addGraphic(TileSheet.getSprite(0, 0));
+      tile.addGraphic(TileSheet.getSprite(0, 0)); // ground under tree
       tile.solid = true;
+      // tree sprite is drawn by the swaying Actor overlay, not the tilemap
+    } else {
+      tile.addGraphic(sprite);
     }
-    tile.addGraphic(sprite);
     if (tiles[tileIndex] instanceof Portal) {
       tile.addGraphic(rlSS.getSprite(31, 22));
     }
@@ -58,15 +92,17 @@ function startGame() {
       const tx = i % GRID_COLS;
       const ty = Math.floor(i / GRID_COLS);
       const treeActor = new Actor({
-        pos: vec(tx * 16 + 8, ty * 16 + 8),
+        pos: vec(tx * 16 + 8, ty * 16 + 16),
         width: 16,
         height: 16,
+        z: 0.5,
+        anchor: vec(0.5, 1),
       });
       const treeSprite = TileSheet.getSprite(3, 0);
       treeActor.graphics.use(treeSprite);
-      const phase = seededRandom() * Math.PI * 2;
       treeActor.graphics.onPreDraw = () => {
-        treeActor.graphics.offset.x = Math.sin(Date.now() * 0.001 + phase) * 0.5;
+        const stretch = 1 + Math.sin(Date.now() * 0.002) * 0.05;
+        treeActor.scale.y = stretch;
       };
       game.add(treeActor);
     }
@@ -87,6 +123,7 @@ function startGame() {
 
   // Spawn rocks
   spawnRocks(5);
+  spawnCollectables(COLLECTABLE_COUNT);
 
   // Game timer
   const timerText = new Text({
@@ -106,21 +143,74 @@ function startGame() {
   timerLabel.graphics.use(timerText);
   game.add(timerLabel);
 
-  gameStartTime = performance.now();
+  // Score display
+  const scoreText = new Text({
+    text: "Score: 0",
+    font: new Font({
+      size: 16,
+      unit: FontUnit.Px,
+      family: "monospace",
+      color: Color.White,
+      shadow: { blur: 2, offset: vec(1, 1), color: Color.Black },
+    }),
+  });
+  const scoreLabel = new ScreenElement({
+    pos: vec(10, 30),
+    z: 100,
+  });
+  scoreLabel.graphics.use(scoreText);
+  game.add(scoreLabel);
+  let displayedScore = 0;
+
+  // Countdown before game starts
+  const countdownFont = new Font({
+    size: 64,
+    unit: FontUnit.Px,
+    family: "monospace",
+    color: Color.White,
+    textAlign: TextAlign.Center,
+    baseAlign: BaseAlign.Middle,
+    shadow: { blur: 4, offset: vec(2, 2), color: Color.Black },
+  });
+  const countdownText = new Text({ text: "3", font: countdownFont });
+  const countdownLabel = new ScreenElement({
+    pos: vec(game.drawWidth / 2, game.drawHeight / 2),
+    z: 200,
+  });
+  countdownLabel.graphics.use(countdownText);
+  game.add(countdownLabel);
+
+  let countdown = 3;
+  const countdownInterval = setInterval(() => {
+    countdown--;
+    if (countdown > 0) {
+      countdownText.text = String(countdown);
+    } else if (countdown === 0) {
+      countdownText.text = "GO!";
+    } else {
+      clearInterval(countdownInterval);
+      countdownLabel.kill();
+
+      // Start the game clock and enable input
+      gameStartTime = performance.now();
+      setupClickHandler();
+    }
+  }, 1000);
 
   game.on("postupdate", () => {
+    if (gameStartTime === 0) return;
     const elapsed = performance.now() - gameStartTime;
     const mins = Math.floor(elapsed / 60000);
     const secs = Math.floor((elapsed % 60000) / 1000);
     const tenths = Math.floor((elapsed % 1000) / 100);
-    timerText.text = `${mins}:${secs.toString().padStart(2, "0")}.${tenths}`;
+    timerText.text = `${mins}:${secs.toString().padStart(2, "0")}:${tenths}`;
+    const targetScore = getScore();
+    if (displayedScore < targetScore) displayedScore++;
+    scoreText.text = `Score: ${displayedScore}`;
   });
-
-  // Wire up click handler
-  setupClickHandler();
 }
 
-let gameStartTime = performance.now();
+let gameStartTime = 0;
 
 export function resetGameTimer() {
   gameStartTime = performance.now();

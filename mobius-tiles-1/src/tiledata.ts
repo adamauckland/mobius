@@ -1,8 +1,9 @@
 // for tilemap creation, create tiles with a sprite info and
 // a collider setting for Graph parsing
 
-export const GRID_COLS = 30;
-export const GRID_ROWS = 30;
+export const GRID_COLS = 100;
+export const GRID_ROWS = 100;
+export const COLLECTABLE_COUNT = 20;
 
 // Seeded PRNG (mulberry32) — same seed always produces the same map
 function mulberry32(seed: number) {
@@ -53,6 +54,13 @@ export class Portal {
 export let tiles: (Grass | Tree | Portal)[] = [];
 export let portalTileIndex = -1;
 
+// Start position — center of the map (pixel coordinates)
+export const START_TILE_X = Math.floor(GRID_COLS / 2);
+export const START_TILE_Y = Math.floor(GRID_ROWS / 2);
+export const START_POS_X = START_TILE_X * 16 + 8;
+export const START_POS_Y = START_TILE_Y * 16 + 8;
+export const START_TILE_INDEX = START_TILE_X + START_TILE_Y * GRID_COLS;
+
 // Call this with a seed to generate the world
 export function generateWorld(seed: number) {
   seededRandom = mulberry32(seed);
@@ -60,7 +68,7 @@ export function generateWorld(seed: number) {
   const total = GRID_COLS * GRID_ROWS;
   const result: (Grass | Tree | Portal)[] = [];
   for (let i = 0; i < total; i++) {
-    if (i === 0) {
+    if (i === START_TILE_INDEX) {
       result.push(new Grass());
     } else {
       result.push(seededRandom() < 0.15 ? new Tree() : new Grass());
@@ -69,7 +77,7 @@ export function generateWorld(seed: number) {
 
   // Place a portal on a random grass tile (not the spawn)
   const grassIndices = result
-    .map((t, i) => (t instanceof Grass && i !== 0 ? i : -1))
+    .map((t, i) => (t instanceof Grass && i !== START_TILE_INDEX ? i : -1))
     .filter((i) => i !== -1);
   const portalIdx =
     grassIndices[Math.floor(seededRandom() * grassIndices.length)];

@@ -2,7 +2,7 @@ import { Vector } from "excalibur";
 import { Player, player } from "./chap";
 import { plrWalk, plrImage } from "./resources";
 import { GameRecorder, type GameRecording } from "./recorder";
-import { GRID_COLS, GRID_ROWS } from "./tiledata";
+import { GRID_COLS, GRID_ROWS, START_POS_X, START_POS_Y, START_TILE_INDEX } from "./tiledata";
 import { model } from "./model";
 import { game } from "./game";
 import { handleTileClick } from "./pathfinding";
@@ -42,11 +42,11 @@ export function replayAll() {
     entry.player.playerActionBuffer = [];
     entry.player.actions.clearActions();
     // Reset to start position
-    entry.player.pos.x = 8;
-    entry.player.pos.y = 8;
-    entry.player.logicalTileIndex = 0;
-    entry.player.currentMoveTileIndex = 0;
-    entry.player.previousTileIndex = 0;
+    entry.player.pos.x = START_POS_X;
+    entry.player.pos.y = START_POS_Y;
+    entry.player.logicalTileIndex = START_TILE_INDEX;
+    entry.player.currentMoveTileIndex = START_TILE_INDEX;
+    entry.player.previousTileIndex = START_TILE_INDEX;
     entry.player.scale.x = 1;
     entry.player.scale.y = 1;
     entry.player.graphics.visible = true;
@@ -71,7 +71,7 @@ export function stopAndSpawnNext() {
 
   // Create a new player with the same sprites
   const newPlayer = new Player(
-    { pos: new Vector(8, 8), width: 16, height: 16 },
+    { pos: new Vector(START_POS_X, START_POS_Y), width: 16, height: 16 },
     plrWalk,
     plrImage,
   );
