@@ -10,6 +10,7 @@ import { Tree, Barrier, Fence, tiles, GRID_COLS, GRID_ROWS } from "./tiledata";
 import { Player } from "./chap";
 import { model } from "./model";
 import { getRockAtTile, pickUpRock, dropRock } from "./worldObjects";
+import { game } from "./game";
 
 // create graph for dijkstra
 let myDijkstraGraph = new ExcaliburGraph();
@@ -55,7 +56,7 @@ export function resetDijkstraGraph() {
 function showWarning() {
   model.showWarning = true;
   model.warningColor = "red";
-  setTimeout(() => {
+  game.clock.schedule(() => {
     model.showWarning = false;
     model.warningColor = "white";
   }, 2000);

@@ -6,6 +6,7 @@ import type { Rock } from "./worldObjects";
 import { dropRockAtTile, tryCollectAtTile } from "./worldObjects";
 import { tryActivateSwitch } from "./barriers";
 import { Z_PLAYER_BASE } from "./zIndex";
+import { game } from "./game";
 
 // create and configure player, and his action buffer
 
@@ -32,7 +33,7 @@ export class Player extends Actor {
         this.actions.getQueue().hasNext();
       if (isMoving) {
         this.graphics.use(this.walkGraphic);
-        this.graphics.offset.y = -Math.abs(Math.sin(Date.now() * 0.01)) * 3;
+        this.graphics.offset.y = -Math.abs(Math.sin(game.clock.now() * 0.01)) * 3;
       } else {
         this.graphics.use(this.idleGraphic);
         this.graphics.offset.y = 0;
@@ -56,7 +57,7 @@ export class Player extends Actor {
     // Carried rock follows the player with a slight offset above
     if (this.carriedRock) {
       const bounce = this.actions.getQueue().hasNext()
-        ? -Math.abs(Math.sin(Date.now() * 0.01)) * 3
+        ? -Math.abs(Math.sin(game.clock.now() * 0.01)) * 3
         : 0;
       this.carriedRock.actor.pos.x = this.pos.x;
       this.carriedRock.actor.pos.y = this.pos.y - 10 + bounce;
