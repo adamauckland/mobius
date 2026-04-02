@@ -16,7 +16,7 @@ export class GameRecorder {
   private startTime = 0;
   private _isRecording = false;
   private _isReplaying = false;
-  private replayTimeouts: number[] = [];
+  private replaySchedules: number[] = [];
 
   get isRecording() {
     return this._isRecording;
@@ -60,7 +60,7 @@ export class GameRecorder {
       const id = game.clock.schedule(() => {
         onClickTile(event.targetTileIndex);
       }, event.timestamp);
-      this.replayTimeouts.push(id);
+      this.replaySchedules.push(id);
     }
 
     // end replay after the last event + a buffer for movement to finish
@@ -71,14 +71,14 @@ export class GameRecorder {
     const endId = game.clock.schedule(() => {
       this._isReplaying = false;
     }, lastTime + 5000);
-    this.replayTimeouts.push(endId);
+    this.replaySchedules.push(endId);
   }
 
   stopReplay() {
     for (const id of this.replayTimeouts) {
       game.clock.clearSchedule(id);
     }
-    this.replayTimeouts = [];
+    this.replaySchedules = [];
     this._isReplaying = false;
   }
 }
