@@ -1,7 +1,5 @@
-import "./style.css";
 import {
   TileMap,
-  Loader,
   ScreenElement,
   Text,
   Font,
@@ -12,11 +10,12 @@ import {
   TextAlign,
   BaseAlign,
 } from "excalibur";
-import { Resources, TileSheet, rlSS } from "./resources";
+import { TileSheet, rlSS } from "./resources";
 import {
   Tree,
   Portal,
   Barrier,
+  Fence,
   tiles,
   GRID_COLS,
   GRID_ROWS,
@@ -52,6 +51,52 @@ btnNewSeed.addEventListener("click", () => {
 const startScreen = document.getElementById("start-screen")!;
 const btnStart = document.getElementById("btn-start")!;
 
+let gameStartTime = 0;
+
+export function resetGameTimer() {
+  gameStartTime = performance.now();
+}
+
+// Auto-tile fence sprites from roguelike sheet (wooden fence at rows 23-24, cols 45-51)
+function getFenceSprite(index: number) {
+  const x = index % GRID_COLS;
+  const y = Math.floor(index / GRID_COLS);
+
+  const isFence = (dx: number, dy: number) => {
+    const nx = x + dx;
+    const ny = y + dy;
+    if (nx < 0 || nx >= GRID_COLS || ny < 0 || ny >= GRID_ROWS) return false;
+    return tiles[nx + ny * GRID_COLS] instanceof Fence;
+  };
+
+  const up = isFence(0, -1);
+  const down = isFence(0, 1);
+  const left = isFence(-1, 0);
+  const right = isFence(1, 0);
+
+  // Wooden fence sprites from rlSS (col, row):
+  // (47, 23) = vertical segment    (47, 24) = horizontal segment
+  // (46, 23) = cross/junction      (46, 24) = T-up (left+right+down)
+  // (48, 24) = left end cap        (49, 24) = right end cap
+  // (49, 23) = T-right (up+down+left)  (50, 23) = bottom-left corner
+  // (48, 23) = T-left (up+down+right)  (51, 23) = bottom-right corner
+
+  if (up && down && left && right) return rlSS.getSprite(46, 23); // cross
+  if (up && down && right) return rlSS.getSprite(48, 23);         // T-right
+  if (up && down && left) return rlSS.getSprite(49, 23);          // T-left
+  if (left && right && down) return rlSS.getSprite(46, 24);       // T-down
+  if (left && right && up) return rlSS.getSprite(46, 24);         // T-up
+  if (up && down) return rlSS.getSprite(47, 23);                  // vertical
+  if (left && right) return rlSS.getSprite(47, 24);               // horizontal
+  if (down && right) return rlSS.getSprite(48, 24);               // corner top-left
+  if (down && left) return rlSS.getSprite(49, 24);                // corner top-right
+  if (up && right) return rlSS.getSprite(50, 23);                 // corner bottom-left
+  if (up && left) return rlSS.getSprite(51, 23);                  // corner bottom-right
+  if (up || down) return rlSS.getSprite(47, 23);                  // vertical end cap
+  if (left || right) return rlSS.getSprite(47, 24);               // horizontal end cap
+  return rlSS.getSprite(46, 23);                                  // isolated post
+}
+
 function startGame() {
   const seed = parseInt(seedInput.value, 10) || generateNewSeed();
   sessionStorage.setItem("mapSeed", String(seed));
@@ -84,6 +129,10 @@ function startGame() {
       tile.addGraphic(TileSheet.getSprite(0, 0)); // ground under barrier
       tile.solid = true;
       // barrier sprite is drawn by a separate Actor overlay
+    } else if (tiles[tileIndex] instanceof Fence) {
+      tile.addGraphic(TileSheet.getSprite(0, 0)); // ground under fence
+      tile.solid = true;
+      tile.addGraphic(getFenceSprite(tileIndex));
     } else {
       tile.addGraphic(sprite);
     }
@@ -120,7 +169,7 @@ function startGame() {
 
   // Add scene elements
   game.add(tilemap);
-  game.currentScene.camera.zoom = 2;
+  game.currentScene.camera.zoom = 4;
   const cameraRadius =
     (Math.min(game.drawWidth, game.drawHeight) /
       game.currentScene.camera.zoom) *
@@ -144,7 +193,7 @@ function startGame() {
   const timerText = new Text({
     text: "0:00.0",
     font: new Font({
-      size: 32,
+      size: 48,
       unit: FontUnit.Px,
       family: "monospace",
       color: Color.White,
@@ -166,7 +215,7 @@ function startGame() {
   const scoreText = new Text({
     text: "0",
     font: new Font({
-      size: 24,
+      size: 32,
       unit: FontUnit.Px,
       family: "monospace",
       color: Color.White,
@@ -246,19 +295,6 @@ function startGame() {
     scoreText.text = `${displayedScore}`;
   });
 }
-
-let gameStartTime = 0;
-
-export function resetGameTimer() {
-  gameStartTime = performance.now();
-}
-
-// Load resources, then wait for START
-const loader = new Loader();
-loader.suppressPlayButton = true;
-for (const resource of Object.values(Resources)) loader.addResource(resource);
-game.start(loader).catch(console.error);
-model.showHUD = true;
 
 btnStart.addEventListener("click", startGame);
 seedInput.addEventListener("keydown", (e) => {

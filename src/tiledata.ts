@@ -70,7 +70,12 @@ export class Switch {
   }
 }
 
-export let tiles: (Grass | Tree | Portal | Barrier | Switch)[] = [];
+export class Fence {
+  sprite = [0, 0]; // grass base, overlay chosen by auto-tiling
+  collider: boolean = true;
+}
+
+export let tiles: (Grass | Tree | Portal | Barrier | Switch | Fence)[] = [];
 export let portalTileIndices: number[] = [];
 
 // Start position — center of the map (pixel coordinates)
@@ -118,9 +123,7 @@ export function generateWorld(seed: number) {
     if (barrierCandidates.length === 0) break;
 
     const startIdx =
-      barrierCandidates[
-        Math.floor(seededRandom() * barrierCandidates.length)
-      ];
+      barrierCandidates[Math.floor(seededRandom() * barrierCandidates.length)];
     const startX = startIdx % GRID_COLS;
     const startY = Math.floor(startIdx / GRID_COLS);
 
@@ -150,10 +153,50 @@ export function generateWorld(seed: number) {
 
     if (switchCandidates.length > 0) {
       const switchIdx =
-        switchCandidates[
-          Math.floor(seededRandom() * switchCandidates.length)
-        ];
+        switchCandidates[Math.floor(seededRandom() * switchCandidates.length)];
       result[switchIdx] = new Switch(g);
+    }
+  }
+
+  // Place fence enclosures
+  const FENCE_ENCLOSURE_COUNT = 5;
+  for (let f = 0; f < FENCE_ENCLOSURE_COUNT; f++) {
+    const fw = 4 + Math.floor(seededRandom() * 5); // 4–8 tiles wide
+    const fh = 4 + Math.floor(seededRandom() * 5); // 4–8 tiles tall
+    const fx = 3 + Math.floor(seededRandom() * (GRID_COLS - fw - 6));
+    const fy = 3 + Math.floor(seededRandom() * (GRID_ROWS - fh - 6));
+
+    for (let x = fx; x < fx + fw; x++) {
+      for (let y = fy; y < fy + fh; y++) {
+        // Only place on perimeter
+        if (x > fx && x < fx + fw - 1 && y > fy && y < fy + fh - 1) continue;
+        const idx = x + y * GRID_COLS;
+        if (idx === START_TILE_INDEX) continue;
+        if (result[idx] instanceof Grass) {
+          result[idx] = new Fence();
+        }
+      }
+    }
+
+    // Add a doorway: remove one fence tile from a random side
+    const side = Math.floor(seededRandom() * 4);
+    let doorX: number, doorY: number;
+    if (side === 0) {
+      doorX = fx + 1 + Math.floor(seededRandom() * (fw - 2));
+      doorY = fy;
+    } else if (side === 1) {
+      doorX = fx + 1 + Math.floor(seededRandom() * (fw - 2));
+      doorY = fy + fh - 1;
+    } else if (side === 2) {
+      doorX = fx;
+      doorY = fy + 1 + Math.floor(seededRandom() * (fh - 2));
+    } else {
+      doorX = fx + fw - 1;
+      doorY = fy + 1 + Math.floor(seededRandom() * (fh - 2));
+    }
+    const doorIdx = doorX + doorY * GRID_COLS;
+    if (result[doorIdx] instanceof Fence) {
+      result[doorIdx] = new Grass();
     }
   }
 

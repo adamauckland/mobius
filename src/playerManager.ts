@@ -13,7 +13,7 @@ import { model } from "./model";
 import { game } from "./game";
 import { handleTileClick } from "./pathfinding";
 import { resetRocks } from "./worldObjects";
-import { resetGameTimer } from "./main2";
+import { resetGameTimer } from "./startScreen";
 import { Z_PLAYER_BASE, Z_RIPPLE } from "./zIndex";
 
 export interface PlayerEntry {
@@ -112,7 +112,10 @@ export function stopAndSpawnNext() {
   model.isRecording = true;
 
   // Follow the new player
-  const cameraRadius = Math.min(game.drawWidth, game.drawHeight) / game.currentScene.camera.zoom * 0.25;
+  const cameraRadius =
+    (Math.min(game.drawWidth, game.drawHeight) /
+      game.currentScene.camera.zoom) *
+    0.25;
   game.currentScene.camera.strategy.radiusAroundActor(newPlayer, cameraRadius);
 }
 

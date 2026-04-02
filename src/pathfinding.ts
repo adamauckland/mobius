@@ -6,7 +6,7 @@ import {
   GraphNode,
 } from "@excaliburjs/plugin-pathfinding";
 import { TileMap } from "excalibur";
-import { Tree, Barrier, tiles, GRID_COLS, GRID_ROWS } from "./tiledata";
+import { Tree, Barrier, Fence, tiles, GRID_COLS, GRID_ROWS } from "./tiledata";
 import { Player } from "./chap";
 import { model } from "./model";
 import { getRockAtTile, pickUpRock, dropRock } from "./worldObjects";
@@ -68,6 +68,11 @@ export function handleTileClick(targetTileIndex: number, targetPlayer: Player) {
   // guard: solid tiles are not valid targets
   if (tiles[targetTileIndex] instanceof Tree) {
     model.warningText = "CLICKING A TREE WILL BE IGNORED";
+    showWarning();
+    return;
+  }
+  if (tiles[targetTileIndex] instanceof Fence) {
+    model.warningText = "CAN'T WALK THROUGH A FENCE";
     showWarning();
     return;
   }

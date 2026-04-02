@@ -1,6 +1,12 @@
 import { Actor, Vector } from "excalibur";
 import { rlSS } from "./resources";
-import { GRID_COLS, Grass, tiles, seededRandom, START_TILE_INDEX } from "./tiledata";
+import {
+  GRID_COLS,
+  Grass,
+  tiles,
+  seededRandom,
+  START_TILE_INDEX,
+} from "./tiledata";
 import { game } from "./game";
 import { Z_ROCKS, Z_COLLECTABLES } from "./zIndex";
 import { Player } from "./chap";
@@ -79,7 +85,7 @@ export function spawnRocks(count: number) {
       height: 16,
       z: Z_ROCKS,
     });
-    actor.graphics.use(rlSS.getSprite(1, 28)); // rock sprite from roguelike sheet
+    actor.graphics.use(rlSS.getSprite(30, 11)); // rock sprite from roguelike sheet
 
     const rock: Rock = {
       actor,
@@ -131,7 +137,9 @@ export function spawnCollectables(count: number) {
   const rockTiles = new Set(rocks.map((r) => r.originTileIndex));
   const validIndices = tiles
     .map((t, i) =>
-      t instanceof Grass && i !== START_TILE_INDEX && !rockTiles.has(i) ? i : -1,
+      t instanceof Grass && i !== START_TILE_INDEX && !rockTiles.has(i)
+        ? i
+        : -1,
     )
     .filter((i) => i !== -1);
 
@@ -149,7 +157,7 @@ export function spawnCollectables(count: number) {
       height: 16,
       z: Z_COLLECTABLES,
     });
-    actor.graphics.use(rlSS.getSprite(11, 28)); // gem/coin sprite
+    actor.graphics.use(rlSS.getSprite(45, 10)); // gem/coin sprite
     // Gentle bob animation
     const phase = seededRandom() * Math.PI * 2;
     actor.graphics.onPreDraw = () => {
@@ -165,3 +173,6 @@ export function spawnCollectables(count: number) {
     game.add(actor);
   }
 }
+
+// actor.graphics.use(rlSS.getSprite(42, 16) switch left
+// actor.graphics.use(rlSS.getSprite(43, 16) switch right

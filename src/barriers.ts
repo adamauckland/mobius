@@ -33,7 +33,7 @@ export function spawnBarriers() {
         height: 16,
         z: Z_BARRIERS,
       });
-      actor.graphics.use(rlSS.getSprite(34, 0)); // barrier wall sprite
+      actor.graphics.use(rlSS.getSprite(33, 3)); // barrier wall sprite
       barrierActors.push({ actor, tileIndex: i, groupId: tile.groupId });
       game.add(actor);
     } else if (tile instanceof Switch) {
@@ -43,7 +43,7 @@ export function spawnBarriers() {
         height: 16,
         z: Z_BARRIERS,
       });
-      actor.graphics.use(rlSS.getSprite(29, 8)); // switch sprite
+      actor.graphics.use(rlSS.getSprite(42, 16)); // switch sprite
       // Gentle bob so the player notices it
       const phase = Math.random() * Math.PI * 2;
       actor.graphics.onPreDraw = () => {
@@ -69,7 +69,7 @@ export function tryActivateSwitch(tileIndex: number): boolean {
   // Visual feedback on the switch itself
   const switchActor = switchActors.get(tileIndex);
   if (switchActor) {
-    switchActor.graphics.use(rlSS.getSprite(30, 8)); // activated look
+    switchActor.graphics.use(rlSS.getSprite(43, 16)); // activated look
   }
 
   // Open every barrier in this group
