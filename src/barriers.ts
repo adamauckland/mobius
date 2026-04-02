@@ -2,7 +2,7 @@ import { Actor, Vector, vec, TileMap } from "excalibur";
 import { rlSS } from "./resources";
 import { tiles, Barrier, Switch, GRID_COLS } from "./tiledata";
 import { game } from "./game";
-import { Z_BARRIERS } from "./zIndex";
+import { zFromY, Z_LAYER_TREE, Z_LAYER_PICKUP } from "./zIndex";
 import { rebuildPathfinding } from "./pathfinding";
 
 interface BarrierEntry {
@@ -31,7 +31,7 @@ export function spawnBarriers() {
         pos: new Vector(x * 16 + 8, y * 16 + 8),
         width: 16,
         height: 16,
-        z: Z_BARRIERS,
+        z: zFromY(y * 16 + 8, Z_LAYER_TREE),
       });
       actor.graphics.use(rlSS.getSprite(33, 3)); // barrier wall sprite
       barrierActors.push({ actor, tileIndex: i, groupId: tile.groupId });
@@ -41,13 +41,13 @@ export function spawnBarriers() {
         pos: new Vector(x * 16 + 8, y * 16 + 8),
         width: 16,
         height: 16,
-        z: Z_BARRIERS,
+        z: zFromY(y * 16 + 8, Z_LAYER_PICKUP),
       });
       actor.graphics.use(rlSS.getSprite(42, 16)); // switch sprite
       // Gentle bob so the player notices it
       const phase = Math.random() * Math.PI * 2;
       actor.graphics.onPreDraw = () => {
-        actor.graphics.offset.y = Math.sin(game.clock.elapsed() * 0.003 + phase) * 2;
+        actor.graphics.offset.y = Math.sin(game.clock.now() * 0.003 + phase) * 2;
       };
       switchActors.set(i, actor);
       game.add(actor);

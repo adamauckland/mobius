@@ -28,14 +28,14 @@ export class GameRecorder {
 
   startRecording() {
     this.events = [];
-    this.startTime = game.clock.elapsed();
+    this.startTime = game.clock.now();
     this._isRecording = true;
   }
 
   recordClick(targetTileIndex: number) {
     if (!this._isRecording) return;
     this.events.push({
-      timestamp: game.clock.elapsed() - this.startTime,
+      timestamp: game.clock.now() - this.startTime,
       targetTileIndex,
     });
   }
@@ -75,7 +75,7 @@ export class GameRecorder {
   }
 
   stopReplay() {
-    for (const id of this.replaySchedules) {
+    for (const id of this.replayTimeouts) {
       game.clock.clearSchedule(id);
     }
     this.replaySchedules = [];

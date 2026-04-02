@@ -29,7 +29,7 @@ import { initPathfinding } from "./pathfinding";
 import { activeEntry, setupClickHandler } from "./playerManager";
 import { spawnRocks, spawnCollectables, getScore } from "./worldObjects";
 import { initBarriers, spawnBarriers } from "./barriers";
-import { Z_TREES, Z_HUD, Z_COUNTDOWN } from "./zIndex";
+import { zFromY, Z_LAYER_TREE, Z_HUD, Z_COUNTDOWN } from "./zIndex";
 
 // Seed management
 const seedInput = document.getElementById("seed-input") as HTMLInputElement;
@@ -54,7 +54,7 @@ const btnStart = document.getElementById("btn-start")!;
 let gameStartTime = 0;
 
 export function resetGameTimer() {
-  gameStartTime = game.clock.elapsed();
+  gameStartTime = game.clock.now();
 }
 
 // Auto-tile fence sprites from roguelike sheet (wooden fence at rows 23-24, cols 45-51)
@@ -82,19 +82,19 @@ function getFenceSprite(index: number) {
   // (48, 23) = T-left (up+down+right)  (51, 23) = bottom-right corner
 
   if (up && down && left && right) return rlSS.getSprite(46, 23); // cross
-  if (up && down && right) return rlSS.getSprite(48, 23);         // T-right
-  if (up && down && left) return rlSS.getSprite(49, 23);          // T-left
-  if (left && right && down) return rlSS.getSprite(46, 24);       // T-down
-  if (left && right && up) return rlSS.getSprite(46, 24);         // T-up
-  if (up && down) return rlSS.getSprite(47, 23);                  // vertical
-  if (left && right) return rlSS.getSprite(47, 24);               // horizontal
-  if (down && right) return rlSS.getSprite(48, 24);               // corner top-left
-  if (down && left) return rlSS.getSprite(49, 24);                // corner top-right
-  if (up && right) return rlSS.getSprite(50, 23);                 // corner bottom-left
-  if (up && left) return rlSS.getSprite(51, 23);                  // corner bottom-right
-  if (up || down) return rlSS.getSprite(47, 23);                  // vertical end cap
-  if (left || right) return rlSS.getSprite(47, 24);               // horizontal end cap
-  return rlSS.getSprite(46, 23);                                  // isolated post
+  if (up && down && right) return rlSS.getSprite(48, 23); // T-right
+  if (up && down && left) return rlSS.getSprite(49, 23); // T-left
+  if (left && right && down) return rlSS.getSprite(46, 24); // T-down
+  if (left && right && up) return rlSS.getSprite(46, 24); // T-up
+  if (up && down) return rlSS.getSprite(47, 23); // vertical
+  if (left && right) return rlSS.getSprite(47, 24); // horizontal
+  if (down && right) return rlSS.getSprite(48, 24); // corner top-left
+  if (down && left) return rlSS.getSprite(49, 24); // corner top-right
+  if (up && right) return rlSS.getSprite(50, 23); // corner bottom-left
+  if (up && left) return rlSS.getSprite(51, 23); // corner bottom-right
+  if (up || down) return rlSS.getSprite(47, 23); // vertical end cap
+  if (left || right) return rlSS.getSprite(47, 24); // horizontal end cap
+  return rlSS.getSprite(46, 23); // isolated post
 }
 
 function startGame() {
@@ -151,13 +151,13 @@ function startGame() {
         pos: vec(tx * 16 + 8, ty * 16 + 16),
         width: 16,
         height: 16,
-        z: Z_TREES,
+        z: zFromY(ty * 16 + 16, Z_LAYER_TREE),
         anchor: vec(0.5, 1),
       });
       const treeSprite = TileSheet.getSprite(3, 0);
       treeActor.graphics.use(treeSprite);
       treeActor.graphics.onPreDraw = () => {
-        const stretch = 1 + Math.sin(game.clock.elapsed() * 0.002) * 0.05;
+        const stretch = 2 + Math.sin(game.clock.now() * 0.002) * 0.05;
         treeActor.scale.y = stretch;
       };
       game.add(treeActor);
@@ -275,7 +275,7 @@ function startGame() {
         popIn();
 
         // Start the game clock and enable input immediately at "GO!"
-        gameStartTime = game.clock.elapsed();
+        gameStartTime = game.clock.now();
         setupClickHandler();
 
         // Remove the "GO!" text after a short delay
@@ -286,7 +286,7 @@ function startGame() {
 
   game.on("postupdate", () => {
     if (gameStartTime === 0) return;
-    const elapsed = game.clock.elapsed() - gameStartTime;
+    const elapsed = game.clock.now() - gameStartTime;
     const mins = Math.floor(elapsed / 60000);
     const secs = Math.floor((elapsed % 60000) / 1000);
     const tenths = Math.floor((elapsed % 1000) / 100);
