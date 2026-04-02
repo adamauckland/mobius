@@ -47,7 +47,7 @@ export function spawnBarriers() {
       // Gentle bob so the player notices it
       const phase = Math.random() * Math.PI * 2;
       actor.graphics.onPreDraw = () => {
-        actor.graphics.offset.y = Math.sin(Date.now() * 0.003 + phase) * 2;
+        actor.graphics.offset.y = Math.sin(game.clock.elapsed() * 0.003 + phase) * 2;
       };
       switchActors.set(i, actor);
       game.add(actor);

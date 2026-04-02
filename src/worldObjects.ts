@@ -161,7 +161,7 @@ export function spawnCollectables(count: number) {
     // Gentle bob animation
     const phase = seededRandom() * Math.PI * 2;
     actor.graphics.onPreDraw = () => {
-      actor.graphics.offset.y = Math.sin(Date.now() * 0.003 + phase) * 2;
+      actor.graphics.offset.y = Math.sin(game.clock.elapsed() * 0.003 + phase) * 2;
     };
 
     const collectable: Collectable = {

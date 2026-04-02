@@ -54,7 +54,7 @@ const btnStart = document.getElementById("btn-start")!;
 let gameStartTime = 0;
 
 export function resetGameTimer() {
-  gameStartTime = performance.now();
+  gameStartTime = game.clock.elapsed();
 }
 
 // Auto-tile fence sprites from roguelike sheet (wooden fence at rows 23-24, cols 45-51)
@@ -157,7 +157,7 @@ function startGame() {
       const treeSprite = TileSheet.getSprite(3, 0);
       treeActor.graphics.use(treeSprite);
       treeActor.graphics.onPreDraw = () => {
-        const stretch = 1 + Math.sin(Date.now() * 0.002) * 0.05;
+        const stretch = 1 + Math.sin(game.clock.elapsed() * 0.002) * 0.05;
         treeActor.scale.y = stretch;
       };
       game.add(treeActor);
@@ -264,28 +264,29 @@ function startGame() {
   popIn();
 
   let countdown = 3;
-  const countdownInterval = setInterval(() => {
-    countdown--;
-    if (countdown > 0) {
-      countdownText.text = String(countdown);
-      popIn();
-    } else {
-      clearInterval(countdownInterval);
-      countdownText.text = "GO!";
-      popIn();
+  for (let i = 1; i <= 3; i++) {
+    game.clock.schedule(() => {
+      countdown--;
+      if (countdown > 0) {
+        countdownText.text = String(countdown);
+        popIn();
+      } else {
+        countdownText.text = "GO!";
+        popIn();
 
-      // Start the game clock and enable input immediately at "GO!"
-      gameStartTime = performance.now();
-      setupClickHandler();
+        // Start the game clock and enable input immediately at "GO!"
+        gameStartTime = game.clock.elapsed();
+        setupClickHandler();
 
-      // Remove the "GO!" text after a short delay
-      setTimeout(() => countdownLabel.kill(), 500);
-    }
-  }, 1000);
+        // Remove the "GO!" text after a short delay
+        game.clock.schedule(() => countdownLabel.kill(), 500);
+      }
+    }, i * 1000);
+  }
 
   game.on("postupdate", () => {
     if (gameStartTime === 0) return;
-    const elapsed = performance.now() - gameStartTime;
+    const elapsed = game.clock.elapsed() - gameStartTime;
     const mins = Math.floor(elapsed / 60000);
     const secs = Math.floor((elapsed % 60000) / 1000);
     const tenths = Math.floor((elapsed % 1000) / 100);
