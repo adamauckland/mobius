@@ -5,7 +5,7 @@ import { plrWalk, plrImage } from "./resources";
 import type { Rock } from "./worldObjects";
 import { dropRockAtTile, tryCollectAtTile } from "./worldObjects";
 import { tryActivateSwitch } from "./barriers";
-import { Z_PLAYER_BASE } from "./zIndex";
+import { zFromY, Z_LAYER_PLAYER } from "./zIndex";
 import { game } from "./game";
 
 // create and configure player, and his action buffer
@@ -42,6 +42,8 @@ export class Player extends Actor {
   }
 
   override onPostUpdate(engine: Engine<any>, delta: number): void {
+    this.z = zFromY(this.pos.y, Z_LAYER_PLAYER);
+
     if (
       this.playerActionBuffer.length > 0 &&
       !this.actions.getQueue().hasNext()
@@ -109,7 +111,7 @@ export class Player extends Actor {
 }
 
 export let player = new Player(
-  { pos: new Vector(START_POS_X, START_POS_Y), width: 16, height: 16, z: Z_PLAYER_BASE },
+  { pos: new Vector(START_POS_X, START_POS_Y), width: 16, height: 16, z: zFromY(START_POS_Y, Z_LAYER_PLAYER) },
   plrWalk,
   plrImage,
 );

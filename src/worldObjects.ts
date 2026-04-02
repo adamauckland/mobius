@@ -8,7 +8,7 @@ import {
   START_TILE_INDEX,
 } from "./tiledata";
 import { game } from "./game";
-import { Z_ROCKS, Z_COLLECTABLES } from "./zIndex";
+import { zFromY, Z_LAYER_PICKUP, Z_LAYER_ROCK } from "./zIndex";
 import { Player } from "./chap";
 
 export interface Rock {
@@ -83,7 +83,7 @@ export function spawnRocks(count: number) {
       pos: new Vector(x * 16 + 8, y * 16 + 8),
       width: 16,
       height: 16,
-      z: Z_ROCKS,
+      z: zFromY(y * 16 + 8, Z_LAYER_ROCK),
     });
     actor.graphics.use(rlSS.getSprite(30, 11)); // rock sprite from roguelike sheet
 
@@ -155,7 +155,7 @@ export function spawnCollectables(count: number) {
       pos: new Vector(x * 16 + 8, y * 16 + 8),
       width: 16,
       height: 16,
-      z: Z_COLLECTABLES,
+      z: zFromY(y * 16 + 8, Z_LAYER_PICKUP),
     });
     actor.graphics.use(rlSS.getSprite(45, 10)); // gem/coin sprite
     // Gentle bob animation

@@ -29,7 +29,7 @@ import { initPathfinding } from "./pathfinding";
 import { activeEntry, setupClickHandler } from "./playerManager";
 import { spawnRocks, spawnCollectables, getScore } from "./worldObjects";
 import { initBarriers, spawnBarriers } from "./barriers";
-import { Z_TREES, Z_HUD, Z_COUNTDOWN } from "./zIndex";
+import { zFromY, Z_LAYER_TREE, Z_HUD, Z_COUNTDOWN } from "./zIndex";
 
 // Seed management
 const seedInput = document.getElementById("seed-input") as HTMLInputElement;
@@ -151,13 +151,13 @@ function startGame() {
         pos: vec(tx * 16 + 8, ty * 16 + 16),
         width: 16,
         height: 16,
-        z: Z_TREES,
+        z: zFromY(ty * 16 + 16, Z_LAYER_TREE),
         anchor: vec(0.5, 1),
       });
       const treeSprite = TileSheet.getSprite(3, 0);
       treeActor.graphics.use(treeSprite);
       treeActor.graphics.onPreDraw = () => {
-        const stretch = 1 + Math.sin(game.clock.now() * 0.002) * 0.05;
+        const stretch = 2 + Math.sin(game.clock.now() * 0.002) * 0.05;
         treeActor.scale.y = stretch;
       };
       game.add(treeActor);

@@ -14,7 +14,7 @@ import { game } from "./game";
 import { handleTileClick } from "./pathfinding";
 import { resetRocks } from "./worldObjects";
 import { resetGameTimer } from "./startScreen";
-import { Z_PLAYER_BASE, Z_RIPPLE } from "./zIndex";
+import { zFromY, Z_LAYER_PLAYER, Z_RIPPLE } from "./zIndex";
 
 export interface PlayerEntry {
   player: Player;
@@ -101,9 +101,9 @@ export function stopAndSpawnNext() {
   };
   entries.push(newEntry);
 
-  // Set z-ordering: oldest player lowest, newest on top (all above rocks at z:1)
-  for (let i = 0; i < entries.length; i++) {
-    entries[i].player.z = Z_PLAYER_BASE + i;
+  // Z-ordering is now handled dynamically by y-position in Player.onPostUpdate
+  for (const entry of entries) {
+    entry.player.z = zFromY(entry.player.pos.y, Z_LAYER_PLAYER);
   }
 
   // Replay all previous players, start recording the new one
