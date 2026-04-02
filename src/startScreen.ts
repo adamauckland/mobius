@@ -9,6 +9,7 @@ import {
   Actor,
   TextAlign,
   BaseAlign,
+  BoundingBox,
 } from "excalibur";
 import { TileSheet, rlSS } from "./resources";
 import {
@@ -150,12 +151,13 @@ function startGame() {
       const treeActor = new Actor({
         pos: vec(tx * 16 + 8, ty * 16 + 16),
         width: 16,
-        height: 16,
+        height: 32,
         z: zFromY(ty * 16 + 16, Z_LAYER_TREE),
         anchor: vec(0.5, 1),
       });
       const treeSprite = TileSheet.getSprite(3, 0);
       treeActor.graphics.use(treeSprite);
+      treeActor.graphics.localBounds = new BoundingBox(-8, -32, 8, 0);
       treeActor.graphics.onPreDraw = () => {
         const stretch = 2 + Math.sin(game.clock.now() * 0.002) * 0.05;
         treeActor.scale.y = stretch;

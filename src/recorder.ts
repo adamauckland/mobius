@@ -75,7 +75,7 @@ export class GameRecorder {
   }
 
   stopReplay() {
-    for (const id of this.replayTimeouts) {
+    for (const id of this.replaySchedules) {
       game.clock.clearSchedule(id);
     }
     this.replaySchedules = [];
