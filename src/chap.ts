@@ -7,6 +7,8 @@ import { dropRockAtTile, tryCollectAtTile } from "./worldObjects";
 import { tryActivateSwitch } from "./barriers";
 import { zFromY, Z_LAYER_PLAYER } from "./zIndex";
 import { game } from "./game";
+import type { MovingBlock } from "./movingBlocks";
+import { getMovingBlockNear, mountBlock } from "./movingBlocks";
 
 // create and configure player, and his action buffer
 
@@ -19,6 +21,7 @@ export class Player extends Actor {
   onReachedPortal: (() => boolean) | null = null; // return true if handled
   carriedRock: Rock | null = null;
   onArriveAtTile: (() => void) | null = null; // called when path completes
+  ridingBlock: MovingBlock | null = null;
   private idleGraphic: Graphic;
   private walkGraphic: Graphic;
 
@@ -44,6 +47,16 @@ export class Player extends Actor {
   override onPostUpdate(engine: Engine<any>, delta: number): void {
     this.z = zFromY(this.pos.y, Z_LAYER_PLAYER);
 
+    // While riding a moving block, skip normal movement processing
+    if (this.ridingBlock) {
+      // Carried rock still follows while riding
+      if (this.carriedRock) {
+        this.carriedRock.actor.pos.x = this.pos.x;
+        this.carriedRock.actor.pos.y = this.pos.y - 10;
+      }
+      return;
+    }
+
     if (
       this.playerActionBuffer.length > 0 &&
       !this.actions.getQueue().hasNext()
@@ -54,6 +67,18 @@ export class Player extends Actor {
       this.currentMoveTileIndex = nextTile;
       model.currentTileIndex = nextTile;
       this.moveToTile(nextTile);
+    }
+
+    // Auto-mount: if idle and a moving block is within a few pixels, hop on
+    if (
+      this.playerActionBuffer.length === 0 &&
+      !this.actions.getQueue().hasNext()
+    ) {
+      const block = getMovingBlockNear(this.pos);
+      if (block) {
+        mountBlock(block, this);
+        return;
+      }
     }
 
     // Carried rock follows the player with a slight offset above

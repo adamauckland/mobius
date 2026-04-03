@@ -30,6 +30,7 @@ import { initPathfinding } from "./pathfinding";
 import { activeEntry, setupClickHandler } from "./playerManager";
 import { spawnRocks, spawnCollectables, getScore } from "./worldObjects";
 import { initBarriers, spawnBarriers } from "./barriers";
+import { spawnMovingBlocks, updateMovingBlocks } from "./movingBlocks";
 import { zFromY, Z_LAYER_TREE, Z_HUD, Z_COUNTDOWN } from "./zIndex";
 
 // Seed management
@@ -191,6 +192,9 @@ function startGame() {
   spawnRocks(5);
   spawnCollectables(COLLECTABLE_COUNT);
 
+  // Spawn moving blocks
+  spawnMovingBlocks(3);
+
   // Game timer
   const timerText = new Text({
     text: "0:00.0",
@@ -287,6 +291,7 @@ function startGame() {
   }
 
   game.on("postupdate", () => {
+    updateMovingBlocks();
     if (gameStartTime === 0) return;
     const elapsed = game.clock.now() - gameStartTime;
     const mins = Math.floor(elapsed / 60000);

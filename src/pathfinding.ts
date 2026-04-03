@@ -11,6 +11,7 @@ import { Player } from "./chap";
 import { model } from "./model";
 import { getRockAtTile, pickUpRock, dropRock } from "./worldObjects";
 import { game } from "./game";
+import { dismountBlock } from "./movingBlocks";
 
 // create graph for dijkstra
 let myDijkstraGraph = new ExcaliburGraph();
@@ -65,6 +66,16 @@ function showWarning() {
 // Process a click on a target tile index: run pathfinding and queue movement
 export function handleTileClick(targetTileIndex: number, targetPlayer: Player) {
   model.targetTileIndex = targetTileIndex;
+
+  // If riding a moving block, dismount first
+  if (targetPlayer.ridingBlock) {
+    if (!dismountBlock(targetPlayer)) {
+      model.warningText = "CAN'T DISMOUNT HERE — WAIT FOR OPEN GROUND";
+      showWarning();
+      return;
+    }
+    // Player is now dismounted — continue with normal pathfinding
+  }
 
   // guard: solid tiles are not valid targets
   if (tiles[targetTileIndex] instanceof Tree) {

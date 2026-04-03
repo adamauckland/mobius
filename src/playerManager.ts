@@ -14,6 +14,7 @@ import { game } from "./game";
 import { handleTileClick } from "./pathfinding";
 import { resetRocks } from "./worldObjects";
 import { resetGameTimer } from "./startScreen";
+import { resetMovingBlocks } from "./movingBlocks";
 import { zFromY, Z_LAYER_PLAYER, Z_RIPPLE } from "./zIndex";
 
 export interface PlayerEntry {
@@ -44,6 +45,7 @@ export function activeEntry() {
 export function replayAll() {
   model.isReplaying = true;
   resetRocks();
+  resetMovingBlocks();
   resetGameTimer();
   for (const entry of entries) {
     // Stop any in-progress replay
@@ -61,6 +63,7 @@ export function replayAll() {
     entry.player.scale.y = 1;
     entry.player.graphics.visible = true;
     entry.player.carriedRock = null;
+    entry.player.ridingBlock = null;
     entry.player.onArriveAtTile = null;
     if (entry.recording) {
       entry.recorder.startReplay(entry.recording, (tileIndex) => {
