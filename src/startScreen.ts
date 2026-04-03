@@ -31,6 +31,7 @@ import { activeEntry, setupClickHandler } from "./playerManager";
 import { spawnRocks, spawnCollectables, getScore } from "./worldObjects";
 import { initBarriers, spawnBarriers } from "./barriers";
 import { spawnMovingBlocks, updateMovingBlocks } from "./movingBlocks";
+import { togglePause, onPauseChange } from "./main";
 import { zFromY, Z_LAYER_TREE, Z_HUD, Z_COUNTDOWN } from "./zIndex";
 
 // Seed management
@@ -53,10 +54,12 @@ btnNewSeed.addEventListener("click", () => {
 const startScreen = document.getElementById("start-screen")!;
 const btnStart = document.getElementById("btn-start")!;
 
-let gameStartTime = 0;
+let gameStarted = false;
+let elapsedGameTime = 0;
 
 export function resetGameTimer() {
-  gameStartTime = game.clock.now();
+  elapsedGameTime = 0;
+  gameStarted = true;
 }
 
 // Auto-tile fence sprites from roguelike sheet (wooden fence at rows 23-24, cols 45-51)
@@ -240,6 +243,31 @@ function startGame() {
   game.add(scoreLabel);
   let displayedScore = 0;
 
+  // Pause button (top-left)
+  const pauseText = new Text({
+    text: "II",
+    font: new Font({
+      size: 32,
+      unit: FontUnit.Px,
+      family: "monospace",
+      color: Color.White,
+      textAlign: TextAlign.Left,
+      shadow: { blur: 2, offset: vec(1, 1), color: Color.Black },
+    }),
+  });
+  const pauseButton = new ScreenElement({
+    pos: vec(10, 10),
+    z: Z_HUD,
+    width: 40,
+    height: 40,
+  });
+  pauseButton.graphics.use(pauseText);
+  pauseButton.on("pointerup", () => togglePause());
+  onPauseChange((isPaused) => {
+    pauseText.text = isPaused ? ">" : "II";
+  });
+  game.add(pauseButton);
+
   // Countdown before game starts
   const countdownFont = new Font({
     size: 200,
@@ -281,7 +309,8 @@ function startGame() {
         popIn();
 
         // Start the game clock and enable input immediately at "GO!"
-        gameStartTime = game.clock.now();
+        gameStarted = true;
+        elapsedGameTime = 0;
         setupClickHandler();
 
         // Remove the "GO!" text after a short delay
@@ -290,10 +319,11 @@ function startGame() {
     }, i * 1000);
   }
 
-  game.on("postupdate", () => {
-    updateMovingBlocks();
-    if (gameStartTime === 0) return;
-    const elapsed = game.clock.now() - gameStartTime;
+  game.on("postupdate", (evt) => {
+    updateMovingBlocks(evt.elapsed);
+    if (!gameStarted) return;
+    elapsedGameTime += evt.elapsed;
+    const elapsed = elapsedGameTime;
     const mins = Math.floor(elapsed / 60000);
     const secs = Math.floor((elapsed % 60000) / 1000);
     const tenths = Math.floor((elapsed % 1000) / 100);

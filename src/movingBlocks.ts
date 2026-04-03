@@ -12,12 +12,12 @@ import { game } from "./game";
 import { zFromY, Z_LAYER_PICKUP } from "./zIndex";
 import type { Player } from "./chap";
 
-/** Clock time when the current round started (set on spawn and each replay). */
-let epoch = 0;
+/** Accumulated elapsed time — advances only via delta, so pauses are excluded. */
+let blockElapsed = 0;
 
 /** Call when the game rewinds so blocks repeat from the same relative time. */
 export function resetMovingBlocks() {
-  epoch = game.clock.now();
+  blockElapsed = 0;
   for (const block of movingBlocks) {
     block.riders = [];
   }
@@ -87,7 +87,7 @@ export function dismountBlock(player: Player): boolean {
 
 /** Spawn moving blocks at random positions with random paths. */
 export function spawnMovingBlocks(count: number) {
-  epoch = game.clock.now();
+  blockElapsed = 0;
   for (let n = 0; n < count; n++) {
     const validIndices = tiles
       .map((t, i) => (t instanceof Grass && i !== START_TILE_INDEX ? i : -1))
@@ -137,11 +137,11 @@ export function spawnMovingBlocks(count: number) {
 }
 
 /** Update every moving block position (call once per frame). */
-export function updateMovingBlocks() {
-  const elapsed = game.clock.now() - epoch;
+export function updateMovingBlocks(delta: number) {
+  blockElapsed += delta;
 
   for (const block of movingBlocks) {
-    const progress = pingPong(elapsed * block.speed + block.phase);
+    const progress = pingPong(blockElapsed * block.speed + block.phase);
 
     const newX =
       block.startPos.x + (block.endPos.x - block.startPos.x) * progress;
