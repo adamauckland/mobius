@@ -9,7 +9,7 @@ import { TileMap } from "excalibur";
 import { Tree, Barrier, Fence, tiles, GRID_COLS, GRID_ROWS } from "./tiledata";
 import { Player } from "./chap";
 import { model } from "./model";
-import { getRockAtTile, pickUpRock, dropRock } from "./worldObjects";
+import { getRockAtTile, pickUpRock, dropRock, getParcelAtTile, pickUpParcel, dropParcel } from "./worldObjects";
 import { game } from "./game";
 import { dismountBlock } from "./movingBlocks";
 
@@ -105,21 +105,36 @@ export function handleTileClick(targetTileIndex: number, targetPlayer: Player) {
     const ity = Math.floor(targetPlayer.pos.y / 16);
     playerTileIdle = itx + ity * GRID_COLS;
   }
-  if (targetPlayer.carriedRock && targetTileIndex === playerTileIdle) {
-    dropRock(targetPlayer);
-    return;
+  if (targetTileIndex === playerTileIdle) {
+    if (targetPlayer.carriedRock) {
+      dropRock(targetPlayer);
+      return;
+    }
+    if (targetPlayer.carriedParcel) {
+      dropParcel(targetPlayer);
+      return;
+    }
   }
 
   // Clear stale arrival callback — a new click replaces the old destination
   targetPlayer.onArriveAtTile = null;
 
-  // Check if there's a rock at the target tile — pathfind to it then pick up on arrival
+  // Check if there's a rock or parcel at the target tile — pathfind to it then pick up on arrival
+  // Player can only carry one thing at a time (rock OR parcel)
+  const isCarrying = targetPlayer.carriedRock || targetPlayer.carriedParcel;
   const rock = getRockAtTile(targetTileIndex);
-  if (rock && !targetPlayer.carriedRock) {
+  if (rock && !isCarrying) {
     targetPlayer.onArriveAtTile = () => {
-      // Re-check the rock is still there when we arrive
-      if (!rock.carriedBy && !targetPlayer.carriedRock) {
+      if (!rock.carriedBy && !targetPlayer.carriedRock && !targetPlayer.carriedParcel) {
         pickUpRock(rock, targetPlayer);
+      }
+    };
+  }
+  const parcel = getParcelAtTile(targetTileIndex);
+  if (parcel && !isCarrying) {
+    targetPlayer.onArriveAtTile = () => {
+      if (!parcel.carriedBy && !targetPlayer.carriedRock && !targetPlayer.carriedParcel) {
+        pickUpParcel(parcel, targetPlayer);
       }
     };
   }

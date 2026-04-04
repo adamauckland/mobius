@@ -18,6 +18,7 @@ import {
   Barrier,
   Fence,
   OneWayGate,
+  DropZone,
   tiles,
   GRID_COLS,
   GRID_ROWS,
@@ -28,10 +29,11 @@ import { player } from "./chap";
 import { game } from "./game";
 import { model } from "./model";
 import { initPathfinding } from "./pathfinding";
-import { activeEntry, setupClickHandler } from "./playerManager";
-import { spawnRocks, spawnCollectables, getScore } from "./worldObjects";
+import { activeEntry, setupClickHandler, replayAll } from "./playerManager";
+import { spawnRocks, spawnCollectables, spawnParcels, PARCEL_SPRITES, getScore } from "./worldObjects";
 import { initBarriers, spawnBarriers } from "./barriers";
 import { spawnMovingBlocks, updateMovingBlocks } from "./movingBlocks";
+import { spawnMonsters, updateMonsters, setOnPlayerKilled } from "./monsters";
 import { togglePause, onPauseChange } from "./main";
 import { zFromY, Z_LAYER_TREE, Z_LAYER_PICKUP, Z_HUD, Z_COUNTDOWN } from "./zIndex";
 
@@ -54,6 +56,11 @@ btnNewSeed.addEventListener("click", () => {
 // Wait for START button
 const startScreen = document.getElementById("start-screen")!;
 const btnStart = document.getElementById("btn-start")!;
+const restartButton = document.getElementById("btn-restart") as HTMLButtonElement;
+restartButton.addEventListener("click", () => {
+  // Seed is already in sessionStorage — reload will reuse it
+  location.reload();
+});
 
 let gameStarted = false;
 let elapsedGameTime = 0;
@@ -141,6 +148,8 @@ function startGame() {
       tile.addGraphic(getFenceSprite(tileIndex));
     } else if (tiles[tileIndex] instanceof OneWayGate) {
       tile.addGraphic(TileSheet.getSprite(0, 0)); // ground under gate
+    } else if (tiles[tileIndex] instanceof DropZone) {
+      tile.addGraphic(TileSheet.getSprite(0, 0)); // ground under drop zone
     } else {
       tile.addGraphic(sprite);
     }
@@ -196,6 +205,31 @@ function startGame() {
     }
   }
 
+  // Add drop zone overlays (target markers for parcels)
+  for (let i = 0; i < tiles.length; i++) {
+    if (tiles[i] instanceof DropZone) {
+      const tx = i % GRID_COLS;
+      const ty = Math.floor(i / GRID_COLS);
+      const dzActor = new Actor({
+        pos: vec(tx * 16 + 8, ty * 16 + 8),
+        width: 16,
+        height: 16,
+        z: zFromY(ty * 16 + 8, Z_LAYER_PICKUP),
+      });
+      const dz = tiles[i] as DropZone;
+      const [sc, sr] = PARCEL_SPRITES[dz.id % PARCEL_SPRITES.length];
+      dzActor.graphics.use(rlSS.getSprite(sc, sr));
+      // Gentle pulse animation
+      const phase = i * 0.5;
+      dzActor.graphics.onPreDraw = () => {
+        const pulse = 0.8 + Math.sin(game.clock.now() * 0.003 + phase) * 0.2;
+        dzActor.scale.x = pulse;
+        dzActor.scale.y = pulse;
+      };
+      game.add(dzActor);
+    }
+  }
+
   // Initialize pathfinding
   initPathfinding(tilemap);
 
@@ -217,12 +251,14 @@ function startGame() {
   initBarriers(tilemap);
   spawnBarriers();
 
-  // Spawn rocks
+  // Spawn rocks and parcels
   spawnRocks(5);
+  spawnParcels();
   spawnCollectables(COLLECTABLE_COUNT);
 
-  // Spawn moving blocks
+  // Spawn moving blocks and monsters
   spawnMovingBlocks(3);
+  spawnMonsters(5);
 
   // Game timer
   const timerText = new Text({
@@ -294,6 +330,76 @@ function startGame() {
   });
   game.add(pauseButton);
 
+  // Lives display (top-left, below pause)
+  const livesText = new Text({
+    text: "♥♥♥",
+    font: new Font({
+      size: 32,
+      unit: FontUnit.Px,
+      family: "monospace",
+      color: Color.Red,
+      textAlign: TextAlign.Left,
+      shadow: { blur: 2, offset: vec(1, 1), color: Color.Black },
+    }),
+  });
+  const livesLabel = new ScreenElement({
+    pos: vec(10, 45),
+    z: Z_HUD,
+  });
+  livesLabel.graphics.use(livesText);
+  game.add(livesLabel);
+
+  // Game over overlay
+  const gameOverText = new Text({
+    text: "GAME OVER",
+    font: new Font({
+      size: 200,
+      unit: FontUnit.Px,
+      family: "monospace",
+      color: Color.Red,
+      textAlign: TextAlign.Center,
+      baseAlign: BaseAlign.Middle,
+      shadow: { blur: 4, offset: vec(2, 2), color: Color.Black },
+    }),
+  });
+  const gameOverLabel = new ScreenElement({
+    pos: vec(0, 0),
+    z: Z_COUNTDOWN,
+  });
+  gameOverLabel.graphics.use(gameOverText);
+  gameOverLabel.graphics.visible = false;
+  gameOverLabel.on("preupdate", () => {
+    gameOverLabel.pos.x = game.screen.resolution.width / 2;
+    gameOverLabel.pos.y = game.screen.resolution.height / 2;
+  });
+  game.add(gameOverLabel);
+
+  // Death handler
+  setOnPlayerKilled((killedPlayer) => {
+    // Only the active (recording) player can die
+    if (killedPlayer !== activeEntry().player) return;
+    if (model.gameOver) return;
+
+    model.lives--;
+    livesText.text = "♥".repeat(model.lives) + "♡".repeat(3 - model.lives);
+
+    if (model.lives <= 0) {
+      model.gameOver = true;
+      gameOverLabel.graphics.visible = true;
+      gameOverLabel.scale.x = 0.3;
+      gameOverLabel.scale.y = 0.3;
+      gameOverLabel.actions.scaleTo(vec(1, 1), vec(3, 3));
+      // Show restart button
+      restartButton.style.display = "block";
+      return;
+    }
+
+    // Rewind: reset player to start, reset timer, replay all previous recordings
+    replayAll();
+    activeEntry().recorder.startRecording();
+    model.isRecording = true;
+  });
+
   // Countdown before game starts
   const countdownFont = new Font({
     size: 200,
@@ -347,7 +453,9 @@ function startGame() {
 
   game.on("postupdate", (evt) => {
     updateMovingBlocks(evt.elapsed);
+    updateMonsters(evt.elapsed);
     if (!gameStarted) return;
+    if (model.gameOver) return;
     elapsedGameTime += evt.elapsed;
     const elapsed = elapsedGameTime;
     const mins = Math.floor(elapsed / 60000);

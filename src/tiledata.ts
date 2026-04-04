@@ -1,9 +1,10 @@
 // for tilemap creation, create tiles with a sprite info and
 // a collider setting for Graph parsing
 
-export const GRID_COLS = 100;
-export const GRID_ROWS = 100;
+export const GRID_COLS = 50;
+export const GRID_ROWS = 50;
 export const COLLECTABLE_COUNT = 20;
+export const PARCEL_COUNT = 3;
 
 // Seeded PRNG (mulberry32) — same seed always produces the same map
 function mulberry32(seed: number) {
@@ -75,7 +76,7 @@ export class Fence {
   collider: boolean = true;
 }
 
-export type Direction = 'up' | 'down' | 'left' | 'right';
+export type Direction = "up" | "down" | "left" | "right";
 
 export class OneWayGate {
   sprite = [0, 0]; // grass base, overlay added as separate Actor
@@ -86,8 +87,28 @@ export class OneWayGate {
   }
 }
 
-export let tiles: (Grass | Tree | Portal | Barrier | Switch | Fence | OneWayGate)[] = [];
+export class DropZone {
+  sprite = [0, 0]; // grass base, overlay added as separate Actor
+  collider: boolean = false;
+  id: number; // which parcel belongs here
+  fulfilled: boolean = false;
+  constructor(id: number) {
+    this.id = id;
+  }
+}
+
+export let tiles: (
+  | Grass
+  | Tree
+  | Portal
+  | Barrier
+  | Switch
+  | Fence
+  | OneWayGate
+  | DropZone
+)[] = [];
 export let portalTileIndices: number[] = [];
+export let dropZoneTileIndices: number[] = [];
 
 // Start position — center of the map (pixel coordinates)
 export const START_TILE_X = Math.floor(GRID_COLS / 2);
@@ -213,7 +234,7 @@ export function generateWorld(seed: number) {
 
   // Place one-way gates on random grass tiles
   const ONE_WAY_GATE_COUNT = 8;
-  const directions: Direction[] = ['up', 'down', 'left', 'right'];
+  const directions: Direction[] = ["up", "down", "left", "right"];
   for (let g = 0; g < ONE_WAY_GATE_COUNT; g++) {
     const gateCandidates = result
       .map((t, i) => (t instanceof Grass && i !== START_TILE_INDEX ? i : -1))
@@ -227,11 +248,12 @@ export function generateWorld(seed: number) {
     // Ensure the tile in the gate's direction is walkable
     const gx = gateIdx % GRID_COLS;
     const gy = Math.floor(gateIdx / GRID_COLS);
-    let nx = gx, ny = gy;
-    if (dir === 'up') ny--;
-    else if (dir === 'down') ny++;
-    else if (dir === 'left') nx--;
-    else if (dir === 'right') nx++;
+    let nx = gx,
+      ny = gy;
+    if (dir === "up") ny--;
+    else if (dir === "down") ny++;
+    else if (dir === "left") nx--;
+    else if (dir === "right") nx++;
 
     if (nx < 0 || nx >= GRID_COLS || ny < 0 || ny >= GRID_ROWS) continue;
     const destIdx = nx + ny * GRID_COLS;
@@ -240,6 +262,20 @@ export function generateWorld(seed: number) {
     result[gateIdx] = new OneWayGate(dir);
   }
 
+  // Place drop zones for parcels
+  const dropZoneIndices: number[] = [];
+  for (let d = 0; d < PARCEL_COUNT; d++) {
+    const dzCandidates = result
+      .map((t, i) => (t instanceof Grass && i !== START_TILE_INDEX ? i : -1))
+      .filter((i) => i !== -1);
+    if (dzCandidates.length === 0) break;
+    const pick = Math.floor(seededRandom() * dzCandidates.length);
+    const dzIdx = dzCandidates[pick];
+    result[dzIdx] = new DropZone(d);
+    dropZoneIndices.push(dzIdx);
+  }
+
   tiles = result;
   portalTileIndices = portalIndices;
+  dropZoneTileIndices = dropZoneIndices;
 }

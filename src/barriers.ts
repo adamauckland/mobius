@@ -44,11 +44,6 @@ export function spawnBarriers() {
         z: zFromY(y * 16 + 8, Z_LAYER_PICKUP),
       });
       actor.graphics.use(rlSS.getSprite(42, 16)); // switch sprite
-      // Gentle bob so the player notices it
-      const phase = Math.random() * Math.PI * 2;
-      actor.graphics.onPreDraw = () => {
-        actor.graphics.offset.y = Math.sin(game.clock.now() * 0.003 + phase) * 2;
-      };
       switchActors.set(i, actor);
       game.add(actor);
     }

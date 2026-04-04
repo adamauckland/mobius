@@ -14,6 +14,8 @@ export const model = {
   inputDiagonal: true,
   inputAlgo: undefined as HTMLInputElement | undefined,
   algoDuration: "0.0",
+  lives: 3,
+  gameOver: false,
   isRecording: false,
   isReplaying: false,
   diagClicked: () => {

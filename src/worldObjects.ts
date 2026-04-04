@@ -3,9 +3,11 @@ import { rlSS } from "./resources";
 import {
   GRID_COLS,
   Grass,
+  DropZone,
   tiles,
   seededRandom,
   START_TILE_INDEX,
+  dropZoneTileIndices,
 } from "./tiledata";
 import { game } from "./game";
 import { zFromY, Z_LAYER_PICKUP, Z_LAYER_ROCK } from "./zIndex";
@@ -176,3 +178,119 @@ export function spawnCollectables(count: number) {
 
 // actor.graphics.use(rlSS.getSprite(42, 16) switch left
 // actor.graphics.use(rlSS.getSprite(43, 16) switch right
+
+// --- Parcels (carryable objects that must be placed on a DropZone) ---
+
+export interface Parcel {
+  actor: Actor;
+  id: number; // matches DropZone.id
+  originTileIndex: number;
+  tileIndex: number;
+  carriedBy: Player | null;
+  placed: boolean; // true when correctly placed on its drop zone
+}
+
+const parcels: Parcel[] = [];
+
+// Each parcel/drop zone pair uses a distinct sprite so the match is obvious
+// [col, row] into the roguelike spritesheet
+export const PARCEL_SPRITES: [number, number][] = [
+  [45, 10], // gem
+  [41, 9],  // key
+  [43, 8],  // potion
+];
+
+export function getParcels() {
+  return parcels;
+}
+
+export function getParcelAtTile(tileIndex: number): Parcel | undefined {
+  return parcels.find((p) => p.tileIndex === tileIndex && !p.carriedBy && !p.placed);
+}
+
+export function pickUpParcel(parcel: Parcel, player: Player) {
+  parcel.carriedBy = player;
+  player.carriedParcel = parcel;
+}
+
+export function dropParcel(player: Player) {
+  dropParcelAtTile(player, player.logicalTileIndex);
+}
+
+export function dropParcelAtTile(player: Player, tileIndex: number) {
+  const parcel = player.carriedParcel;
+  if (!parcel) return;
+  parcel.carriedBy = null;
+  parcel.tileIndex = tileIndex;
+  player.carriedParcel = null;
+  const x = tileIndex % GRID_COLS;
+  const y = Math.floor(tileIndex / GRID_COLS);
+  parcel.actor.pos.x = x * 16 + 8;
+  parcel.actor.pos.y = y * 16 + 8;
+
+  // Check if placed on matching drop zone
+  const tile = tiles[tileIndex];
+  if (tile instanceof DropZone && tile.id === parcel.id && !tile.fulfilled) {
+    parcel.placed = true;
+    tile.fulfilled = true;
+    score += 500;
+  }
+}
+
+export function resetParcels() {
+  for (const parcel of parcels) {
+    parcel.tileIndex = parcel.originTileIndex;
+    parcel.carriedBy = null;
+    parcel.placed = false;
+    parcel.actor.graphics.visible = true;
+    const x = parcel.originTileIndex % GRID_COLS;
+    const y = Math.floor(parcel.originTileIndex / GRID_COLS);
+    parcel.actor.pos.x = x * 16 + 8;
+    parcel.actor.pos.y = y * 16 + 8;
+  }
+  // Reset drop zone fulfilled state
+  for (const idx of dropZoneTileIndices) {
+    const tile = tiles[idx];
+    if (tile instanceof DropZone) {
+      tile.fulfilled = false;
+    }
+  }
+}
+
+export function spawnParcels() {
+  // Place one parcel per drop zone, on a random grass tile nearby
+  for (let i = 0; i < dropZoneTileIndices.length; i++) {
+    const validIndices = tiles
+      .map((t, idx) =>
+        t instanceof Grass && idx !== START_TILE_INDEX ? idx : -1,
+      )
+      .filter((idx) => idx !== -1);
+
+    if (validIndices.length === 0) break;
+    const pick = Math.floor(seededRandom() * validIndices.length);
+    const tileIdx = validIndices[pick];
+
+    const x = tileIdx % GRID_COLS;
+    const y = Math.floor(tileIdx / GRID_COLS);
+
+    const actor = new Actor({
+      pos: new Vector(x * 16 + 8, y * 16 + 8),
+      width: 16,
+      height: 16,
+      z: zFromY(y * 16 + 8, Z_LAYER_ROCK),
+    });
+    const [sc, sr] = PARCEL_SPRITES[i % PARCEL_SPRITES.length];
+    actor.graphics.use(rlSS.getSprite(sc, sr));
+
+    const parcel: Parcel = {
+      actor,
+      id: i,
+      originTileIndex: tileIdx,
+      tileIndex: tileIdx,
+      carriedBy: null,
+      placed: false,
+    };
+    parcels.push(parcel);
+    game.add(actor);
+  }
+}

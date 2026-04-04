@@ -26,6 +26,12 @@
         background: #5e676b; color: #d0e3e9; border: none; cursor: pointer;
       }
       #btn-start:hover { background: #929fa4; color: #131617; }
+      #btn-restart {
+        display: none; position: fixed; left: 50%; top: 60%; transform: translate(-50%, -50%);
+        font-family: monospace; font-size: 32px; padding: 16px 48px;
+        background: #5e676b; color: #d0e3e9; border: none; cursor: pointer; z-index: 300000;
+      }
+      #btn-restart:hover { background: #929fa4; color: #131617; }
     </style>
   </head>
   <body>
@@ -38,6 +44,7 @@
       </div>
       <button id="btn-start">START</button>
     </div>
+    <button id="btn-restart">RESTART</button>
     <script type="module" src="./src/main.ts"></script>
     <canvas id='cnv'> </canvas>
   </body>

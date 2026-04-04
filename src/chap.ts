@@ -2,8 +2,8 @@ import { Actor, Vector, EasingFunctions, Engine, Graphic } from "excalibur";
 import { model } from "./model";
 import { GRID_COLS, GRID_ROWS, portalTileIndices, START_POS_X, START_POS_Y, START_TILE_INDEX, tiles, OneWayGate, Tree, Fence, Barrier } from "./tiledata";
 import { plrWalk, plrImage } from "./resources";
-import type { Rock } from "./worldObjects";
-import { dropRockAtTile, tryCollectAtTile } from "./worldObjects";
+import type { Rock, Parcel } from "./worldObjects";
+import { dropRockAtTile, dropParcelAtTile, tryCollectAtTile } from "./worldObjects";
 import { tryActivateSwitch } from "./barriers";
 import { zFromY, Z_LAYER_PLAYER } from "./zIndex";
 import { game } from "./game";
@@ -20,6 +20,7 @@ export class Player extends Actor {
   previousTileIndex = 0; // the tile the player was on before the current move
   onReachedPortal: (() => boolean) | null = null; // return true if handled
   carriedRock: Rock | null = null;
+  carriedParcel: Parcel | null = null;
   onArriveAtTile: (() => void) | null = null; // called when path completes
   ridingBlock: MovingBlock | null = null;
   private idleGraphic: Graphic;
@@ -49,10 +50,14 @@ export class Player extends Actor {
 
     // While riding a moving block, skip normal movement processing
     if (this.ridingBlock) {
-      // Carried rock still follows while riding
+      // Carried rock/parcel still follows while riding
       if (this.carriedRock) {
         this.carriedRock.actor.pos.x = this.pos.x;
         this.carriedRock.actor.pos.y = this.pos.y - 10;
+      }
+      if (this.carriedParcel) {
+        this.carriedParcel.actor.pos.x = this.pos.x;
+        this.carriedParcel.actor.pos.y = this.pos.y - 10;
       }
       return;
     }
@@ -81,13 +86,20 @@ export class Player extends Actor {
       }
     }
 
-    // Carried rock follows the player with a slight offset above
+    // Carried rock/parcel follows the player with a slight offset above
     if (this.carriedRock) {
       const bounce = this.actions.getQueue().hasNext()
         ? -Math.abs(Math.sin(game.clock.now() * 0.01)) * 3
         : 0;
       this.carriedRock.actor.pos.x = this.pos.x;
       this.carriedRock.actor.pos.y = this.pos.y - 10 + bounce;
+    }
+    if (this.carriedParcel) {
+      const bounce = this.actions.getQueue().hasNext()
+        ? -Math.abs(Math.sin(game.clock.now() * 0.01)) * 3
+        : 0;
+      this.carriedParcel.actor.pos.x = this.pos.x;
+      this.carriedParcel.actor.pos.y = this.pos.y - 10 + bounce;
     }
   }
 
@@ -112,9 +124,12 @@ export class Player extends Actor {
           this.onArriveAtTile = null;
           cb();
         }
-        // If landing on the portal while carrying a rock, drop it on the previous tile
+        // If landing on the portal while carrying a rock/parcel, drop it on the previous tile
         if (portalTileIndices.includes(node) && this.carriedRock) {
           dropRockAtTile(this, this.previousTileIndex);
+        }
+        if (portalTileIndices.includes(node) && this.carriedParcel) {
+          dropParcelAtTile(this, this.previousTileIndex);
         }
         // If path is complete and we landed on the portal
         if (
