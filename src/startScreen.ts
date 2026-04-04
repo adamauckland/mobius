@@ -20,6 +20,7 @@ import {
   OneWayGate,
   DropZone,
   tiles,
+  TILE_SIZE,
   GRID_COLS,
   GRID_ROWS,
   generateWorld,
@@ -125,8 +126,8 @@ function startGame() {
   const tilemap = new TileMap({
     rows: GRID_ROWS,
     columns: GRID_COLS,
-    tileWidth: 16,
-    tileHeight: 16,
+    tileWidth: TILE_SIZE,
+    tileHeight: TILE_SIZE,
   });
 
   let tileIndex = 0;
@@ -166,10 +167,10 @@ function startGame() {
       const tx = i % GRID_COLS;
       const ty = Math.floor(i / GRID_COLS);
       const treeActor = new Actor({
-        pos: vec(tx * 16 + 8, ty * 16 + 16),
-        width: 16,
-        height: 32,
-        z: zFromY(ty * 16 + 16, Z_LAYER_TREE),
+        pos: vec(tx * TILE_SIZE + TILE_SIZE / 2, ty * TILE_SIZE + TILE_SIZE),
+        width: TILE_SIZE,
+        height: TILE_SIZE * 2,
+        z: zFromY(ty * TILE_SIZE + TILE_SIZE, Z_LAYER_TREE),
         anchor: vec(0.5, 1),
       });
       const treeSprite = TileSheet.getSprite(3, 0);
@@ -190,10 +191,10 @@ function startGame() {
       const tx = i % GRID_COLS;
       const ty = Math.floor(i / GRID_COLS);
       const gateActor = new Actor({
-        pos: vec(tx * 16 + 8, ty * 16 + 8),
-        width: 16,
-        height: 16,
-        z: zFromY(ty * 16 + 8, Z_LAYER_PICKUP),
+        pos: vec(tx * TILE_SIZE + TILE_SIZE / 2, ty * TILE_SIZE + TILE_SIZE / 2),
+        width: TILE_SIZE,
+        height: TILE_SIZE,
+        z: zFromY(ty * TILE_SIZE + TILE_SIZE / 2, Z_LAYER_PICKUP),
       });
       gateActor.graphics.use(rlSS.getSprite(29, 22));
       switch (gate.direction) {
@@ -212,10 +213,10 @@ function startGame() {
       const tx = i % GRID_COLS;
       const ty = Math.floor(i / GRID_COLS);
       const dzActor = new Actor({
-        pos: vec(tx * 16 + 8, ty * 16 + 8),
-        width: 16,
-        height: 16,
-        z: zFromY(ty * 16 + 8, Z_LAYER_PICKUP),
+        pos: vec(tx * TILE_SIZE + TILE_SIZE / 2, ty * TILE_SIZE + TILE_SIZE / 2),
+        width: TILE_SIZE,
+        height: TILE_SIZE,
+        z: zFromY(ty * TILE_SIZE + TILE_SIZE / 2, Z_LAYER_PICKUP),
       });
       const dz = tiles[i] as DropZone;
       const [sc, sr] = PARCEL_SPRITES[dz.id % PARCEL_SPRITES.length];

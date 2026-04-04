@@ -1,6 +1,7 @@
 import { Actor, Vector } from "excalibur";
 import { rlSS } from "./resources";
 import {
+  TILE_SIZE,
   GRID_COLS,
   GRID_ROWS,
   Grass,
@@ -68,8 +69,8 @@ export function dismountBlock(player: Player): boolean {
   const block = player.ridingBlock;
   if (!block) return false;
 
-  const tx = Math.floor(player.pos.x / 16);
-  const ty = Math.floor(player.pos.y / 16);
+  const tx = Math.floor(player.pos.x / TILE_SIZE);
+  const ty = Math.floor(player.pos.y / TILE_SIZE);
   const currentTile = tx + ty * GRID_COLS;
 
   if (currentTile < 0 || currentTile >= GRID_COLS * GRID_ROWS) return false;
@@ -80,8 +81,8 @@ export function dismountBlock(player: Player): boolean {
   sfxPlatformStop();
 
   // Snap to tile centre
-  player.pos.x = tx * 16 + 8;
-  player.pos.y = ty * 16 + 8;
+  player.pos.x = tx * TILE_SIZE + TILE_SIZE / 2;
+  player.pos.y = ty * TILE_SIZE + TILE_SIZE / 2;
   player.logicalTileIndex = currentTile;
   player.currentMoveTileIndex = currentTile;
 
@@ -115,14 +116,14 @@ export function spawnMovingBlocks(count: number) {
       GRID_ROWS - 2,
     );
 
-    const startPos = new Vector(startX * 16 + 8, startY * 16 + 8);
-    const endPos = new Vector(endX * 16 + 8, endY * 16 + 8);
+    const startPos = new Vector(startX * TILE_SIZE + TILE_SIZE / 2, startY * TILE_SIZE + TILE_SIZE / 2);
+    const endPos = new Vector(endX * TILE_SIZE + TILE_SIZE / 2, endY * TILE_SIZE + TILE_SIZE / 2);
 
     const actor = new Actor({
       pos: startPos.clone(),
-      width: 16,
-      height: 16,
-      z: zFromY(startY * 16 + 8, Z_LAYER_PICKUP),
+      width: TILE_SIZE,
+      height: TILE_SIZE,
+      z: zFromY(startY * TILE_SIZE + TILE_SIZE / 2, Z_LAYER_PICKUP),
     });
     actor.graphics.use(rlSS.getSprite(4, 0)); // stone platform sprite
 

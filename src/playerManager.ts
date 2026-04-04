@@ -3,6 +3,7 @@ import { Player, player } from "./chap";
 import { plrWalk, plrImage } from "./resources";
 import { GameRecorder, type GameRecording } from "./recorder";
 import {
+  TILE_SIZE,
   GRID_COLS,
   GRID_ROWS,
   START_POS_X,
@@ -90,7 +91,7 @@ export function stopAndSpawnNext() {
 
   // Create a new player with the same sprites
   const newPlayer = new Player(
-    { pos: new Vector(START_POS_X, START_POS_Y), width: 16, height: 16 },
+    { pos: new Vector(START_POS_X, START_POS_Y), width: TILE_SIZE, height: TILE_SIZE },
     plrWalk,
     plrImage,
   );

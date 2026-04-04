@@ -1,6 +1,7 @@
 // for tilemap creation, create tiles with a sprite info and
 // a collider setting for Graph parsing
 
+export const TILE_SIZE = 16;
 export const GRID_COLS = 50;
 export const GRID_ROWS = 50;
 export const COLLECTABLE_COUNT = 20;
@@ -113,8 +114,8 @@ export let dropZoneTileIndices: number[] = [];
 // Start position — center of the map (pixel coordinates)
 export const START_TILE_X = Math.floor(GRID_COLS / 2);
 export const START_TILE_Y = Math.floor(GRID_ROWS / 2);
-export const START_POS_X = START_TILE_X * 16 + 8;
-export const START_POS_Y = START_TILE_Y * 16 + 8;
+export const START_POS_X = START_TILE_X * TILE_SIZE + TILE_SIZE / 2;
+export const START_POS_Y = START_TILE_Y * TILE_SIZE + TILE_SIZE / 2;
 export const START_TILE_INDEX = START_TILE_X + START_TILE_Y * GRID_COLS;
 
 // Call this with a seed to generate the world

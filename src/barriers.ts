@@ -1,6 +1,6 @@
 import { Actor, Vector, vec, TileMap } from "excalibur";
 import { rlSS } from "./resources";
-import { tiles, Barrier, Switch, GRID_COLS } from "./tiledata";
+import { tiles, Barrier, Switch, GRID_COLS, TILE_SIZE } from "./tiledata";
 import { game } from "./game";
 import { zFromY, Z_LAYER_TREE, Z_LAYER_PICKUP } from "./zIndex";
 import { rebuildPathfinding } from "./pathfinding";
@@ -30,20 +30,20 @@ export function spawnBarriers() {
 
     if (tile instanceof Barrier) {
       const actor = new Actor({
-        pos: new Vector(x * 16 + 8, y * 16 + 8),
-        width: 16,
-        height: 16,
-        z: zFromY(y * 16 + 8, Z_LAYER_TREE),
+        pos: new Vector(x * TILE_SIZE + TILE_SIZE / 2, y * TILE_SIZE + TILE_SIZE / 2),
+        width: TILE_SIZE,
+        height: TILE_SIZE,
+        z: zFromY(y * TILE_SIZE + TILE_SIZE / 2, Z_LAYER_TREE),
       });
       actor.graphics.use(rlSS.getSprite(33, 3)); // barrier wall sprite
       barrierActors.push({ actor, tileIndex: i, groupId: tile.groupId });
       game.add(actor);
     } else if (tile instanceof Switch) {
       const actor = new Actor({
-        pos: new Vector(x * 16 + 8, y * 16 + 8),
-        width: 16,
-        height: 16,
-        z: zFromY(y * 16 + 8, Z_LAYER_PICKUP),
+        pos: new Vector(x * TILE_SIZE + TILE_SIZE / 2, y * TILE_SIZE + TILE_SIZE / 2),
+        width: TILE_SIZE,
+        height: TILE_SIZE,
+        z: zFromY(y * TILE_SIZE + TILE_SIZE / 2, Z_LAYER_PICKUP),
       });
       actor.graphics.use(rlSS.getSprite(42, 16)); // switch sprite
       switchActors.set(i, actor);
@@ -102,7 +102,7 @@ export function tryActivateSwitch(tileIndex: number): boolean {
   // Light trail from switch to each barrier in the group
   const sx = tileIndex % GRID_COLS;
   const sy = Math.floor(tileIndex / GRID_COLS);
-  const switchPos = new Vector(sx * 16 + 8, sy * 16 + 8);
+  const switchPos = new Vector(sx * TILE_SIZE + TILE_SIZE / 2, sy * TILE_SIZE + TILE_SIZE / 2);
   for (const b of barrierActors) {
     if (b.groupId === groupId) {
       spawnLight(switchPos, b.actor.pos.clone(), 1000);

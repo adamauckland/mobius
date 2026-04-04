@@ -1,6 +1,7 @@
 import { Actor, Vector } from "excalibur";
 import { rlSS } from "./resources";
 import {
+  TILE_SIZE,
   GRID_COLS,
   GRID_ROWS,
   Grass,
@@ -63,14 +64,14 @@ export function spawnMonsters(count: number) {
       GRID_ROWS - 2,
     );
 
-    const startPos = new Vector(startX * 16 + 8, startY * 16 + 8);
-    const endPos = new Vector(endX * 16 + 8, endY * 16 + 8);
+    const startPos = new Vector(startX * TILE_SIZE + TILE_SIZE / 2, startY * TILE_SIZE + TILE_SIZE / 2);
+    const endPos = new Vector(endX * TILE_SIZE + TILE_SIZE / 2, endY * TILE_SIZE + TILE_SIZE / 2);
 
     const actor = new Actor({
       pos: startPos.clone(),
-      width: 16,
-      height: 16,
-      z: zFromY(startY * 16 + 8, Z_LAYER_PLAYER),
+      width: TILE_SIZE,
+      height: TILE_SIZE,
+      z: zFromY(startY * TILE_SIZE + TILE_SIZE / 2, Z_LAYER_PLAYER),
     });
     actor.graphics.use(rlSS.getSprite(26, 0)); // monster sprite
 

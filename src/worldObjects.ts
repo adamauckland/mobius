@@ -1,6 +1,7 @@
 import { Actor, Vector } from "excalibur";
 import { rlSS } from "./resources";
 import {
+  TILE_SIZE,
   GRID_COLS,
   Grass,
   DropZone,
@@ -61,8 +62,8 @@ export function dropRockAtTile(player: Player, tileIndex: number) {
   player.carriedRock = null;
   const x = tileIndex % GRID_COLS;
   const y = Math.floor(tileIndex / GRID_COLS);
-  rock.actor.pos.x = x * 16 + 8;
-  rock.actor.pos.y = y * 16 + 8;
+  rock.actor.pos.x = x * TILE_SIZE + TILE_SIZE / 2;
+  rock.actor.pos.y = y * TILE_SIZE + TILE_SIZE / 2;
   sfxDropRock();
 }
 
@@ -73,8 +74,8 @@ export function resetRocks() {
     rock.carriedBy = null;
     const x = rock.originTileIndex % GRID_COLS;
     const y = Math.floor(rock.originTileIndex / GRID_COLS);
-    rock.actor.pos.x = x * 16 + 8;
-    rock.actor.pos.y = y * 16 + 8;
+    rock.actor.pos.x = x * TILE_SIZE + TILE_SIZE / 2;
+    rock.actor.pos.y = y * TILE_SIZE + TILE_SIZE / 2;
   }
 }
 
@@ -93,10 +94,10 @@ export function spawnRocks(count: number) {
     const y = Math.floor(tileIdx / GRID_COLS);
 
     const actor = new Actor({
-      pos: new Vector(x * 16 + 8, y * 16 + 8),
-      width: 16,
-      height: 16,
-      z: zFromY(y * 16 + 8, Z_LAYER_ROCK),
+      pos: new Vector(x * TILE_SIZE + TILE_SIZE / 2, y * TILE_SIZE + TILE_SIZE / 2),
+      width: TILE_SIZE,
+      height: TILE_SIZE,
+      z: zFromY(y * TILE_SIZE + TILE_SIZE / 2, Z_LAYER_ROCK),
     });
     actor.graphics.use(rlSS.getSprite(30, 11)); // rock sprite from roguelike sheet
 
@@ -167,10 +168,10 @@ export function spawnCollectables(count: number) {
     const y = Math.floor(tileIdx / GRID_COLS);
 
     const actor = new Actor({
-      pos: new Vector(x * 16 + 8, y * 16 + 8),
-      width: 16,
-      height: 16,
-      z: zFromY(y * 16 + 8, Z_LAYER_PICKUP),
+      pos: new Vector(x * TILE_SIZE + TILE_SIZE / 2, y * TILE_SIZE + TILE_SIZE / 2),
+      width: TILE_SIZE,
+      height: TILE_SIZE,
+      z: zFromY(y * TILE_SIZE + TILE_SIZE / 2, Z_LAYER_PICKUP),
     });
     actor.graphics.use(rlSS.getSprite(45, 10)); // gem/coin sprite
     // Gentle bob animation
@@ -232,8 +233,8 @@ export function pickUpParcel(parcel: Parcel, player: Player) {
   // Light trail from pickup position to matching drop zone
   const dzTileIndex = dropZoneTileIndices[parcel.id];
   if (dzTileIndex !== undefined) {
-    const dzX = (dzTileIndex % GRID_COLS) * 16 + 8;
-    const dzY = Math.floor(dzTileIndex / GRID_COLS) * 16 + 8;
+    const dzX = (dzTileIndex % GRID_COLS) * TILE_SIZE + TILE_SIZE / 2;
+    const dzY = Math.floor(dzTileIndex / GRID_COLS) * TILE_SIZE + TILE_SIZE / 2;
     spawnLight(parcel.actor.pos.clone(), new Vector(dzX, dzY), 1000);
 
     // Repeat the light trail every 10 seconds while carrying
@@ -261,8 +262,8 @@ export function dropParcelAtTile(player: Player, tileIndex: number) {
   player.carriedParcel = null;
   const x = tileIndex % GRID_COLS;
   const y = Math.floor(tileIndex / GRID_COLS);
-  parcel.actor.pos.x = x * 16 + 8;
-  parcel.actor.pos.y = y * 16 + 8;
+  parcel.actor.pos.x = x * TILE_SIZE + TILE_SIZE / 2;
+  parcel.actor.pos.y = y * TILE_SIZE + TILE_SIZE / 2;
 
   // Check if placed on matching drop zone
   const tile = tiles[tileIndex];
@@ -289,8 +290,8 @@ export function resetParcels() {
     parcel.actor.graphics.visible = true;
     const x = parcel.originTileIndex % GRID_COLS;
     const y = Math.floor(parcel.originTileIndex / GRID_COLS);
-    parcel.actor.pos.x = x * 16 + 8;
-    parcel.actor.pos.y = y * 16 + 8;
+    parcel.actor.pos.x = x * TILE_SIZE + TILE_SIZE / 2;
+    parcel.actor.pos.y = y * TILE_SIZE + TILE_SIZE / 2;
   }
   // Reset drop zone fulfilled state
   for (const idx of dropZoneTileIndices) {
@@ -318,10 +319,10 @@ export function spawnParcels() {
     const y = Math.floor(tileIdx / GRID_COLS);
 
     const actor = new Actor({
-      pos: new Vector(x * 16 + 8, y * 16 + 8),
-      width: 16,
-      height: 16,
-      z: zFromY(y * 16 + 8, Z_LAYER_ROCK),
+      pos: new Vector(x * TILE_SIZE + TILE_SIZE / 2, y * TILE_SIZE + TILE_SIZE / 2),
+      width: TILE_SIZE,
+      height: TILE_SIZE,
+      z: zFromY(y * TILE_SIZE + TILE_SIZE / 2, Z_LAYER_ROCK),
     });
     const [sc, sr] = PARCEL_SPRITES[i % PARCEL_SPRITES.length];
     actor.graphics.use(rlSS.getSprite(sc, sr));

@@ -6,7 +6,7 @@ import {
   GraphNode,
 } from "@excaliburjs/plugin-pathfinding";
 import { TileMap } from "excalibur";
-import { Tree, Barrier, Fence, tiles, GRID_COLS, GRID_ROWS } from "./tiledata";
+import { Tree, Barrier, Fence, tiles, TILE_SIZE, GRID_COLS, GRID_ROWS } from "./tiledata";
 import { Player } from "./chap";
 import { model } from "./model";
 import { getRockAtTile, pickUpRock, dropRock, getParcelAtTile, pickUpParcel, dropParcel } from "./worldObjects";
@@ -101,8 +101,8 @@ export function handleTileClick(targetTileIndex: number, targetPlayer: Player) {
   if (idleMoving) {
     playerTileIdle = targetPlayer.currentMoveTileIndex;
   } else {
-    const itx = Math.floor(targetPlayer.pos.x / 16);
-    const ity = Math.floor(targetPlayer.pos.y / 16);
+    const itx = Math.floor(targetPlayer.pos.x / TILE_SIZE);
+    const ity = Math.floor(targetPlayer.pos.y / TILE_SIZE);
     playerTileIdle = itx + ity * GRID_COLS;
   }
   if (targetTileIndex === playerTileIdle) {
@@ -151,8 +151,8 @@ export function handleTileClick(targetTileIndex: number, targetPlayer: Player) {
   if (isMoving) {
     playerTileIndex = targetPlayer.currentMoveTileIndex;
   } else {
-    const tx = Math.floor(targetPlayer.pos.x / 16);
-    const ty = Math.floor(targetPlayer.pos.y / 16);
+    const tx = Math.floor(targetPlayer.pos.x / TILE_SIZE);
+    const ty = Math.floor(targetPlayer.pos.y / TILE_SIZE);
     playerTileIndex = tx + ty * GRID_COLS;
   }
 

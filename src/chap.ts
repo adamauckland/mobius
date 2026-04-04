@@ -1,6 +1,6 @@
 import { Actor, Vector, EasingFunctions, Engine, Graphic } from "excalibur";
 import { model } from "./model";
-import { GRID_COLS, GRID_ROWS, portalTileIndices, START_POS_X, START_POS_Y, START_TILE_INDEX, tiles, OneWayGate, Tree, Fence, Barrier } from "./tiledata";
+import { GRID_COLS, GRID_ROWS, TILE_SIZE, portalTileIndices, START_POS_X, START_POS_Y, START_TILE_INDEX, tiles, OneWayGate, Tree, Fence, Barrier } from "./tiledata";
 import { plrWalk, plrImage } from "./resources";
 import type { Rock, Parcel } from "./worldObjects";
 import { dropRockAtTile, dropParcelAtTile, tryCollectAtTile } from "./worldObjects";
@@ -109,7 +109,7 @@ export class Player extends Actor {
     let x = node % GRID_COLS;
     let y = Math.floor(node / GRID_COLS);
     //get vector between player and tile
-    let target = new Vector(x * 16 + 8, y * 16 + 8);
+    let target = new Vector(x * TILE_SIZE + TILE_SIZE / 2, y * TILE_SIZE + TILE_SIZE / 2);
 
     this.actions
       .easeTo(target, 400, EasingFunctions.Linear)
@@ -178,7 +178,7 @@ export class Player extends Actor {
 }
 
 export let player = new Player(
-  { pos: new Vector(START_POS_X, START_POS_Y), width: 16, height: 16, z: zFromY(START_POS_Y, Z_LAYER_PLAYER) },
+  { pos: new Vector(START_POS_X, START_POS_Y), width: TILE_SIZE, height: TILE_SIZE, z: zFromY(START_POS_Y, Z_LAYER_PLAYER) },
   plrWalk,
   plrImage,
 );
