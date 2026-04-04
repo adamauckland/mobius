@@ -375,7 +375,7 @@ function drawFenceSprite(
   const right = isFence(1, 0);
 
   let col = 46, row = 23; // default: isolated post
-  if (up && down && left && right) { col = 46; row = 23; }
+  if (up && down && left && right) { col = 46; row = 24; }
   else if (up && down && right) { col = 48; row = 23; }
   else if (up && down && left) { col = 49; row = 23; }
   else if (left && right && down) { col = 46; row = 24; }
@@ -575,7 +575,8 @@ function onWheel(e: WheelEvent) {
 }
 
 function onKeyDown(e: KeyboardEvent) {
-  // Don't capture when typing in name input
+  // Don't capture when editor is hidden or typing in name input
+  if (container && container.style.display === "none") return;
   if (document.activeElement === nameInput) return;
 
   // Tool hotkeys
@@ -643,7 +644,7 @@ function updatePropertyUI() {
 }
 
 function updateStatus(msg: string) {
-  if (statusBar && msg) statusBar.textContent = msg;
+  if (statusBar) statusBar.textContent = msg;
 }
 
 // Global callbacks for inline onclick handlers
@@ -870,7 +871,7 @@ function buildEditorUI() {
   // Canvas events
   canvas.addEventListener("mousedown", onMouseDown);
   canvas.addEventListener("mousemove", onMouseMove);
-  canvas.addEventListener("mouseup", onMouseUp);
+  document.addEventListener("mouseup", onMouseUp);
   canvas.addEventListener("wheel", onWheel, { passive: false });
   canvas.addEventListener("contextmenu", (e) => e.preventDefault());
   document.addEventListener("keydown", onKeyDown);
@@ -878,7 +879,8 @@ function buildEditorUI() {
   // Resize
   function resizeCanvas() {
     const rect = canvas.parentElement!.getBoundingClientRect();
-    canvas.width = rect.width - 80; // minus toolbar
+    const tbWidth = toolbar.getBoundingClientRect().width;
+    canvas.width = rect.width - tbWidth;
     canvas.height = rect.height;
     ctx.imageSmoothingEnabled = false;
   }
@@ -928,11 +930,13 @@ export function showEditor() {
 
   // Resize canvas after display
   const rect = canvas.parentElement!.getBoundingClientRect();
-  canvas.width = rect.width - 80;
+  const tbWidth = toolbar.getBoundingClientRect().width;
+  canvas.width = rect.width - tbWidth;
   canvas.height = rect.height;
   ctx.imageSmoothingEnabled = false;
 
   centerCamera();
   updatePropertyUI();
+  cancelAnimationFrame(animFrame);
   render();
 }

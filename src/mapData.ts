@@ -84,5 +84,17 @@ export function serializeMap(map: MapData): string {
 }
 
 export function deserializeMap(json: string): MapData {
-  return JSON.parse(json) as MapData;
+  const data = JSON.parse(json);
+  return {
+    name: data.name ?? "Untitled",
+    cols: data.cols ?? 0,
+    rows: data.rows ?? 0,
+    startTile: data.startTile ?? 0,
+    tiles: Array.isArray(data.tiles) ? data.tiles : [],
+    rocks: Array.isArray(data.rocks) ? data.rocks : [],
+    collectables: Array.isArray(data.collectables) ? data.collectables : [],
+    parcels: Array.isArray(data.parcels) ? data.parcels : [],
+    monsters: Array.isArray(data.monsters) ? data.monsters : [],
+    movingBlocks: Array.isArray(data.movingBlocks) ? data.movingBlocks : [],
+  };
 }
