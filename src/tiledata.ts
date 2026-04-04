@@ -1,3 +1,6 @@
+import type { MapData } from "./mapData";
+import { codeToTile } from "./mapData";
+
 // for tilemap creation, create tiles with a sprite info and
 // a collider setting for Graph parsing
 
@@ -98,18 +101,12 @@ export class DropZone {
   }
 }
 
-export let tiles: (
-  | Grass
-  | Tree
-  | Portal
-  | Barrier
-  | Switch
-  | Fence
-  | OneWayGate
-  | DropZone
-)[] = [];
+export type TileType = Grass | Tree | Portal | Barrier | Switch | Fence | OneWayGate | DropZone;
+
+export let tiles: TileType[] = [];
 export let portalTileIndices: number[] = [];
 export let dropZoneTileIndices: number[] = [];
+export let customStartTile: number | null = null;
 
 // Start position — center of the map (pixel coordinates)
 export const START_TILE_X = Math.floor(GRID_COLS / 2);
@@ -279,4 +276,55 @@ export function generateWorld(seed: number) {
   tiles = result;
   portalTileIndices = portalIndices;
   dropZoneTileIndices = dropZoneIndices;
+}
+
+/** Load a hand-crafted map from editor data instead of procedural generation. */
+export function loadWorld(map: MapData) {
+  // Ensure seededRandom is available for Grass sprite variation
+  if (!seededRandom) {
+    seededRandom = mulberry32(0);
+  }
+
+  const total = map.cols * map.rows;
+  const result: TileType[] = [];
+  const portalIndices: number[] = [];
+  const dzIndices: number[] = [];
+
+  for (let i = 0; i < total; i++) {
+    const code = map.tiles[i] || "g";
+    const info = codeToTile(code);
+    switch (info.type) {
+      case "grass":
+        result.push(new Grass());
+        break;
+      case "tree":
+        result.push(new Tree());
+        break;
+      case "portal":
+        result.push(new Portal());
+        portalIndices.push(i);
+        break;
+      case "barrier":
+        result.push(new Barrier(info.groupId));
+        break;
+      case "switch":
+        result.push(new Switch(info.groupId));
+        break;
+      case "fence":
+        result.push(new Fence());
+        break;
+      case "oneWayGate":
+        result.push(new OneWayGate(info.direction));
+        break;
+      case "dropZone":
+        result.push(new DropZone(info.id));
+        dzIndices.push(i);
+        break;
+    }
+  }
+
+  tiles = result;
+  portalTileIndices = portalIndices;
+  dropZoneTileIndices = dzIndices;
+  customStartTile = map.startTile;
 }

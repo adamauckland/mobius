@@ -24,17 +24,20 @@ import {
   GRID_COLS,
   GRID_ROWS,
   generateWorld,
+  loadWorld,
+  customStartTile,
   COLLECTABLE_COUNT,
 } from "./tiledata";
+import { deserializeMap, type MapData } from "./mapData";
 import { player } from "./chap";
 import { game } from "./game";
 import { model } from "./model";
 import { initPathfinding } from "./pathfinding";
 import { activeEntry, setupClickHandler, replayAll } from "./playerManager";
-import { spawnRocks, spawnCollectables, spawnParcels, PARCEL_SPRITES, getScore } from "./worldObjects";
+import { spawnRocks, spawnRocksAt, spawnCollectables, spawnCollectablesAt, spawnParcels, spawnParcelsAt, PARCEL_SPRITES, getScore } from "./worldObjects";
 import { initBarriers, spawnBarriers } from "./barriers";
-import { spawnMovingBlocks, updateMovingBlocks } from "./movingBlocks";
-import { spawnMonsters, updateMonsters, setOnPlayerKilled } from "./monsters";
+import { spawnMovingBlocks, spawnMovingBlocksAt, updateMovingBlocks } from "./movingBlocks";
+import { spawnMonsters, spawnMonstersAt, updateMonsters, setOnPlayerKilled } from "./monsters";
 import { sfxDeath } from "./sounds";
 import { togglePause, onPauseChange } from "./main";
 import { zFromY, Z_LAYER_TREE, Z_LAYER_PICKUP, Z_HUD, Z_COUNTDOWN } from "./zIndex";
@@ -112,15 +115,36 @@ function getFenceSprite(index: number) {
   return rlSS.getSprite(46, 23); // isolated post
 }
 
-function startGame() {
-  const seed = parseInt(seedInput.value, 10) || generateNewSeed();
-  sessionStorage.setItem("mapSeed", String(seed));
-
-  // Generate world from seed
-  generateWorld(seed);
+function startGame(customMapData?: MapData) {
+  if (customMapData) {
+    loadWorld(customMapData);
+  } else {
+    const seed = parseInt(seedInput.value, 10) || generateNewSeed();
+    sessionStorage.setItem("mapSeed", String(seed));
+    generateWorld(seed);
+  }
 
   // Hide start screen
   startScreen.style.display = "none";
+
+  // Show "Back to Editor" button for custom maps
+  if (customMapData) {
+    const backBtn = document.createElement("button");
+    backBtn.textContent = "EDITOR";
+    backBtn.style.cssText = `
+      position: fixed; left: 10px; bottom: 10px;
+      font-family: monospace; font-size: 14px; padding: 8px 16px;
+      background: #34393c; color: #d0e3e9; border: 1px solid #5e676b;
+      cursor: pointer; z-index: 300000; opacity: 0.7;
+    `;
+    backBtn.addEventListener("click", () => {
+      sessionStorage.setItem("editorMode", "true");
+      location.reload();
+    });
+    backBtn.addEventListener("mouseenter", () => { backBtn.style.opacity = "1"; });
+    backBtn.addEventListener("mouseleave", () => { backBtn.style.opacity = "0.7"; });
+    document.body.appendChild(backBtn);
+  }
 
   // Create tilemap
   const tilemap = new TileMap({
@@ -235,6 +259,16 @@ function startGame() {
   // Initialize pathfinding
   initPathfinding(tilemap);
 
+  // Move player to custom start if set
+  if (customStartTile !== null) {
+    const sx = (customStartTile % GRID_COLS) * TILE_SIZE + TILE_SIZE / 2;
+    const sy = Math.floor(customStartTile / GRID_COLS) * TILE_SIZE + TILE_SIZE / 2;
+    player.pos.x = sx;
+    player.pos.y = sy;
+    player.logicalTileIndex = customStartTile;
+    player.currentMoveTileIndex = customStartTile;
+  }
+
   // Add scene elements
   game.add(tilemap);
   game.currentScene.camera.zoom = 4;
@@ -253,14 +287,20 @@ function startGame() {
   initBarriers(tilemap);
   spawnBarriers();
 
-  // Spawn rocks and parcels
-  spawnRocks(5);
-  spawnParcels();
-  spawnCollectables(COLLECTABLE_COUNT);
-
-  // Spawn moving blocks and monsters
-  spawnMovingBlocks(3);
-  spawnMonsters(5);
+  // Spawn entities from custom map or procedurally
+  if (customMapData) {
+    spawnRocksAt(customMapData.rocks);
+    spawnParcelsAt(customMapData.parcels);
+    spawnCollectablesAt(customMapData.collectables);
+    spawnMovingBlocksAt(customMapData.movingBlocks);
+    spawnMonstersAt(customMapData.monsters);
+  } else {
+    spawnRocks(5);
+    spawnParcels();
+    spawnCollectables(COLLECTABLE_COUNT);
+    spawnMovingBlocks(3);
+    spawnMonsters(5);
+  }
 
   // Game timer
   const timerText = new Text({
@@ -471,7 +511,13 @@ function startGame() {
   });
 }
 
-btnStart.addEventListener("click", startGame);
+btnStart.addEventListener("click", () => startGame());
 seedInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter") startGame();
 });
+
+/** Called from main.ts after resources are loaded, to start a custom map. */
+export function startCustomMap(json: string) {
+  const custom = deserializeMap(json);
+  startGame(custom);
+}

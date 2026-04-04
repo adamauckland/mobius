@@ -140,6 +140,39 @@ export function spawnMovingBlocks(count: number) {
   }
 }
 
+/** Spawn moving blocks at specific positions (for custom maps). */
+export function spawnMovingBlocksAt(entries: { start: number; end: number }[]) {
+  blockElapsed = 0;
+  for (const entry of entries) {
+    const startX = entry.start % GRID_COLS;
+    const startY = Math.floor(entry.start / GRID_COLS);
+    const endX = entry.end % GRID_COLS;
+    const endY = Math.floor(entry.end / GRID_COLS);
+
+    const startPos = new Vector(startX * TILE_SIZE + TILE_SIZE / 2, startY * TILE_SIZE + TILE_SIZE / 2);
+    const endPos = new Vector(endX * TILE_SIZE + TILE_SIZE / 2, endY * TILE_SIZE + TILE_SIZE / 2);
+
+    const actor = new Actor({
+      pos: startPos.clone(),
+      width: TILE_SIZE,
+      height: TILE_SIZE,
+      z: zFromY(startY * TILE_SIZE + TILE_SIZE / 2, Z_LAYER_PICKUP),
+    });
+    actor.graphics.use(rlSS.getSprite(4, 0));
+
+    const block: MovingBlock = {
+      actor,
+      startPos,
+      endPos,
+      phase: Math.random() * 2,
+      speed: 0.0004,
+      riders: [],
+    };
+    movingBlocks.push(block);
+    game.add(actor);
+  }
+}
+
 /** Update every moving block position (call once per frame). */
 export function updateMovingBlocks(delta: number) {
   blockElapsed += delta;

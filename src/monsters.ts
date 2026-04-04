@@ -87,6 +87,38 @@ export function spawnMonsters(count: number) {
   }
 }
 
+/** Spawn monsters at specific positions (for custom maps). */
+export function spawnMonstersAt(entries: { start: number; end: number }[]) {
+  monsterElapsed = 0;
+  for (const entry of entries) {
+    const startX = entry.start % GRID_COLS;
+    const startY = Math.floor(entry.start / GRID_COLS);
+    const endX = entry.end % GRID_COLS;
+    const endY = Math.floor(entry.end / GRID_COLS);
+
+    const startPos = new Vector(startX * TILE_SIZE + TILE_SIZE / 2, startY * TILE_SIZE + TILE_SIZE / 2);
+    const endPos = new Vector(endX * TILE_SIZE + TILE_SIZE / 2, endY * TILE_SIZE + TILE_SIZE / 2);
+
+    const actor = new Actor({
+      pos: startPos.clone(),
+      width: TILE_SIZE,
+      height: TILE_SIZE,
+      z: zFromY(startY * TILE_SIZE + TILE_SIZE / 2, Z_LAYER_PLAYER),
+    });
+    actor.graphics.use(rlSS.getSprite(26, 0));
+
+    const monster: Monster = {
+      actor,
+      startPos,
+      endPos,
+      phase: Math.random() * 2,
+      speed: 0.0005,
+    };
+    monsters.push(monster);
+    game.add(actor);
+  }
+}
+
 const KILL_RADIUS_SQ = 8 * 8; // 8px — half a tile
 
 /** Called when a player is killed by a monster. Returns the callback or null. */

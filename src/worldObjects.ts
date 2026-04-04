@@ -112,6 +112,24 @@ export function spawnRocks(count: number) {
   }
 }
 
+/** Spawn rocks at specific tile indices (for custom maps). */
+export function spawnRocksAt(indices: number[]) {
+  for (const tileIdx of indices) {
+    const x = tileIdx % GRID_COLS;
+    const y = Math.floor(tileIdx / GRID_COLS);
+    const actor = new Actor({
+      pos: new Vector(x * TILE_SIZE + TILE_SIZE / 2, y * TILE_SIZE + TILE_SIZE / 2),
+      width: TILE_SIZE,
+      height: TILE_SIZE,
+      z: zFromY(y * TILE_SIZE + TILE_SIZE / 2, Z_LAYER_ROCK),
+    });
+    actor.graphics.use(rlSS.getSprite(30, 11));
+    const rock: Rock = { actor, originTileIndex: tileIdx, tileIndex: tileIdx, carriedBy: null };
+    rocks.push(rock);
+    game.add(actor);
+  }
+}
+
 // --- Collectables ---
 
 export interface Collectable {
@@ -190,8 +208,27 @@ export function spawnCollectables(count: number) {
   }
 }
 
-// actor.graphics.use(rlSS.getSprite(42, 16) switch left
-// actor.graphics.use(rlSS.getSprite(43, 16) switch right
+/** Spawn collectables at specific tile indices (for custom maps). */
+export function spawnCollectablesAt(indices: number[]) {
+  for (const tileIdx of indices) {
+    const x = tileIdx % GRID_COLS;
+    const y = Math.floor(tileIdx / GRID_COLS);
+    const actor = new Actor({
+      pos: new Vector(x * TILE_SIZE + TILE_SIZE / 2, y * TILE_SIZE + TILE_SIZE / 2),
+      width: TILE_SIZE,
+      height: TILE_SIZE,
+      z: zFromY(y * TILE_SIZE + TILE_SIZE / 2, Z_LAYER_PICKUP),
+    });
+    actor.graphics.use(rlSS.getSprite(45, 10));
+    const phase = Math.random() * Math.PI * 2;
+    actor.graphics.onPreDraw = () => {
+      actor.graphics.offset.y = Math.sin(game.clock.now() * 0.003 + phase) * 2;
+    };
+    const collectable: Collectable = { actor, tileIndex: tileIdx, collected: false };
+    collectables.push(collectable);
+    game.add(actor);
+  }
+}
 
 // --- Parcels (carryable objects that must be placed on a DropZone) ---
 
@@ -332,6 +369,33 @@ export function spawnParcels() {
       id: i,
       originTileIndex: tileIdx,
       tileIndex: tileIdx,
+      carriedBy: null,
+      placed: false,
+      lightInterval: null,
+    };
+    parcels.push(parcel);
+    game.add(actor);
+  }
+}
+
+/** Spawn parcels at specific tile indices (for custom maps). */
+export function spawnParcelsAt(entries: { id: number; tile: number }[]) {
+  for (const entry of entries) {
+    const x = entry.tile % GRID_COLS;
+    const y = Math.floor(entry.tile / GRID_COLS);
+    const actor = new Actor({
+      pos: new Vector(x * TILE_SIZE + TILE_SIZE / 2, y * TILE_SIZE + TILE_SIZE / 2),
+      width: TILE_SIZE,
+      height: TILE_SIZE,
+      z: zFromY(y * TILE_SIZE + TILE_SIZE / 2, Z_LAYER_ROCK),
+    });
+    const [sc, sr] = PARCEL_SPRITES[entry.id % PARCEL_SPRITES.length];
+    actor.graphics.use(rlSS.getSprite(sc, sr));
+    const parcel: Parcel = {
+      actor,
+      id: entry.id,
+      originTileIndex: entry.tile,
+      tileIndex: entry.tile,
       carriedBy: null,
       placed: false,
       lightInterval: null,
