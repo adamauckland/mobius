@@ -82,7 +82,7 @@ export function resetRocks() {
 // Create rocks at random grass tiles (not spawn, not portal)
 export function spawnRocks(count: number) {
   const validIndices = tiles
-    .map((t, i) => (t instanceof Grass && i !== 0 ? i : -1))
+    .map((t, i) => (t instanceof Grass && i !== START_TILE_INDEX ? i : -1))
     .filter((i) => i !== -1);
 
   for (let n = 0; n < count; n++) {
@@ -145,6 +145,7 @@ let score = 0;
 export function getScore() {
   return score;
 }
+
 
 // Check if a collectable is at this tile and collect it (permanently)
 export function tryCollectAtTile(tileIndex: number): boolean {
@@ -239,7 +240,7 @@ export interface Parcel {
   tileIndex: number;
   carriedBy: Player | null;
   placed: boolean; // true when correctly placed on its drop zone
-  lightInterval: ReturnType<typeof setInterval> | null;
+  lightInterval: number | null;
 }
 
 const parcels: Parcel[] = [];
@@ -274,12 +275,16 @@ export function pickUpParcel(parcel: Parcel, player: Player) {
     const dzY = Math.floor(dzTileIndex / GRID_COLS) * TILE_SIZE + TILE_SIZE / 2;
     spawnLight(parcel.actor.pos.clone(), new Vector(dzX, dzY), 1000);
 
-    // Repeat the light trail every 10 seconds while carrying
-    parcel.lightInterval = setInterval(() => {
-      if (parcel.carriedBy) {
-        spawnLight(parcel.actor.pos.clone(), new Vector(dzX, dzY), 1000);
-      }
-    }, 1000);
+    // Repeat the light trail while carrying, using game clock so it pauses with the game
+    const scheduleNext = () => {
+      parcel.lightInterval = game.clock.schedule(() => {
+        if (parcel.carriedBy) {
+          spawnLight(parcel.actor.pos.clone(), new Vector(dzX, dzY), 1000);
+          scheduleNext();
+        }
+      }, 1000);
+    };
+    scheduleNext();
   }
 }
 
@@ -291,7 +296,7 @@ export function dropParcelAtTile(player: Player, tileIndex: number) {
   const parcel = player.carriedParcel;
   if (!parcel) return;
   if (parcel.lightInterval) {
-    clearInterval(parcel.lightInterval);
+    game.clock.clearSchedule(parcel.lightInterval!);
     parcel.lightInterval = null;
   }
   parcel.carriedBy = null;
@@ -318,7 +323,7 @@ export function dropParcelAtTile(player: Player, tileIndex: number) {
 export function resetParcels() {
   for (const parcel of parcels) {
     if (parcel.lightInterval) {
-      clearInterval(parcel.lightInterval);
+      game.clock.clearSchedule(parcel.lightInterval!);
       parcel.lightInterval = null;
     }
     parcel.tileIndex = parcel.originTileIndex;

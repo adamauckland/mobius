@@ -379,7 +379,7 @@ function drawFenceSprite(
   else if (up && down && right) { col = 48; row = 23; }
   else if (up && down && left) { col = 49; row = 23; }
   else if (left && right && down) { col = 46; row = 24; }
-  else if (left && right && up) { col = 46; row = 24; }
+  else if (left && right && up) { col = 50; row = 24; }
   else if (up && down) { col = 47; row = 23; }
   else if (left && right) { col = 47; row = 24; }
   else if (down && right) { col = 48; row = 24; }
@@ -788,7 +788,7 @@ function buildEditorUI() {
     #editor-buttons button:hover { background: #929fa4; color: #131617; }
     #editor-body { display: flex; flex: 1; overflow: hidden; }
     #editor-toolbar {
-      width: 80px; background: #1e2225; border-right: 1px solid #34393c;
+      width: 110px; background: #1e2225; border-right: 1px solid #34393c;
       overflow-y: auto; padding: 4px;
       display: flex; flex-direction: column; gap: 2px;
     }

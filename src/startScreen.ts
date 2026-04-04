@@ -103,7 +103,7 @@ function getFenceSprite(index: number) {
   if (up && down && right) return rlSS.getSprite(48, 23); // T-right
   if (up && down && left) return rlSS.getSprite(49, 23); // T-left
   if (left && right && down) return rlSS.getSprite(46, 24); // T-down
-  if (left && right && up) return rlSS.getSprite(46, 24); // T-up
+  if (left && right && up) return rlSS.getSprite(50, 24); // T-up
   if (up && down) return rlSS.getSprite(47, 23); // vertical
   if (left && right) return rlSS.getSprite(47, 24); // horizontal
   if (down && right) return rlSS.getSprite(48, 24); // corner top-left
@@ -201,7 +201,7 @@ function startGame(customMapData?: MapData) {
       treeActor.graphics.use(treeSprite);
       treeActor.graphics.localBounds = new BoundingBox(-8, -32, 8, 0);
       treeActor.graphics.onPreDraw = () => {
-        const stretch = 2 + Math.sin(game.clock.now() * 0.002) * 0.05;
+        const stretch = 1 + Math.sin(game.clock.now() * 0.002) * 0.05;
         treeActor.scale.y = stretch;
       };
       game.add(treeActor);
@@ -495,10 +495,10 @@ function startGame(customMapData?: MapData) {
   }
 
   game.on("postupdate", (evt) => {
-    updateMovingBlocks(evt.elapsed);
-    updateMonsters(evt.elapsed);
     if (!gameStarted) return;
     if (model.gameOver) return;
+    updateMovingBlocks(evt.elapsed);
+    updateMonsters(evt.elapsed);
     elapsedGameTime += evt.elapsed;
     const elapsed = elapsedGameTime;
     const mins = Math.floor(elapsed / 60000);
@@ -506,7 +506,11 @@ function startGame(customMapData?: MapData) {
     const tenths = Math.floor((elapsed % 1000) / 100);
     timerText.text = `${mins}:${secs.toString().padStart(2, "0")}.${tenths}`;
     const targetScore = getScore();
-    if (displayedScore < targetScore) displayedScore++;
+    if (displayedScore < targetScore) {
+      const gap = targetScore - displayedScore;
+      displayedScore += Math.max(1, Math.ceil(gap * 0.1));
+      if (displayedScore > targetScore) displayedScore = targetScore;
+    }
     scoreText.text = `${displayedScore}`;
   });
 }

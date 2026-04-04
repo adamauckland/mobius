@@ -18,7 +18,7 @@ export class Player extends Actor {
   playerActionStatus = "idle";
   logicalTileIndex = START_TILE_INDEX;
   currentMoveTileIndex = START_TILE_INDEX;
-  previousTileIndex = 0; // the tile the player was on before the current move
+  previousTileIndex = START_TILE_INDEX; // the tile the player was on before the current move
   onReachedPortal: (() => boolean) | null = null; // return true if handled
   carriedRock: Rock | null = null;
   carriedParcel: Parcel | null = null;

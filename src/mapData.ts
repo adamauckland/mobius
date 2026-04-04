@@ -49,14 +49,14 @@ export function codeToTile(code: string): TileInfo {
   if (code === "g") return { type: "grass" };
   if (code === "T") return { type: "tree" };
   if (code === "P") return { type: "portal" };
-  if (code.startsWith("B")) return { type: "barrier", groupId: parseInt(code[1]) || 0 };
-  if (code.startsWith("S")) return { type: "switch", groupId: parseInt(code[1]) || 0 };
+  if (code.startsWith("B")) return { type: "barrier", groupId: parseInt(code.slice(1)) || 0 };
+  if (code.startsWith("S")) return { type: "switch", groupId: parseInt(code.slice(1)) || 0 };
   if (code === "F") return { type: "fence" };
   if (code === ">") return { type: "oneWayGate", direction: "right" };
   if (code === "<") return { type: "oneWayGate", direction: "left" };
   if (code === "^") return { type: "oneWayGate", direction: "up" };
   if (code === "v") return { type: "oneWayGate", direction: "down" };
-  if (code.startsWith("D")) return { type: "dropZone", id: parseInt(code[1]) || 0 };
+  if (code.startsWith("D")) return { type: "dropZone", id: parseInt(code.slice(1)) || 0 };
   return { type: "grass" };
 }
 

@@ -13,15 +13,9 @@ import { getRockAtTile, pickUpRock, dropRock, getParcelAtTile, pickUpParcel, dro
 import { game } from "./game";
 import { dismountBlock } from "./movingBlocks";
 
-// create graph for dijkstra
+// create graph for dijkstra — deferred until initPathfinding so tiles are populated
 let myDijkstraGraph = new ExcaliburGraph();
-let myGraphTileMap: GraphTileMap = {
-  name: "myGraph",
-  tiles: [...tiles],
-  rows: GRID_ROWS,
-  cols: GRID_COLS,
-};
-myDijkstraGraph.addTileMap(myGraphTileMap, true);
+let myGraphTileMap: GraphTileMap;
 
 let myGraph: ExcaliburAStar;
 let storedTilemap: TileMap;
@@ -29,6 +23,15 @@ let storedTilemap: TileMap;
 export function initPathfinding(tilemap: TileMap) {
   storedTilemap = tilemap;
   myGraph = new ExcaliburAStar(tilemap);
+  // Build the Dijkstra graph now that tiles are populated
+  myGraphTileMap = {
+    name: "myGraph",
+    tiles: [...tiles],
+    rows: GRID_ROWS,
+    cols: GRID_COLS,
+  };
+  myDijkstraGraph = new ExcaliburGraph();
+  myDijkstraGraph.addTileMap(myGraphTileMap, true);
 }
 
 /** Rebuild both pathfinding graphs after barrier tiles change. */
@@ -131,7 +134,7 @@ export function handleTileClick(targetTileIndex: number, targetPlayer: Player) {
     };
   }
   const parcel = getParcelAtTile(targetTileIndex);
-  if (parcel && !isCarrying) {
+  if (!rock && parcel && !isCarrying) {
     targetPlayer.onArriveAtTile = () => {
       if (!parcel.carriedBy && !targetPlayer.carriedRock && !targetPlayer.carriedParcel) {
         pickUpParcel(parcel, targetPlayer);
