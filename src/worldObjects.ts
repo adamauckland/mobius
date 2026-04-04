@@ -12,7 +12,14 @@ import {
 import { game } from "./game";
 import { zFromY, Z_LAYER_PICKUP, Z_LAYER_ROCK } from "./zIndex";
 import { spawnLight, spawnScoreLight } from "./lightTrail";
-import { sfxCollect, sfxPickUpRock, sfxDropRock, sfxPickUpParcel, sfxDropParcel, sfxParcelPlaced } from "./sounds";
+import {
+  sfxCollect,
+  sfxPickUpRock,
+  sfxDropRock,
+  sfxPickUpParcel,
+  sfxDropParcel,
+  sfxParcelPlaced,
+} from "./sounds";
 import { Player } from "./chap";
 
 export interface Rock {
@@ -194,6 +201,7 @@ export interface Parcel {
   tileIndex: number;
   carriedBy: Player | null;
   placed: boolean; // true when correctly placed on its drop zone
+  lightInterval: ReturnType<typeof setInterval> | null;
 }
 
 const parcels: Parcel[] = [];
@@ -202,8 +210,8 @@ const parcels: Parcel[] = [];
 // [col, row] into the roguelike spritesheet
 export const PARCEL_SPRITES: [number, number][] = [
   [45, 10], // gem
-  [41, 9],  // key
-  [43, 8],  // potion
+  [41, 9], // key
+  [43, 8], // potion
 ];
 
 export function getParcels() {
@@ -211,7 +219,9 @@ export function getParcels() {
 }
 
 export function getParcelAtTile(tileIndex: number): Parcel | undefined {
-  return parcels.find((p) => p.tileIndex === tileIndex && !p.carriedBy && !p.placed);
+  return parcels.find(
+    (p) => p.tileIndex === tileIndex && !p.carriedBy && !p.placed,
+  );
 }
 
 export function pickUpParcel(parcel: Parcel, player: Player) {
@@ -225,6 +235,13 @@ export function pickUpParcel(parcel: Parcel, player: Player) {
     const dzX = (dzTileIndex % GRID_COLS) * 16 + 8;
     const dzY = Math.floor(dzTileIndex / GRID_COLS) * 16 + 8;
     spawnLight(parcel.actor.pos.clone(), new Vector(dzX, dzY), 1000);
+
+    // Repeat the light trail every 10 seconds while carrying
+    parcel.lightInterval = setInterval(() => {
+      if (parcel.carriedBy) {
+        spawnLight(parcel.actor.pos.clone(), new Vector(dzX, dzY), 1000);
+      }
+    }, 1000);
   }
 }
 
@@ -235,6 +252,10 @@ export function dropParcel(player: Player) {
 export function dropParcelAtTile(player: Player, tileIndex: number) {
   const parcel = player.carriedParcel;
   if (!parcel) return;
+  if (parcel.lightInterval) {
+    clearInterval(parcel.lightInterval);
+    parcel.lightInterval = null;
+  }
   parcel.carriedBy = null;
   parcel.tileIndex = tileIndex;
   player.carriedParcel = null;
@@ -258,6 +279,10 @@ export function dropParcelAtTile(player: Player, tileIndex: number) {
 
 export function resetParcels() {
   for (const parcel of parcels) {
+    if (parcel.lightInterval) {
+      clearInterval(parcel.lightInterval);
+      parcel.lightInterval = null;
+    }
     parcel.tileIndex = parcel.originTileIndex;
     parcel.carriedBy = null;
     parcel.placed = false;
@@ -308,6 +333,7 @@ export function spawnParcels() {
       tileIndex: tileIdx,
       carriedBy: null,
       placed: false,
+      lightInterval: null,
     };
     parcels.push(parcel);
     game.add(actor);
