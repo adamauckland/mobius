@@ -17,6 +17,7 @@ import {
   Portal,
   Barrier,
   Fence,
+  OneWayGate,
   tiles,
   GRID_COLS,
   GRID_ROWS,
@@ -32,7 +33,7 @@ import { spawnRocks, spawnCollectables, getScore } from "./worldObjects";
 import { initBarriers, spawnBarriers } from "./barriers";
 import { spawnMovingBlocks, updateMovingBlocks } from "./movingBlocks";
 import { togglePause, onPauseChange } from "./main";
-import { zFromY, Z_LAYER_TREE, Z_HUD, Z_COUNTDOWN } from "./zIndex";
+import { zFromY, Z_LAYER_TREE, Z_LAYER_PICKUP, Z_HUD, Z_COUNTDOWN } from "./zIndex";
 
 // Seed management
 const seedInput = document.getElementById("seed-input") as HTMLInputElement;
@@ -138,6 +139,8 @@ function startGame() {
       tile.addGraphic(TileSheet.getSprite(0, 0)); // ground under fence
       tile.solid = true;
       tile.addGraphic(getFenceSprite(tileIndex));
+    } else if (tiles[tileIndex] instanceof OneWayGate) {
+      tile.addGraphic(TileSheet.getSprite(0, 0)); // ground under gate
     } else {
       tile.addGraphic(sprite);
     }
@@ -167,6 +170,29 @@ function startGame() {
         treeActor.scale.y = stretch;
       };
       game.add(treeActor);
+    }
+  }
+
+  // Add one-way gate arrow overlays
+  for (let i = 0; i < tiles.length; i++) {
+    if (tiles[i] instanceof OneWayGate) {
+      const gate = tiles[i] as OneWayGate;
+      const tx = i % GRID_COLS;
+      const ty = Math.floor(i / GRID_COLS);
+      const gateActor = new Actor({
+        pos: vec(tx * 16 + 8, ty * 16 + 8),
+        width: 16,
+        height: 16,
+        z: zFromY(ty * 16 + 8, Z_LAYER_PICKUP),
+      });
+      gateActor.graphics.use(rlSS.getSprite(29, 22));
+      switch (gate.direction) {
+        case 'right': gateActor.rotation = 0; break;
+        case 'down': gateActor.rotation = Math.PI / 2; break;
+        case 'left': gateActor.rotation = Math.PI; break;
+        case 'up': gateActor.rotation = -Math.PI / 2; break;
+      }
+      game.add(gateActor);
     }
   }
 

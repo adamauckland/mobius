@@ -75,7 +75,18 @@ export class Fence {
   collider: boolean = true;
 }
 
-export let tiles: (Grass | Tree | Portal | Barrier | Switch | Fence)[] = [];
+export type Direction = 'up' | 'down' | 'left' | 'right';
+
+export class OneWayGate {
+  sprite = [0, 0]; // grass base, overlay added as separate Actor
+  collider: boolean = false;
+  direction: Direction;
+  constructor(direction: Direction) {
+    this.direction = direction;
+  }
+}
+
+export let tiles: (Grass | Tree | Portal | Barrier | Switch | Fence | OneWayGate)[] = [];
 export let portalTileIndices: number[] = [];
 
 // Start position — center of the map (pixel coordinates)
@@ -198,6 +209,35 @@ export function generateWorld(seed: number) {
     if (result[doorIdx] instanceof Fence) {
       result[doorIdx] = new Grass();
     }
+  }
+
+  // Place one-way gates on random grass tiles
+  const ONE_WAY_GATE_COUNT = 8;
+  const directions: Direction[] = ['up', 'down', 'left', 'right'];
+  for (let g = 0; g < ONE_WAY_GATE_COUNT; g++) {
+    const gateCandidates = result
+      .map((t, i) => (t instanceof Grass && i !== START_TILE_INDEX ? i : -1))
+      .filter((i) => i !== -1);
+    if (gateCandidates.length === 0) break;
+
+    const pick = Math.floor(seededRandom() * gateCandidates.length);
+    const gateIdx = gateCandidates[pick];
+    const dir = directions[Math.floor(seededRandom() * directions.length)];
+
+    // Ensure the tile in the gate's direction is walkable
+    const gx = gateIdx % GRID_COLS;
+    const gy = Math.floor(gateIdx / GRID_COLS);
+    let nx = gx, ny = gy;
+    if (dir === 'up') ny--;
+    else if (dir === 'down') ny++;
+    else if (dir === 'left') nx--;
+    else if (dir === 'right') nx++;
+
+    if (nx < 0 || nx >= GRID_COLS || ny < 0 || ny >= GRID_ROWS) continue;
+    const destIdx = nx + ny * GRID_COLS;
+    if (!(result[destIdx] instanceof Grass)) continue;
+
+    result[gateIdx] = new OneWayGate(dir);
   }
 
   tiles = result;

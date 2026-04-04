@@ -1,6 +1,6 @@
 import { Actor, Vector, EasingFunctions, Engine, Graphic } from "excalibur";
 import { model } from "./model";
-import { GRID_COLS, portalTileIndices, START_POS_X, START_POS_Y, START_TILE_INDEX } from "./tiledata";
+import { GRID_COLS, GRID_ROWS, portalTileIndices, START_POS_X, START_POS_Y, START_TILE_INDEX, tiles, OneWayGate, Tree, Fence, Barrier } from "./tiledata";
 import { plrWalk, plrImage } from "./resources";
 import type { Rock } from "./worldObjects";
 import { dropRockAtTile, tryCollectAtTile } from "./worldObjects";
@@ -129,6 +129,30 @@ export class Player extends Actor {
               .callMethod(() => {
                 this.graphics.visible = false;
               });
+          }
+        }
+        // One-way gate: force movement in the gate's direction
+        const gateTile = tiles[node];
+        if (gateTile instanceof OneWayGate) {
+          const gx = node % GRID_COLS;
+          const gy = Math.floor(node / GRID_COLS);
+          let nx = gx, ny = gy;
+          switch (gateTile.direction) {
+            case 'up': ny--; break;
+            case 'down': ny++; break;
+            case 'left': nx--; break;
+            case 'right': nx++; break;
+          }
+          if (nx >= 0 && nx < GRID_COLS && ny >= 0 && ny < GRID_ROWS) {
+            const nextIdx = nx + ny * GRID_COLS;
+            const dest = tiles[nextIdx];
+            const blocked =
+              dest instanceof Tree ||
+              dest instanceof Fence ||
+              (dest instanceof Barrier && dest.collider);
+            if (!blocked) {
+              this.playerActionBuffer = [nextIdx];
+            }
           }
         }
       });

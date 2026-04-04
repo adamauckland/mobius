@@ -146,6 +146,9 @@ export function handleTileClick(targetTileIndex: number, targetPlayer: Player) {
   if (playerTileIndex < 0 || playerTileIndex >= totalTiles) return;
   if (targetTileIndex < 0 || targetTileIndex >= totalTiles) return;
 
+  // Guard: already on the target tile — nothing to do
+  if (playerTileIndex === targetTileIndex) return;
+
   const letDiag = model.inputDiagonal ? true : false;
 
   // pick which algorithm

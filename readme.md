@@ -1,3 +1,4 @@
 // TO DO:
 
-Change all timers to use the excaliburjs clock and game.clock.schedule like in https://excaliburjs.com/docs/clock/
+- implement one way tiles which are randomly placed around the area
+- a one-way tile only allows the user to move one way
