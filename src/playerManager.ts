@@ -14,6 +14,7 @@ import { game } from "./game";
 import { handleTileClick } from "./pathfinding";
 import { resetRocks, resetParcels } from "./worldObjects";
 import { resetMonsters } from "./monsters";
+import { resetBarriers } from "./barriers";
 import { resetGameTimer } from "./startScreen";
 import { resetMovingBlocks } from "./movingBlocks";
 import { zFromY, Z_LAYER_PLAYER, Z_RIPPLE } from "./zIndex";
@@ -47,6 +48,7 @@ export function replayAll() {
   model.isReplaying = true;
   resetRocks();
   resetParcels();
+  resetBarriers();
   resetMovingBlocks();
   resetMonsters();
   resetGameTimer();

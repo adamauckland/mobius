@@ -11,6 +11,7 @@ import {
 } from "./tiledata";
 import { game } from "./game";
 import { zFromY, Z_LAYER_PICKUP, Z_LAYER_ROCK } from "./zIndex";
+import { spawnLight } from "./lightTrail";
 import { Player } from "./chap";
 
 export interface Rock {
@@ -211,6 +212,14 @@ export function getParcelAtTile(tileIndex: number): Parcel | undefined {
 export function pickUpParcel(parcel: Parcel, player: Player) {
   parcel.carriedBy = player;
   player.carriedParcel = parcel;
+
+  // Light trail from pickup position to matching drop zone
+  const dzTileIndex = dropZoneTileIndices[parcel.id];
+  if (dzTileIndex !== undefined) {
+    const dzX = (dzTileIndex % GRID_COLS) * 16 + 8;
+    const dzY = Math.floor(dzTileIndex / GRID_COLS) * 16 + 8;
+    spawnLight(parcel.actor.pos.clone(), new Vector(dzX, dzY), 1000);
+  }
 }
 
 export function dropParcel(player: Player) {

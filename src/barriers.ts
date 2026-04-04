@@ -4,6 +4,7 @@ import { tiles, Barrier, Switch, GRID_COLS } from "./tiledata";
 import { game } from "./game";
 import { zFromY, Z_LAYER_TREE, Z_LAYER_PICKUP } from "./zIndex";
 import { rebuildPathfinding } from "./pathfinding";
+import { spawnLight } from "./lightTrail";
 
 interface BarrierEntry {
   actor: Actor;
@@ -50,6 +51,35 @@ export function spawnBarriers() {
   }
 }
 
+/** Reset all barriers and switches to their initial state (for rewind). */
+export function resetBarriers() {
+  // Re-lock all barriers
+  for (let i = 0; i < tiles.length; i++) {
+    const t = tiles[i];
+    if (t instanceof Barrier) {
+      t.collider = true;
+      tileMapRef.tiles[i].solid = true;
+    } else if (t instanceof Switch) {
+      t.activated = false;
+    }
+  }
+
+  // Restore barrier actors
+  for (const b of barrierActors) {
+    b.actor.actions.clearActions();
+    b.actor.scale.x = 1;
+    b.actor.scale.y = 1;
+    b.actor.graphics.visible = true;
+  }
+
+  // Restore switch actor sprites
+  for (const [, actor] of switchActors) {
+    actor.graphics.use(rlSS.getSprite(42, 16)); // inactive look
+  }
+
+  rebuildPathfinding();
+}
+
 /**
  * Called when the player lands on a tile.
  * If it is an un-activated Switch, open every Barrier in the same group.
@@ -67,6 +97,16 @@ export function tryActivateSwitch(tileIndex: number): boolean {
     switchActor.graphics.use(rlSS.getSprite(43, 16)); // activated look
   }
 
+  // Light trail from switch to each barrier in the group
+  const sx = tileIndex % GRID_COLS;
+  const sy = Math.floor(tileIndex / GRID_COLS);
+  const switchPos = new Vector(sx * 16 + 8, sy * 16 + 8);
+  for (const b of barrierActors) {
+    if (b.groupId === groupId) {
+      spawnLight(switchPos, b.actor.pos.clone(), 1000);
+    }
+  }
+
   // Open every barrier in this group
   for (let i = 0; i < tiles.length; i++) {
     const t = tiles[i];
@@ -76,12 +116,15 @@ export function tryActivateSwitch(tileIndex: number): boolean {
     }
   }
 
-  // Animate barrier actors away
+  // Animate barrier actors away (hide, don't kill — needed for reset on rewind)
   for (const b of barrierActors) {
     if (b.groupId === groupId) {
+      b.actor.actions.clearActions();
       b.actor.actions
         .scaleTo(vec(0, 0), vec(3, 3))
-        .callMethod(() => b.actor.kill());
+        .callMethod(() => {
+          b.actor.graphics.visible = false;
+        });
     }
   }
 
