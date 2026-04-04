@@ -34,6 +34,7 @@ import { spawnRocks, spawnCollectables, spawnParcels, PARCEL_SPRITES, getScore }
 import { initBarriers, spawnBarriers } from "./barriers";
 import { spawnMovingBlocks, updateMovingBlocks } from "./movingBlocks";
 import { spawnMonsters, updateMonsters, setOnPlayerKilled } from "./monsters";
+import { sfxDeath } from "./sounds";
 import { togglePause, onPauseChange } from "./main";
 import { zFromY, Z_LAYER_TREE, Z_LAYER_PICKUP, Z_HUD, Z_COUNTDOWN } from "./zIndex";
 
@@ -382,6 +383,7 @@ function startGame() {
 
     model.lives--;
     livesText.text = "♥".repeat(model.lives) + "♡".repeat(3 - model.lives);
+    sfxDeath();
 
     if (model.lives <= 0) {
       model.gameOver = true;

@@ -5,6 +5,7 @@ import { game } from "./game";
 import { zFromY, Z_LAYER_TREE, Z_LAYER_PICKUP } from "./zIndex";
 import { rebuildPathfinding } from "./pathfinding";
 import { spawnLight } from "./lightTrail";
+import { sfxSwitch } from "./sounds";
 
 interface BarrierEntry {
   actor: Actor;
@@ -90,6 +91,7 @@ export function tryActivateSwitch(tileIndex: number): boolean {
 
   tile.activated = true;
   const { groupId } = tile;
+  sfxSwitch();
 
   // Visual feedback on the switch itself
   const switchActor = switchActors.get(tileIndex);

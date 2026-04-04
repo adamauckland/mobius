@@ -6,6 +6,7 @@ import type { Rock, Parcel } from "./worldObjects";
 import { dropRockAtTile, dropParcelAtTile, tryCollectAtTile } from "./worldObjects";
 import { tryActivateSwitch } from "./barriers";
 import { zFromY, Z_LAYER_PLAYER } from "./zIndex";
+import { sfxOneWayGate, sfxPortal } from "./sounds";
 import { game } from "./game";
 import type { MovingBlock } from "./movingBlocks";
 import { getMovingBlockNear, mountBlock } from "./movingBlocks";
@@ -136,6 +137,7 @@ export class Player extends Actor {
           this.playerActionBuffer.length === 0 &&
           portalTileIndices.includes(node)
         ) {
+          sfxPortal();
           const handled = this.onReachedPortal ? this.onReachedPortal() : false;
           if (!handled) {
             // Replaying player — shrink and disappear into the portal
@@ -149,6 +151,7 @@ export class Player extends Actor {
         // One-way gate: force movement in the gate's direction
         const gateTile = tiles[node];
         if (gateTile instanceof OneWayGate) {
+          sfxOneWayGate();
           const gx = node % GRID_COLS;
           const gy = Math.floor(node / GRID_COLS);
           let nx = gx, ny = gy;

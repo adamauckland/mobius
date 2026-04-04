@@ -11,6 +11,7 @@ import {
 import { game } from "./game";
 import { zFromY, Z_LAYER_PICKUP } from "./zIndex";
 import type { Player } from "./chap";
+import { sfxPlatformStart, sfxPlatformStop } from "./sounds";
 
 /** Accumulated elapsed time — advances only via delta, so pauses are excluded. */
 let blockElapsed = 0;
@@ -56,6 +57,7 @@ export function mountBlock(block: MovingBlock, player: Player) {
   player.ridingBlock = block;
   player.playerActionBuffer = [];
   player.actions.clearActions();
+  sfxPlatformStart();
 }
 
 /**
@@ -75,6 +77,7 @@ export function dismountBlock(player: Player): boolean {
 
   block.riders = block.riders.filter((r) => r !== player);
   player.ridingBlock = null;
+  sfxPlatformStop();
 
   // Snap to tile centre
   player.pos.x = tx * 16 + 8;

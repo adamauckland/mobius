@@ -11,7 +11,8 @@ import {
 } from "./tiledata";
 import { game } from "./game";
 import { zFromY, Z_LAYER_PICKUP, Z_LAYER_ROCK } from "./zIndex";
-import { spawnLight } from "./lightTrail";
+import { spawnLight, spawnScoreLight } from "./lightTrail";
+import { sfxCollect, sfxPickUpRock, sfxDropRock, sfxPickUpParcel, sfxDropParcel, sfxParcelPlaced } from "./sounds";
 import { Player } from "./chap";
 
 export interface Rock {
@@ -36,6 +37,7 @@ export function getRockAtTile(tileIndex: number): Rock | undefined {
 export function pickUpRock(rock: Rock, player: Player) {
   rock.carriedBy = player;
   player.carriedRock = rock;
+  sfxPickUpRock();
 }
 
 // Drop a rock at the player's current logical tile
@@ -54,6 +56,7 @@ export function dropRockAtTile(player: Player, tileIndex: number) {
   const y = Math.floor(tileIndex / GRID_COLS);
   rock.actor.pos.x = x * 16 + 8;
   rock.actor.pos.y = y * 16 + 8;
+  sfxDropRock();
 }
 
 // Reset all rocks to their original positions
@@ -122,8 +125,10 @@ export function tryCollectAtTile(tileIndex: number): boolean {
   const c = collectables.find((c) => c.tileIndex === tileIndex && !c.collected);
   if (!c) return false;
   c.collected = true;
+  spawnScoreLight(c.actor.pos.clone());
   c.actor.kill();
   score += 100;
+  sfxCollect();
   return true;
 }
 
@@ -212,6 +217,7 @@ export function getParcelAtTile(tileIndex: number): Parcel | undefined {
 export function pickUpParcel(parcel: Parcel, player: Player) {
   parcel.carriedBy = player;
   player.carriedParcel = parcel;
+  sfxPickUpParcel();
 
   // Light trail from pickup position to matching drop zone
   const dzTileIndex = dropZoneTileIndices[parcel.id];
@@ -243,6 +249,10 @@ export function dropParcelAtTile(player: Player, tileIndex: number) {
     parcel.placed = true;
     tile.fulfilled = true;
     score += 500;
+    sfxParcelPlaced();
+    spawnScoreLight(parcel.actor.pos.clone(), 5);
+  } else {
+    sfxDropParcel();
   }
 }
 
