@@ -29,19 +29,49 @@ import {
   customStartTile,
   COLLECTABLE_COUNT,
 } from "./tiledata";
-import { deserializeMap, type MapData } from "./mapData";
+import { deserializeMap, deserializeProject, type MapData } from "./mapData";
 import { player } from "./chap";
 import { game } from "./game";
 import { model } from "./model";
 import { initPathfinding } from "./pathfinding";
-import { activeEntry, setupClickHandler, replayAll, timeRewind, setOnNewActivePlayer } from "./playerManager";
-import { spawnRocks, spawnRocksAt, spawnCollectables, spawnCollectablesAt, spawnParcels, spawnParcelsAt, PARCEL_SPRITES, getScore } from "./worldObjects";
+import {
+  activeEntry,
+  setupClickHandler,
+  replayAll,
+  timeRewind,
+  setOnNewActivePlayer,
+} from "./playerManager";
+import {
+  spawnRocks,
+  spawnRocksAt,
+  spawnCollectables,
+  spawnCollectablesAt,
+  spawnParcels,
+  spawnParcelsAt,
+  PARCEL_SPRITES,
+  getScore,
+} from "./worldObjects";
 import { initBarriers, spawnBarriers } from "./barriers";
-import { spawnMovingBlocks, spawnMovingBlocksAt, updateMovingBlocks } from "./movingBlocks";
-import { spawnMonsters, spawnMonstersAt, updateMonsters, setOnPlayerKilled } from "./monsters";
+import {
+  spawnMovingBlocks,
+  spawnMovingBlocksAt,
+  updateMovingBlocks,
+} from "./movingBlocks";
+import {
+  spawnMonsters,
+  spawnMonstersAt,
+  updateMonsters,
+  setOnPlayerKilled,
+} from "./monsters";
 import { sfxDeath, sfxLevelComplete } from "./sounds";
 import { togglePause, onPauseChange } from "./main";
-import { zFromY, Z_LAYER_TREE, Z_LAYER_PICKUP, Z_HUD, Z_COUNTDOWN } from "./zIndex";
+import {
+  zFromY,
+  Z_LAYER_TREE,
+  Z_LAYER_PICKUP,
+  Z_HUD,
+  Z_COUNTDOWN,
+} from "./zIndex";
 
 // Seed management
 const seedInput = document.getElementById("seed-input") as HTMLInputElement;
@@ -51,8 +81,8 @@ function generateNewSeed() {
   return Math.floor(Math.random() * 100000);
 }
 
-// Load seed from sessionStorage, or generate a new one
-const storedSeed = sessionStorage.getItem("mapSeed");
+// Load seed from localStorage, or generate a new one
+const storedSeed = localStorage.getItem("mapSeed");
 seedInput.value = storedSeed ?? String(generateNewSeed());
 
 btnNewSeed.addEventListener("click", () => {
@@ -62,9 +92,28 @@ btnNewSeed.addEventListener("click", () => {
 // Wait for START button
 const startScreen = document.getElementById("start-screen")!;
 const btnStart = document.getElementById("btn-start")!;
-const restartButton = document.getElementById("btn-restart") as HTMLButtonElement;
+const restartButton = document.getElementById(
+  "btn-restart",
+) as HTMLButtonElement;
 restartButton.addEventListener("click", () => {
-  // Seed is already in sessionStorage — reload will reuse it
+  // For project mode: re-store the project so the reload picks it up
+  if (model.projectJson) {
+    localStorage.setItem("customProject", model.projectJson);
+    localStorage.setItem("customProjectLevel", String(model.currentLevel));
+    // Don't preserve lives on restart — reset to 3
+  }
+  location.reload();
+});
+const continueButton = document.getElementById(
+  "btn-continue",
+) as HTMLButtonElement;
+continueButton.addEventListener("click", () => {
+  if (!model.projectJson || model.currentLevel + 1 >= model.totalLevels) return;
+  // Persist lives and advance level via localStorage + reload
+  const nextLevel = model.currentLevel + 1;
+  localStorage.setItem("customProject", model.projectJson);
+  localStorage.setItem("customProjectLevel", String(nextLevel));
+  localStorage.setItem("projectLives", String(model.lives));
   location.reload();
 });
 
@@ -127,7 +176,7 @@ function startGame(customMapData?: MapData) {
     }
   } else {
     const seed = parseInt(seedInput.value, 10) || generateNewSeed();
-    sessionStorage.setItem("mapSeed", String(seed));
+    localStorage.setItem("mapSeed", String(seed));
     generateWorld(seed);
   }
 
@@ -145,11 +194,15 @@ function startGame(customMapData?: MapData) {
       cursor: pointer; z-index: 300000; opacity: 0.7;
     `;
     backBtn.addEventListener("click", () => {
-      sessionStorage.setItem("editorMode", "true");
+      localStorage.setItem("editorMode", "true");
       location.reload();
     });
-    backBtn.addEventListener("mouseenter", () => { backBtn.style.opacity = "1"; });
-    backBtn.addEventListener("mouseleave", () => { backBtn.style.opacity = "0.7"; });
+    backBtn.addEventListener("mouseenter", () => {
+      backBtn.style.opacity = "1";
+    });
+    backBtn.addEventListener("mouseleave", () => {
+      backBtn.style.opacity = "0.7";
+    });
     document.body.appendChild(backBtn);
   }
 
@@ -224,17 +277,28 @@ function startGame(customMapData?: MapData) {
       const tx = i % GRID_COLS;
       const ty = Math.floor(i / GRID_COLS);
       const gateActor = new Actor({
-        pos: vec(tx * TILE_SIZE + TILE_SIZE / 2, ty * TILE_SIZE + TILE_SIZE / 2),
+        pos: vec(
+          tx * TILE_SIZE + TILE_SIZE / 2,
+          ty * TILE_SIZE + TILE_SIZE / 2,
+        ),
         width: TILE_SIZE,
         height: TILE_SIZE,
         z: zFromY(ty * TILE_SIZE + TILE_SIZE / 2, Z_LAYER_PICKUP),
       });
       gateActor.graphics.use(rlSS.getSprite(29, 22));
       switch (gate.direction) {
-        case 'right': gateActor.rotation = 0; break;
-        case 'down': gateActor.rotation = Math.PI / 2; break;
-        case 'left': gateActor.rotation = Math.PI; break;
-        case 'up': gateActor.rotation = -Math.PI / 2; break;
+        case "right":
+          gateActor.rotation = 0;
+          break;
+        case "down":
+          gateActor.rotation = Math.PI / 2;
+          break;
+        case "left":
+          gateActor.rotation = Math.PI;
+          break;
+        case "up":
+          gateActor.rotation = -Math.PI / 2;
+          break;
       }
       game.add(gateActor);
     }
@@ -246,7 +310,10 @@ function startGame(customMapData?: MapData) {
       const tx = i % GRID_COLS;
       const ty = Math.floor(i / GRID_COLS);
       const dzActor = new Actor({
-        pos: vec(tx * TILE_SIZE + TILE_SIZE / 2, ty * TILE_SIZE + TILE_SIZE / 2),
+        pos: vec(
+          tx * TILE_SIZE + TILE_SIZE / 2,
+          ty * TILE_SIZE + TILE_SIZE / 2,
+        ),
         width: TILE_SIZE,
         height: TILE_SIZE,
         z: zFromY(ty * TILE_SIZE + TILE_SIZE / 2, Z_LAYER_PICKUP),
@@ -271,7 +338,10 @@ function startGame(customMapData?: MapData) {
       const tx = i % GRID_COLS;
       const ty = Math.floor(i / GRID_COLS);
       const doorActor = new Actor({
-        pos: vec(tx * TILE_SIZE + TILE_SIZE / 2, ty * TILE_SIZE + TILE_SIZE / 2),
+        pos: vec(
+          tx * TILE_SIZE + TILE_SIZE / 2,
+          ty * TILE_SIZE + TILE_SIZE / 2,
+        ),
         width: TILE_SIZE,
         height: TILE_SIZE,
         z: zFromY(ty * TILE_SIZE + TILE_SIZE / 2, Z_LAYER_PICKUP),
@@ -287,7 +357,8 @@ function startGame(customMapData?: MapData) {
   // Move player to custom start if set
   if (customStartTile !== null) {
     const sx = (customStartTile % GRID_COLS) * TILE_SIZE + TILE_SIZE / 2;
-    const sy = Math.floor(customStartTile / GRID_COLS) * TILE_SIZE + TILE_SIZE / 2;
+    const sy =
+      Math.floor(customStartTile / GRID_COLS) * TILE_SIZE + TILE_SIZE / 2;
     player.pos.x = sx;
     player.pos.y = sy;
     player.logicalTileIndex = customStartTile;
@@ -399,7 +470,7 @@ function startGame(customMapData?: MapData) {
 
   // Lives display (top-left, below pause)
   const livesText = new Text({
-    text: "♥♥♥",
+    text: "♥".repeat(model.lives) + "♡".repeat(Math.max(0, 3 - model.lives)),
     font: new Font({
       size: 32,
       unit: FontUnit.Px,
@@ -415,6 +486,27 @@ function startGame(customMapData?: MapData) {
   });
   livesLabel.graphics.use(livesText);
   game.add(livesLabel);
+
+  // Level indicator (top-left, below lives) — only shown for multi-level projects
+  if (model.totalLevels > 1) {
+    const levelText = new Text({
+      text: `Level ${model.currentLevel + 1}/${model.totalLevels}`,
+      font: new Font({
+        size: 24,
+        unit: FontUnit.Px,
+        family: "monospace",
+        color: Color.White,
+        textAlign: TextAlign.Left,
+        shadow: { blur: 2, offset: vec(1, 1), color: Color.Black },
+      }),
+    });
+    const levelLabel = new ScreenElement({
+      pos: vec(10, 78),
+      z: Z_HUD,
+    });
+    levelLabel.graphics.use(levelText);
+    game.add(levelLabel);
+  }
 
   // Game over overlay
   const gameOverText = new Text({
@@ -477,6 +569,10 @@ function startGame(customMapData?: MapData) {
       levelCompleteLabel.scale.y = 0.3;
       levelCompleteLabel.actions.scaleTo(vec(1, 1), vec(3, 3));
       restartButton.style.display = "block";
+      // Show continue button if there are more levels
+      if (model.projectJson && model.currentLevel + 1 < model.totalLevels) {
+        continueButton.style.display = "block";
+      }
     };
   }
   wireExitDoor();
@@ -615,8 +711,49 @@ seedInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter") startGame();
 });
 
+// "Play Project" button on start screen — pick a .json file and play from level 1
+const btnPlayProject = document.getElementById("btn-play-project");
+if (btnPlayProject) {
+  btnPlayProject.addEventListener("click", () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".json";
+    input.onchange = () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const json = reader.result as string;
+          startProjectLevel(json, 0);
+        } catch {
+          alert("Failed to load project file");
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  });
+}
+
 /** Called from main.ts after resources are loaded, to start a custom map. */
 export function startCustomMap(json: string) {
   const custom = deserializeMap(json);
   startGame(custom);
+}
+
+/** Called from main.ts to start a specific level from a project. */
+export function startProjectLevel(projectJson: string, levelIndex: number) {
+  const proj = deserializeProject(projectJson);
+  if (levelIndex < 0 || levelIndex >= proj.levels.length) levelIndex = 0;
+  model.projectJson = projectJson;
+  model.currentLevel = levelIndex;
+  model.totalLevels = proj.levels.length;
+  // Restore lives from localStorage if continuing from a previous level
+  const savedLives = localStorage.getItem("projectLives");
+  if (savedLives !== null) {
+    model.lives = parseInt(savedLives, 10);
+    localStorage.removeItem("projectLives");
+  }
+  startGame(proj.levels[levelIndex]);
 }

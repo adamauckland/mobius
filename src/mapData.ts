@@ -84,6 +84,28 @@ export function createEmptyMap(cols: number, rows: number): MapData {
   };
 }
 
+// A project is a collection of levels
+export interface ProjectData {
+  levels: MapData[];
+}
+
+export function serializeProject(project: ProjectData): string {
+  return JSON.stringify(project);
+}
+
+export function deserializeProject(json: string): ProjectData {
+  const data = JSON.parse(json);
+  const levels: MapData[] = Array.isArray(data.levels)
+    ? data.levels.map((l: any) => deserializeMap(JSON.stringify(l)))
+    : [];
+  if (levels.length === 0) {
+    // Legacy single-map file — wrap it as a one-level project
+    const single = deserializeMap(json);
+    levels.push(single);
+  }
+  return { levels };
+}
+
 export function serializeMap(map: MapData): string {
   return JSON.stringify(map);
 }
