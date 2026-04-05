@@ -39,6 +39,7 @@ export function resetMonsters() {
 
 /** Spawn monsters at random positions with random patrol paths. */
 export function spawnMonsters(count: number) {
+  monsters.length = 0;
   monsterElapsed = 0;
   for (let n = 0; n < count; n++) {
     const validIndices = tiles
@@ -89,6 +90,7 @@ export function spawnMonsters(count: number) {
 
 /** Spawn monsters at specific positions (for custom maps). */
 export function spawnMonstersAt(entries: { start: number; end: number }[]) {
+  monsters.length = 0;
   monsterElapsed = 0;
   for (const entry of entries) {
     const startX = entry.start % GRID_COLS;

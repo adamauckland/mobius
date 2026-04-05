@@ -1,0 +1,4 @@
+{
+  "vitest.configSearchPatternExclude": "**/node_modules/**",
+  "vitest.enable": true
+}

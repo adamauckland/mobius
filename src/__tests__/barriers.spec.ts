@@ -4,8 +4,13 @@ vi.mock("excalibur", () => {
   class MockVector {
     x: number;
     y: number;
-    constructor(x = 0, y = 0) { this.x = x; this.y = y; }
-    clone() { return new MockVector(this.x, this.y); }
+    constructor(x = 0, y = 0) {
+      this.x = x;
+      this.y = y;
+    }
+    clone() {
+      return new MockVector(this.x, this.y);
+    }
   }
   const vec = (x: number, y: number) => new MockVector(x, y);
   class MockActor {
@@ -19,7 +24,9 @@ vi.mock("excalibur", () => {
       callMethod: vi.fn().mockReturnThis(),
     };
     constructor(options?: any) {
-      this.pos = options?.pos ? new MockVector(options.pos.x, options.pos.y) : new MockVector();
+      this.pos = options?.pos
+        ? new MockVector(options.pos.x, options.pos.y)
+        : new MockVector();
     }
   }
   return { Actor: MockActor, Vector: MockVector, vec, TileMap: class {} };
@@ -57,14 +64,7 @@ import {
   resetBarriers,
   tryActivateSwitch,
 } from "../barriers";
-import {
-  generateWorld,
-  tiles,
-  Barrier,
-  Switch,
-  GRID_COLS,
-  TILE_SIZE,
-} from "../tiledata";
+import { generateWorld, tiles, Barrier, Switch } from "../tiledata";
 import { rebuildPathfinding } from "../pathfinding";
 import { game } from "../game";
 
