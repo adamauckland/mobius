@@ -11,6 +11,7 @@ export interface MapData {
   parcels: { id: number; tile: number }[];
   monsters: { start: number; end: number }[];
   movingBlocks: { start: number; end: number }[];
+  timeLimit: number; // ms before time rewind triggers (0 = no limit)
 }
 
 // Tile code encoding/decoding
@@ -22,7 +23,8 @@ export type TileInfo =
   | { type: "switch"; groupId: number }
   | { type: "fence" }
   | { type: "oneWayGate"; direction: Direction }
-  | { type: "dropZone"; id: number };
+  | { type: "dropZone"; id: number }
+  | { type: "exitDoor" };
 
 export function tileToCode(info: TileInfo): string {
   switch (info.type) {
@@ -41,6 +43,7 @@ export function tileToCode(info: TileInfo): string {
       }
       break;
     case "dropZone": return "D" + info.id;
+    case "exitDoor": return "E";
   }
   return "g";
 }
@@ -57,6 +60,7 @@ export function codeToTile(code: string): TileInfo {
   if (code === "^") return { type: "oneWayGate", direction: "up" };
   if (code === "v") return { type: "oneWayGate", direction: "down" };
   if (code.startsWith("D")) return { type: "dropZone", id: parseInt(code.slice(1)) || 0 };
+  if (code === "E") return { type: "exitDoor" };
   return { type: "grass" };
 }
 
@@ -76,6 +80,7 @@ export function createEmptyMap(cols: number, rows: number): MapData {
     parcels: [],
     monsters: [],
     movingBlocks: [],
+    timeLimit: 60000,
   };
 }
 
@@ -96,5 +101,6 @@ export function deserializeMap(json: string): MapData {
     parcels: Array.isArray(data.parcels) ? data.parcels : [],
     monsters: Array.isArray(data.monsters) ? data.monsters : [],
     movingBlocks: Array.isArray(data.movingBlocks) ? data.movingBlocks : [],
+    timeLimit: typeof data.timeLimit === "number" ? data.timeLimit : 60000,
   };
 }

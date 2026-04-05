@@ -54,6 +54,7 @@ type ToolId =
   | "fence"
   | "gate"
   | "dropZone"
+  | "exitDoor"
   | "start"
   | "rock"
   | "collectable"
@@ -73,19 +74,86 @@ interface ToolDef {
 const TOOLS: ToolDef[] = [
   { id: "grass", label: "Grass", color: "#4a7c47", category: "tile", key: "1" },
   { id: "tree", label: "Tree", color: "#2d5a1e", category: "tile", key: "2" },
-  { id: "portal", label: "Portal", color: "#7b48a8", category: "tile", key: "3" },
-  { id: "barrier", label: "Barrier", color: "#c0392b", category: "tile", key: "4" },
-  { id: "switch", label: "Switch", color: "#f39c12", category: "tile", key: "5" },
+  {
+    id: "portal",
+    label: "Portal",
+    color: "#7b48a8",
+    category: "tile",
+    key: "3",
+  },
+  {
+    id: "barrier",
+    label: "Barrier",
+    color: "#c0392b",
+    category: "tile",
+    key: "4",
+  },
+  {
+    id: "switch",
+    label: "Switch",
+    color: "#f39c12",
+    category: "tile",
+    key: "5",
+  },
   { id: "fence", label: "Fence", color: "#8b6914", category: "tile", key: "6" },
   { id: "gate", label: "Gate", color: "#3498db", category: "tile", key: "7" },
-  { id: "dropZone", label: "DropZone", color: "#e91e63", category: "tile", key: "8" },
-  { id: "start", label: "Start", color: "#ffffff", category: "entity", key: "q" },
+  {
+    id: "dropZone",
+    label: "DropZone",
+    color: "#e91e63",
+    category: "tile",
+    key: "8",
+  },
+  {
+    id: "exitDoor",
+    label: "Exit Door",
+    color: "#00e676",
+    category: "tile",
+    key: "9",
+  },
+  {
+    id: "start",
+    label: "Start",
+    color: "#ffffff",
+    category: "entity",
+    key: "q",
+  },
   { id: "rock", label: "Rock", color: "#7f8c8d", category: "entity", key: "w" },
-  { id: "collectable", label: "Gem", color: "#f1c40f", category: "entity", key: "e" },
-  { id: "parcel", label: "Parcel", color: "#e67e22", category: "entity", key: "r" },
-  { id: "monster", label: "Monster", color: "#e74c3c", category: "entity", key: "t" },
-  { id: "movingBlock", label: "Platform", color: "#1abc9c", category: "entity", key: "y" },
-  { id: "eraser", label: "Eraser", color: "#555", category: "entity", key: "x" },
+  {
+    id: "collectable",
+    label: "Gem",
+    color: "#f1c40f",
+    category: "entity",
+    key: "e",
+  },
+  {
+    id: "parcel",
+    label: "Parcel",
+    color: "#e67e22",
+    category: "entity",
+    key: "r",
+  },
+  {
+    id: "monster",
+    label: "Monster",
+    color: "#e74c3c",
+    category: "entity",
+    key: "t",
+  },
+  {
+    id: "movingBlock",
+    label: "Platform",
+    color: "#1abc9c",
+    category: "entity",
+    key: "y",
+  },
+  {
+    id: "eraser",
+    label: "Eraser",
+    color: "#555",
+    category: "entity",
+    key: "x",
+  },
 ];
 
 // Parcel sprite coords [col, row] into the roguelike sheet
@@ -127,6 +195,7 @@ let container: HTMLDivElement;
 let toolbar: HTMLDivElement;
 let statusBar: HTMLDivElement;
 let nameInput: HTMLInputElement;
+let timeLimitInput: HTMLInputElement;
 let imagesReady = false;
 let animFrame = 0;
 
@@ -231,6 +300,9 @@ function render() {
         ctx.strokeRect(dx + 0.5, dy + 0.5, ts - 1, ts - 1);
         break;
       }
+      case "exitDoor":
+        drawRL(ctx, 35, 0, dx, dy, ts); // door sprite from roguelike sheet
+        break;
     }
   }
 
@@ -330,7 +402,10 @@ function render() {
     const sy = tileY(patrolPlacement.startTile) * ts + ts / 2;
     const ex = tileX(hoveredTile) * ts + ts / 2;
     const ey = tileY(hoveredTile) * ts + ts / 2;
-    const col = patrolPlacement.tool === "monster" ? "rgba(231,76,60,0.4)" : "rgba(26,188,156,0.4)";
+    const col =
+      patrolPlacement.tool === "monster"
+        ? "rgba(231,76,60,0.4)"
+        : "rgba(26,188,156,0.4)";
     ctx.strokeStyle = col;
     ctx.lineWidth = 2;
     ctx.setLineDash([4, 4]);
@@ -366,7 +441,8 @@ function drawFenceSprite(
   const isFence = (ddx: number, ddy: number) => {
     const nx = x + ddx;
     const ny = y + ddy;
-    if (nx < 0 || nx >= mapData.cols || ny < 0 || ny >= mapData.rows) return false;
+    if (nx < 0 || nx >= mapData.cols || ny < 0 || ny >= mapData.rows)
+      return false;
     return codeToTile(mapData.tiles[nx + ny * mapData.cols]).type === "fence";
   };
   const up = isFence(0, -1);
@@ -374,20 +450,48 @@ function drawFenceSprite(
   const left = isFence(-1, 0);
   const right = isFence(1, 0);
 
-  let col = 46, row = 23; // default: isolated post
-  if (up && down && left && right) { col = 46; row = 24; }
-  else if (up && down && right) { col = 48; row = 23; }
-  else if (up && down && left) { col = 49; row = 23; }
-  else if (left && right && down) { col = 46; row = 24; }
-  else if (left && right && up) { col = 50; row = 24; }
-  else if (up && down) { col = 47; row = 23; }
-  else if (left && right) { col = 47; row = 24; }
-  else if (down && right) { col = 48; row = 24; }
-  else if (down && left) { col = 49; row = 24; }
-  else if (up && right) { col = 50; row = 23; }
-  else if (up && left) { col = 51; row = 23; }
-  else if (up || down) { col = 47; row = 23; }
-  else if (left || right) { col = 47; row = 24; }
+  let col = 46,
+    row = 23; // default: isolated post
+  if (up && down && left && right) {
+    col = 46;
+    row = 24;
+  } else if (up && down && right) {
+    col = 48;
+    row = 23;
+  } else if (up && down && left) {
+    col = 49;
+    row = 23;
+  } else if (left && right && down) {
+    col = 46;
+    row = 24;
+  } else if (left && right && up) {
+    col = 50;
+    row = 24;
+  } else if (up && down) {
+    col = 47;
+    row = 23;
+  } else if (left && right) {
+    col = 47;
+    row = 24;
+  } else if (down && right) {
+    col = 48;
+    row = 24;
+  } else if (down && left) {
+    col = 49;
+    row = 24;
+  } else if (up && right) {
+    col = 50;
+    row = 23;
+  } else if (up && left) {
+    col = 51;
+    row = 23;
+  } else if (up || down) {
+    col = 47;
+    row = 23;
+  } else if (left || right) {
+    col = 47;
+    row = 24;
+  }
 
   drawRL(ctx, col, row, dx, dy, size);
 }
@@ -402,10 +506,17 @@ function drawGateSprite(
   ctx.save();
   ctx.translate(dx + size / 2, dy + size / 2);
   switch (dir) {
-    case "right": break;
-    case "down": ctx.rotate(Math.PI / 2); break;
-    case "left": ctx.rotate(Math.PI); break;
-    case "up": ctx.rotate(-Math.PI / 2); break;
+    case "right":
+      break;
+    case "down":
+      ctx.rotate(Math.PI / 2);
+      break;
+    case "left":
+      ctx.rotate(Math.PI);
+      break;
+    case "up":
+      ctx.rotate(-Math.PI / 2);
+      break;
   }
   drawRL(ctx, 29, 22, -size / 2, -size / 2, size);
   ctx.restore();
@@ -424,7 +535,10 @@ function applyTool(tileIdx: number) {
       patrolPlacement = { tool: selectedTool, startTile: tileIdx };
       updateStatus(`Click end point for ${selectedTool} patrol`);
     } else {
-      const list = patrolPlacement.tool === "monster" ? mapData.monsters : mapData.movingBlocks;
+      const list =
+        patrolPlacement.tool === "monster"
+          ? mapData.monsters
+          : mapData.movingBlocks;
       list.push({ start: patrolPlacement.startTile, end: tileIdx });
       patrolPlacement = null;
       updateStatus("");
@@ -459,6 +573,9 @@ function applyTool(tileIdx: number) {
     case "dropZone":
       mapData.tiles[tileIdx] = tileToCode({ type: "dropZone", id: entityId });
       break;
+    case "exitDoor":
+      mapData.tiles[tileIdx] = tileToCode({ type: "exitDoor" });
+      break;
     case "start":
       mapData.startTile = tileIdx;
       break;
@@ -466,7 +583,8 @@ function applyTool(tileIdx: number) {
       if (!mapData.rocks.includes(tileIdx)) mapData.rocks.push(tileIdx);
       break;
     case "collectable":
-      if (!mapData.collectables.includes(tileIdx)) mapData.collectables.push(tileIdx);
+      if (!mapData.collectables.includes(tileIdx))
+        mapData.collectables.push(tileIdx);
       break;
     case "parcel":
       if (!mapData.parcels.find((p: { tile: number }) => p.tile === tileIdx)) {
@@ -482,13 +600,19 @@ function applyTool(tileIdx: number) {
 function eraseAt(tileIdx: number) {
   // Remove entities at this tile
   mapData.rocks = mapData.rocks.filter((r: number) => r !== tileIdx);
-  mapData.collectables = mapData.collectables.filter((c: number) => c !== tileIdx);
-  mapData.parcels = mapData.parcels.filter((p: { tile: number }) => p.tile !== tileIdx);
+  mapData.collectables = mapData.collectables.filter(
+    (c: number) => c !== tileIdx,
+  );
+  mapData.parcels = mapData.parcels.filter(
+    (p: { tile: number }) => p.tile !== tileIdx,
+  );
   mapData.monsters = mapData.monsters.filter(
-    (m: { start: number; end: number }) => m.start !== tileIdx && m.end !== tileIdx,
+    (m: { start: number; end: number }) =>
+      m.start !== tileIdx && m.end !== tileIdx,
   );
   mapData.movingBlocks = mapData.movingBlocks.filter(
-    (mb: { start: number; end: number }) => mb.start !== tileIdx && mb.end !== tileIdx,
+    (mb: { start: number; end: number }) =>
+      mb.start !== tileIdx && mb.end !== tileIdx,
   );
   // Set tile to grass
   mapData.tiles[tileIdx] = "g";
@@ -553,9 +677,18 @@ function onMouseMove(e: MouseEvent) {
     const entities: string[] = [];
     if (mapData.rocks.includes(hoveredTile)) entities.push("Rock");
     if (mapData.collectables.includes(hoveredTile)) entities.push("Gem");
-    if (mapData.parcels.find((p: { tile: number }) => p.tile === hoveredTile)) entities.push("Parcel");
-    if (mapData.monsters.find((m: { start: number }) => m.start === hoveredTile)) entities.push("Monster");
-    if (mapData.movingBlocks.find((m: { start: number }) => m.start === hoveredTile)) entities.push("Platform");
+    if (mapData.parcels.find((p: { tile: number }) => p.tile === hoveredTile))
+      entities.push("Parcel");
+    if (
+      mapData.monsters.find((m: { start: number }) => m.start === hoveredTile)
+    )
+      entities.push("Monster");
+    if (
+      mapData.movingBlocks.find(
+        (m: { start: number }) => m.start === hoveredTile,
+      )
+    )
+      entities.push("Platform");
     if (hoveredTile === mapData.startTile) entities.push("Start");
     const entStr = entities.length ? ` | ${entities.join(", ")}` : "";
     updateStatus(`(${tx}, ${ty}) ${info.type}${entStr}`);
@@ -588,8 +721,14 @@ function onKeyDown(e: KeyboardEvent) {
   }
 
   // Group ID
-  if (e.key === "[") { groupId = Math.max(0, groupId - 1); updatePropertyUI(); }
-  if (e.key === "]") { groupId = Math.min(9, groupId + 1); updatePropertyUI(); }
+  if (e.key === "[") {
+    groupId = Math.max(0, groupId - 1);
+    updatePropertyUI();
+  }
+  if (e.key === "]") {
+    groupId = Math.min(9, groupId + 1);
+    updatePropertyUI();
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -621,7 +760,12 @@ function updatePropertyUI() {
 
   if (selectedTool === "gate") {
     html += `<div class="prop-row"><label>Dir:</label>`;
-    const arrows: Record<string, string> = { up: "\u2191", down: "\u2193", left: "\u2190", right: "\u2192" };
+    const arrows: Record<string, string> = {
+      up: "\u2191",
+      down: "\u2193",
+      left: "\u2190",
+      right: "\u2192",
+    };
     for (const d of DIRECTIONS) {
       html += `<button class="prop-btn ${direction === d ? "active" : ""}" onclick="window._edSetDir('${d}')">${arrows[d]}</button>`;
     }
@@ -648,9 +792,18 @@ function updateStatus(msg: string) {
 }
 
 // Global callbacks for inline onclick handlers
-(window as any)._edSetGroup = (g: number) => { groupId = g; updatePropertyUI(); };
-(window as any)._edSetDir = (d: string) => { direction = d as any; updatePropertyUI(); };
-(window as any)._edSetId = (id: number) => { entityId = id; updatePropertyUI(); };
+(window as any)._edSetGroup = (g: number) => {
+  groupId = g;
+  updatePropertyUI();
+};
+(window as any)._edSetDir = (d: string) => {
+  direction = d as any;
+  updatePropertyUI();
+};
+(window as any)._edSetId = (id: number) => {
+  entityId = id;
+  updatePropertyUI();
+};
 
 // ---------------------------------------------------------------------------
 // Save / Load
@@ -658,6 +811,7 @@ function updateStatus(msg: string) {
 
 function saveMap() {
   mapData.name = nameInput.value || "Untitled";
+  mapData.timeLimit = (parseFloat(timeLimitInput.value) || 0) * 1000;
   const json = serializeMap(mapData);
   const blob = new Blob([json], { type: "application/json" });
   const url = URL.createObjectURL(blob);
@@ -690,6 +844,7 @@ function loadMap() {
         if (loaded.tiles.length > expected) loaded.tiles.length = expected;
         mapData = loaded;
         nameInput.value = mapData.name;
+        timeLimitInput.value = String(mapData.timeLimit / 1000);
         centerCamera();
       } catch {
         alert("Failed to parse map file");
@@ -702,6 +857,7 @@ function loadMap() {
 
 function testMap() {
   mapData.name = nameInput.value || "Untitled";
+  mapData.timeLimit = (parseFloat(timeLimitInput.value) || 0) * 1000;
   sessionStorage.setItem("customMap", serializeMap(mapData));
   sessionStorage.setItem("editorMap", serializeMap(mapData));
   location.reload();
@@ -710,6 +866,7 @@ function testMap() {
 function backToMenu() {
   // Store current map so we can resume editing
   mapData.name = nameInput.value || "Untitled";
+  mapData.timeLimit = (parseFloat(timeLimitInput.value) || 0) * 1000;
   sessionStorage.setItem("editorMap", serializeMap(mapData));
   container.style.display = "none";
   cancelAnimationFrame(animFrame);
@@ -720,6 +877,7 @@ function newMap() {
   if (!confirm("Create a new empty map? Unsaved changes will be lost.")) return;
   mapData = createEmptyMap(GRID_COLS, GRID_ROWS);
   nameInput.value = mapData.name;
+  timeLimitInput.value = String(mapData.timeLimit / 1000);
   centerCamera();
 }
 
@@ -745,6 +903,11 @@ function buildEditorUI() {
   container.innerHTML = `
     <div id="editor-header">
       <input id="editor-name" type="text" value="Untitled" placeholder="Map name" />
+      <label style="font-size:12px;color:#929fa4;display:flex;align-items:center;gap:4px;">
+        Time limit (s)
+        <input id="editor-timelimit" type="number" min="0" step="5" value="60"
+          style="width:60px;font-family:monospace;font-size:14px;padding:4px 6px;background:#34393c;color:#d0e3e9;border:1px solid #5e676b;" />
+      </label>
       <div id="editor-buttons">
         <button id="ed-new">New</button>
         <button id="ed-save">Save</button>
@@ -789,7 +952,6 @@ function buildEditorUI() {
     #editor-body { display: flex; flex: 1; overflow: hidden; }
     #editor-toolbar {
       width: 110px; background: #1e2225; border-right: 1px solid #34393c;
-      overflow-y: auto; padding: 4px;
       display: flex; flex-direction: column; gap: 2px;
     }
     .tool-section {
@@ -859,6 +1021,7 @@ function buildEditorUI() {
 
   // Other refs
   nameInput = container.querySelector("#editor-name")!;
+  timeLimitInput = container.querySelector("#editor-timelimit")!;
   statusBar = container.querySelector("#editor-status")!;
 
   // Wire buttons
@@ -924,6 +1087,7 @@ export function showEditor() {
     mapData = createEmptyMap(GRID_COLS, GRID_ROWS);
   }
   nameInput.value = mapData.name;
+  timeLimitInput.value = String(mapData.timeLimit / 1000);
 
   container.style.display = "flex";
   document.getElementById("start-screen")!.style.display = "none";

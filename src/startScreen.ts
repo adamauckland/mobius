@@ -19,6 +19,7 @@ import {
   Fence,
   OneWayGate,
   DropZone,
+  ExitDoor,
   tiles,
   TILE_SIZE,
   GRID_COLS,
@@ -33,12 +34,12 @@ import { player } from "./chap";
 import { game } from "./game";
 import { model } from "./model";
 import { initPathfinding } from "./pathfinding";
-import { activeEntry, setupClickHandler, replayAll } from "./playerManager";
+import { activeEntry, setupClickHandler, replayAll, timeRewind, setOnNewActivePlayer } from "./playerManager";
 import { spawnRocks, spawnRocksAt, spawnCollectables, spawnCollectablesAt, spawnParcels, spawnParcelsAt, PARCEL_SPRITES, getScore } from "./worldObjects";
 import { initBarriers, spawnBarriers } from "./barriers";
 import { spawnMovingBlocks, spawnMovingBlocksAt, updateMovingBlocks } from "./movingBlocks";
 import { spawnMonsters, spawnMonstersAt, updateMonsters, setOnPlayerKilled } from "./monsters";
-import { sfxDeath } from "./sounds";
+import { sfxDeath, sfxLevelComplete } from "./sounds";
 import { togglePause, onPauseChange } from "./main";
 import { zFromY, Z_LAYER_TREE, Z_LAYER_PICKUP, Z_HUD, Z_COUNTDOWN } from "./zIndex";
 
@@ -118,6 +119,12 @@ function getFenceSprite(index: number) {
 function startGame(customMapData?: MapData) {
   if (customMapData) {
     loadWorld(customMapData);
+    // Apply custom time limit (0 = no limit)
+    if (customMapData.timeLimit > 0) {
+      model.timeLimit = customMapData.timeLimit;
+    } else {
+      model.timeLimit = 0;
+    }
   } else {
     const seed = parseInt(seedInput.value, 10) || generateNewSeed();
     sessionStorage.setItem("mapSeed", String(seed));
@@ -176,6 +183,8 @@ function startGame(customMapData?: MapData) {
       tile.addGraphic(TileSheet.getSprite(0, 0)); // ground under gate
     } else if (tiles[tileIndex] instanceof DropZone) {
       tile.addGraphic(TileSheet.getSprite(0, 0)); // ground under drop zone
+    } else if (tiles[tileIndex] instanceof ExitDoor) {
+      tile.addGraphic(TileSheet.getSprite(0, 0)); // ground under exit door
     } else {
       tile.addGraphic(sprite);
     }
@@ -253,6 +262,22 @@ function startGame(customMapData?: MapData) {
         dzActor.scale.y = pulse;
       };
       game.add(dzActor);
+    }
+  }
+
+  // Add exit door overlays
+  for (let i = 0; i < tiles.length; i++) {
+    if (tiles[i] instanceof ExitDoor) {
+      const tx = i % GRID_COLS;
+      const ty = Math.floor(i / GRID_COLS);
+      const doorActor = new Actor({
+        pos: vec(tx * TILE_SIZE + TILE_SIZE / 2, ty * TILE_SIZE + TILE_SIZE / 2),
+        width: TILE_SIZE,
+        height: TILE_SIZE,
+        z: zFromY(ty * TILE_SIZE + TILE_SIZE / 2, Z_LAYER_PICKUP),
+      });
+      doorActor.graphics.use(rlSS.getSprite(35, 0));
+      game.add(doorActor);
     }
   }
 
@@ -416,6 +441,47 @@ function startGame(customMapData?: MapData) {
   });
   game.add(gameOverLabel);
 
+  // Level complete overlay
+  const levelCompleteText = new Text({
+    text: "LEVEL COMPLETE",
+    font: new Font({
+      size: 200,
+      unit: FontUnit.Px,
+      family: "monospace",
+      color: Color.fromHex("#00e676"),
+      textAlign: TextAlign.Center,
+      baseAlign: BaseAlign.Middle,
+      shadow: { blur: 4, offset: vec(2, 2), color: Color.Black },
+    }),
+  });
+  const levelCompleteLabel = new ScreenElement({
+    pos: vec(0, 0),
+    z: Z_COUNTDOWN,
+  });
+  levelCompleteLabel.graphics.use(levelCompleteText);
+  levelCompleteLabel.graphics.visible = false;
+  levelCompleteLabel.on("preupdate", () => {
+    levelCompleteLabel.pos.x = game.screen.resolution.width / 2;
+    levelCompleteLabel.pos.y = game.screen.resolution.height / 2;
+  });
+  game.add(levelCompleteLabel);
+
+  // Exit door handler — wire up on the active player (and re-wire after rewind)
+  function wireExitDoor() {
+    activeEntry().player.onReachedExitDoor = () => {
+      if (model.gameOver) return;
+      model.gameOver = true;
+      sfxLevelComplete();
+      levelCompleteLabel.graphics.visible = true;
+      levelCompleteLabel.scale.x = 0.3;
+      levelCompleteLabel.scale.y = 0.3;
+      levelCompleteLabel.actions.scaleTo(vec(1, 1), vec(3, 3));
+      restartButton.style.display = "block";
+    };
+  }
+  wireExitDoor();
+  setOnNewActivePlayer(wireExitDoor);
+
   // Death handler
   setOnPlayerKilled((killedPlayer) => {
     // Only the active (recording) player can die
@@ -441,6 +507,7 @@ function startGame(customMapData?: MapData) {
     replayAll();
     activeEntry().recorder.startRecording();
     model.isRecording = true;
+    wireExitDoor();
   });
 
   // Countdown before game starts
@@ -500,11 +567,39 @@ function startGame(customMapData?: MapData) {
     updateMovingBlocks(evt.elapsed);
     updateMonsters(evt.elapsed);
     elapsedGameTime += evt.elapsed;
-    const elapsed = elapsedGameTime;
-    const mins = Math.floor(elapsed / 60000);
-    const secs = Math.floor((elapsed % 60000) / 1000);
-    const tenths = Math.floor((elapsed % 1000) / 100);
-    timerText.text = `${mins}:${secs.toString().padStart(2, "0")}.${tenths}`;
+
+    if (model.timeLimit > 0) {
+      // Display remaining time (countdown)
+      const remaining = Math.max(0, model.timeLimit - elapsedGameTime);
+      const mins = Math.floor(remaining / 60000);
+      const secs = Math.floor((remaining % 60000) / 1000);
+      const tenths = Math.floor((remaining % 1000) / 100);
+      timerText.text = `${mins}:${secs.toString().padStart(2, "0")}.${tenths}`;
+
+      // Flash red when under 10 seconds
+      if (remaining < 10000) {
+        const flash = Math.sin(game.clock.now() * 0.01) > 0;
+        (timerText.font as Font).color = flash ? Color.Red : Color.White;
+      } else {
+        (timerText.font as Font).color = Color.White;
+      }
+
+      // Time's up — trigger time rewind (erase everything, no ghosts)
+      if (elapsedGameTime >= model.timeLimit) {
+        timeRewind();
+        activeEntry().recorder.startRecording();
+        model.isRecording = true;
+        wireExitDoor();
+      }
+    } else {
+      // No time limit — show elapsed time counting up
+      const elapsed = elapsedGameTime;
+      const mins = Math.floor(elapsed / 60000);
+      const secs = Math.floor((elapsed % 60000) / 1000);
+      const tenths = Math.floor((elapsed % 1000) / 100);
+      timerText.text = `${mins}:${secs.toString().padStart(2, "0")}.${tenths}`;
+    }
+
     const targetScore = getScore();
     if (displayedScore < targetScore) {
       const gap = targetScore - displayedScore;

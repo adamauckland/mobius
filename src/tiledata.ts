@@ -101,10 +101,16 @@ export class DropZone {
   }
 }
 
-export type TileType = Grass | Tree | Portal | Barrier | Switch | Fence | OneWayGate | DropZone;
+export class ExitDoor {
+  sprite = [0, 0]; // grass base, overlay added as separate Actor
+  collider: boolean = false;
+}
+
+export type TileType = Grass | Tree | Portal | Barrier | Switch | Fence | OneWayGate | DropZone | ExitDoor;
 
 export let tiles: TileType[] = [];
 export let portalTileIndices: number[] = [];
+export let exitDoorTileIndices: number[] = [];
 export let dropZoneTileIndices: number[] = [];
 export let customStartTile: number | null = null;
 
@@ -288,6 +294,7 @@ export function loadWorld(map: MapData) {
   const total = map.cols * map.rows;
   const result: TileType[] = [];
   const portalIndices: number[] = [];
+  const exitDoorIndices: number[] = [];
   const dzIndices: number[] = [];
 
   for (let i = 0; i < total; i++) {
@@ -320,11 +327,16 @@ export function loadWorld(map: MapData) {
         result.push(new DropZone(info.id));
         dzIndices.push(i);
         break;
+      case "exitDoor":
+        result.push(new ExitDoor());
+        exitDoorIndices.push(i);
+        break;
     }
   }
 
   tiles = result;
   portalTileIndices = portalIndices;
+  exitDoorTileIndices = exitDoorIndices;
   dropZoneTileIndices = dzIndices;
   customStartTile = map.startTile;
 }

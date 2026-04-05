@@ -18,6 +18,7 @@ export const model = {
   gameOver: false,
   isRecording: false,
   isReplaying: false,
+  timeLimit: 60000, // ms before time rewind triggers (60 seconds)
   diagClicked: () => {
     resetDijkstraGraph();
   },

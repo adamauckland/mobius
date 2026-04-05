@@ -1,6 +1,6 @@
 import { Actor, Vector, EasingFunctions, Engine, Graphic } from "excalibur";
 import { model } from "./model";
-import { GRID_COLS, GRID_ROWS, TILE_SIZE, portalTileIndices, START_POS_X, START_POS_Y, START_TILE_INDEX, tiles, OneWayGate, Tree, Fence, Barrier } from "./tiledata";
+import { GRID_COLS, GRID_ROWS, TILE_SIZE, portalTileIndices, exitDoorTileIndices, START_POS_X, START_POS_Y, START_TILE_INDEX, tiles, OneWayGate, Tree, Fence, Barrier } from "./tiledata";
 import { plrWalk, plrImage } from "./resources";
 import type { Rock, Parcel } from "./worldObjects";
 import { dropRockAtTile, dropParcelAtTile, tryCollectAtTile } from "./worldObjects";
@@ -20,6 +20,7 @@ export class Player extends Actor {
   currentMoveTileIndex = START_TILE_INDEX;
   previousTileIndex = START_TILE_INDEX; // the tile the player was on before the current move
   onReachedPortal: (() => boolean) | null = null; // return true if handled
+  onReachedExitDoor: (() => void) | null = null;
   carriedRock: Rock | null = null;
   carriedParcel: Parcel | null = null;
   onArriveAtTile: (() => void) | null = null; // called when path completes
@@ -146,6 +147,15 @@ export class Player extends Actor {
               .callMethod(() => {
                 this.graphics.visible = false;
               });
+          }
+        }
+        // If path is complete and we landed on the exit door
+        if (
+          this.playerActionBuffer.length === 0 &&
+          exitDoorTileIndices.includes(node)
+        ) {
+          if (this.onReachedExitDoor) {
+            this.onReachedExitDoor();
           }
         }
         // One-way gate: force movement in the gate's direction

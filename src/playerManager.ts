@@ -44,6 +44,12 @@ export function activeEntry() {
   return entries[entries.length - 1];
 }
 
+// Called whenever a new active player is created (after portal spawn)
+let _onNewActivePlayer: (() => void) | null = null;
+export function setOnNewActivePlayer(cb: (() => void) | null) {
+  _onNewActivePlayer = cb;
+}
+
 // Reset all players to start and replay all recordings
 export function replayAll() {
   model.isReplaying = true;
@@ -78,6 +84,66 @@ export function replayAll() {
       });
     }
   }
+}
+
+// Time rewind: reset the world AND erase all recordings/ghosts.
+// Unlike replayAll(), nothing is replayed — everything since the last
+// time rewind (or start) is permanently removed.
+export function timeRewind() {
+  model.isReplaying = true;
+  resetRocks();
+  resetParcels();
+  resetBarriers();
+  resetMovingBlocks();
+  resetMonsters();
+  resetGameTimer();
+
+  // Stop any in-progress recording/replay for the active player
+  const active = activeEntry();
+  if (active.recorder.isRecording) {
+    active.recorder.stopRecording();
+  }
+  active.recorder.stopReplay();
+
+  // Kill and remove all extra spawned players (ghosts) from the scene
+  for (let i = 0; i < entries.length - 1; i++) {
+    entries[i].recorder.stopReplay();
+    entries[i].player.kill();
+  }
+
+  // Reset the first player (reuse the original) back to start
+  const keeper = active.player;
+  keeper.playerActionBuffer = [];
+  keeper.actions.clearActions();
+  keeper.pos.x = START_POS_X;
+  keeper.pos.y = START_POS_Y;
+  keeper.logicalTileIndex = START_TILE_INDEX;
+  keeper.currentMoveTileIndex = START_TILE_INDEX;
+  keeper.previousTileIndex = START_TILE_INDEX;
+  keeper.scale.x = 1;
+  keeper.scale.y = 1;
+  keeper.graphics.visible = true;
+  keeper.carriedRock = null;
+  keeper.carriedParcel = null;
+  keeper.ridingBlock = null;
+  keeper.onArriveAtTile = null;
+
+  // Collapse entries to just this one player with no recording
+  entries.length = 0;
+  entries.push({
+    player: keeper,
+    recorder: new GameRecorder(),
+    recording: null,
+  });
+
+  // Re-follow the surviving player
+  const cameraRadius =
+    (Math.min(game.drawWidth, game.drawHeight) /
+      game.currentScene.camera.zoom) *
+    0.25;
+  game.currentScene.camera.strategy.radiusAroundActor(keeper, cameraRadius);
+
+  model.isReplaying = false;
 }
 
 // Stop recording the active player, spawn a new one, replay all, and start recording the new one
@@ -127,6 +193,8 @@ export function stopAndSpawnNext() {
       game.currentScene.camera.zoom) *
     0.25;
   game.currentScene.camera.strategy.radiusAroundActor(newPlayer, cameraRadius);
+
+  if (_onNewActivePlayer) _onNewActivePlayer();
 }
 
 function showTapRipple(worldPos: Vector) {

@@ -77,6 +77,10 @@ export function sfxDeath() {
   playArpeggio([440, 330, 220, 110], 0.15, "sawtooth", 0.15);
 }
 
+export function sfxLevelComplete() {
+  playArpeggio([523, 659, 784, 1047], 0.15, "sine", 0.15);
+}
+
 export function sfxPortal() {
   const ac = getCtx();
   const duration = 0.6;
