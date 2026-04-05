@@ -9,6 +9,7 @@ import {
   START_POS_X,
   START_POS_Y,
   START_TILE_INDEX,
+  customStartTile,
 } from "./tiledata";
 import { model } from "./model";
 import { game } from "./game";
@@ -50,6 +51,19 @@ export function setOnNewActivePlayer(cb: (() => void) | null) {
   _onNewActivePlayer = cb;
 }
 
+// Resolve the actual start position (custom or default center)
+function startPosX() {
+  if (customStartTile !== null) return (customStartTile % GRID_COLS) * TILE_SIZE + TILE_SIZE / 2;
+  return START_POS_X;
+}
+function startPosY() {
+  if (customStartTile !== null) return Math.floor(customStartTile / GRID_COLS) * TILE_SIZE + TILE_SIZE / 2;
+  return START_POS_Y;
+}
+function startTileIdx() {
+  return customStartTile ?? START_TILE_INDEX;
+}
+
 // Reset all players to start and replay all recordings
 export function replayAll() {
   model.isReplaying = true;
@@ -66,11 +80,11 @@ export function replayAll() {
     entry.player.playerActionBuffer = [];
     entry.player.actions.clearActions();
     // Reset to start position
-    entry.player.pos.x = START_POS_X;
-    entry.player.pos.y = START_POS_Y;
-    entry.player.logicalTileIndex = START_TILE_INDEX;
-    entry.player.currentMoveTileIndex = START_TILE_INDEX;
-    entry.player.previousTileIndex = START_TILE_INDEX;
+    entry.player.pos.x = startPosX();
+    entry.player.pos.y = startPosY();
+    entry.player.logicalTileIndex = startTileIdx();
+    entry.player.currentMoveTileIndex = startTileIdx();
+    entry.player.previousTileIndex = startTileIdx();
     entry.player.scale.x = 1;
     entry.player.scale.y = 1;
     entry.player.graphics.visible = true;
@@ -115,11 +129,11 @@ export function timeRewind() {
   const keeper = active.player;
   keeper.playerActionBuffer = [];
   keeper.actions.clearActions();
-  keeper.pos.x = START_POS_X;
-  keeper.pos.y = START_POS_Y;
-  keeper.logicalTileIndex = START_TILE_INDEX;
-  keeper.currentMoveTileIndex = START_TILE_INDEX;
-  keeper.previousTileIndex = START_TILE_INDEX;
+  keeper.pos.x = startPosX();
+  keeper.pos.y = startPosY();
+  keeper.logicalTileIndex = startTileIdx();
+  keeper.currentMoveTileIndex = startTileIdx();
+  keeper.previousTileIndex = startTileIdx();
   keeper.scale.x = 1;
   keeper.scale.y = 1;
   keeper.graphics.visible = true;
@@ -157,7 +171,7 @@ export function stopAndSpawnNext() {
 
   // Create a new player with the same sprites
   const newPlayer = new Player(
-    { pos: new Vector(START_POS_X, START_POS_Y), width: TILE_SIZE, height: TILE_SIZE },
+    { pos: new Vector(startPosX(), startPosY()), width: TILE_SIZE, height: TILE_SIZE },
     plrWalk,
     plrImage,
   );

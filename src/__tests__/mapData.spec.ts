@@ -174,6 +174,7 @@ describe("serializeMap / deserializeMap", () => {
       parcels: [{ id: 0, tile: 5 }],
       monsters: [{ start: 10, end: 20 }],
       movingBlocks: [{ start: 15, end: 25 }],
+      timeLimit: 60000,
     };
     const json = serializeMap(map);
     const restored = deserializeMap(json);

@@ -3,7 +3,6 @@ import {
   TILE_SIZE,
   GRID_COLS,
   GRID_ROWS,
-  COLLECTABLE_COUNT,
   PARCEL_COUNT,
   START_TILE_X,
   START_TILE_Y,
@@ -25,7 +24,7 @@ import {
   dropZoneTileIndices,
   customStartTile,
 } from "../tiledata";
-import { createEmptyMap, type MapData } from "../mapData";
+import { type MapData } from "../mapData";
 
 describe("constants", () => {
   it("has correct tile size", () => {
@@ -248,6 +247,7 @@ describe("loadWorld", () => {
       parcels: [],
       monsters: [],
       movingBlocks: [],
+      timeLimit: 60,
     };
     loadWorld(map);
 
@@ -278,6 +278,7 @@ describe("loadWorld", () => {
       parcels: [],
       monsters: [],
       movingBlocks: [],
+      timeLimit: 60,
     };
     loadWorld(map);
     expect(portalTileIndices).toEqual([1, 2]);
@@ -295,6 +296,7 @@ describe("loadWorld", () => {
       parcels: [],
       monsters: [],
       movingBlocks: [],
+      timeLimit: 60,
     };
     loadWorld(map);
     expect(dropZoneTileIndices).toEqual([1, 2]);
@@ -312,6 +314,7 @@ describe("loadWorld", () => {
       parcels: [],
       monsters: [],
       movingBlocks: [],
+      timeLimit: 60,
     };
     loadWorld(map);
     expect(customStartTile).toBe(3);
@@ -329,6 +332,7 @@ describe("loadWorld", () => {
       parcels: [],
       monsters: [],
       movingBlocks: [],
+      timeLimit: 60,
     };
     loadWorld(map);
     expect(tiles[0]).toBeInstanceOf(Tree);

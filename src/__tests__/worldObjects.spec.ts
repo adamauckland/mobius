@@ -4,17 +4,29 @@ vi.mock("excalibur", () => {
   class MockVector {
     x: number;
     y: number;
-    constructor(x = 0, y = 0) { this.x = x; this.y = y; }
-    clone() { return new MockVector(this.x, this.y); }
+    constructor(x = 0, y = 0) {
+      this.x = x;
+      this.y = y;
+    }
+    clone() {
+      return new MockVector(this.x, this.y);
+    }
   }
   class MockActor {
     pos: MockVector;
     width = 0;
     height = 0;
     z = 0;
-    graphics = { use: vi.fn(), visible: true, onPreDraw: null, offset: { x: 0, y: 0 } };
+    graphics = {
+      use: vi.fn(),
+      visible: true,
+      onPreDraw: null,
+      offset: { x: 0, y: 0 },
+    };
     constructor(options?: any) {
-      this.pos = options?.pos ? new MockVector(options.pos.x, options.pos.y) : new MockVector();
+      this.pos = options?.pos
+        ? new MockVector(options.pos.x, options.pos.y)
+        : new MockVector();
     }
     kill() {}
   }
@@ -138,7 +150,10 @@ describe("worldObjects", () => {
       it("drops rock at specified tile and updates position", () => {
         spawnRocksAt([30]);
         const rock = getRockAtTile(30)!;
-        const player = { carriedRock: null as any, logicalTileIndex: 30 } as any;
+        const player = {
+          carriedRock: null as any,
+          logicalTileIndex: 30,
+        } as any;
         pickUpRock(rock, player);
 
         dropRockAtTile(player, 35);
@@ -162,7 +177,10 @@ describe("worldObjects", () => {
       it("drops rock at player's logical tile", () => {
         spawnRocksAt([40]);
         const rock = getRockAtTile(40)!;
-        const player = { carriedRock: null as any, logicalTileIndex: 45 } as any;
+        const player = {
+          carriedRock: null as any,
+          logicalTileIndex: 45,
+        } as any;
         pickUpRock(rock, player);
         dropRock(player);
         expect(rock.tileIndex).toBe(45);
@@ -182,7 +200,9 @@ describe("worldObjects", () => {
         expect(rock.carriedBy).toBeNull();
         const x = 50 % GRID_COLS;
         const y = Math.floor(50 / GRID_COLS);
+
         expect(rock.actor.pos.x).toBe(x * TILE_SIZE + TILE_SIZE / 2);
+        expect(rock.actor.pos.y).toBe(y * TILE_SIZE + TILE_SIZE / 2);
       });
     });
   });
@@ -290,7 +310,10 @@ describe("worldObjects", () => {
       it("drops parcel at specified tile", () => {
         spawnParcelsAt([{ id: 0, tile: 305 }]);
         const parcel = getParcelAtTile(305)!;
-        const player = { carriedParcel: null as any, logicalTileIndex: 305 } as any;
+        const player = {
+          carriedParcel: null as any,
+          logicalTileIndex: 305,
+        } as any;
         pickUpParcel(parcel, player);
         dropParcelAtTile(player, 310);
         expect(parcel.carriedBy).toBeNull();
@@ -303,7 +326,10 @@ describe("worldObjects", () => {
       it("drops at player's logical tile", () => {
         spawnParcelsAt([{ id: 0, tile: 306 }]);
         const parcel = getParcelAtTile(306)!;
-        const player = { carriedParcel: null as any, logicalTileIndex: 320 } as any;
+        const player = {
+          carriedParcel: null as any,
+          logicalTileIndex: 320,
+        } as any;
         pickUpParcel(parcel, player);
         dropParcel(player);
         expect(parcel.tileIndex).toBe(320);

@@ -2,11 +2,12 @@ import tilesImgUrl from "./assets/tiles.png";
 import roguelikeImgUrl from "./assets/roguelike.png";
 import {
   type MapData,
+  type ProjectData,
   codeToTile,
   tileToCode,
   createEmptyMap,
-  serializeMap,
-  deserializeMap,
+  serializeProject,
+  deserializeProject,
 } from "./mapData";
 import { GRID_COLS, GRID_ROWS, TILE_SIZE } from "./tiledata";
 
@@ -174,7 +175,10 @@ interface PatrolPlacement {
   startTile: number;
 }
 
-let mapData: MapData;
+let project: ProjectData = { levels: [createEmptyMap(GRID_COLS, GRID_ROWS)] };
+let currentLevelIndex = 0;
+let mapData: MapData = project.levels[0];
+let levelIndicator: HTMLSpanElement;
 let selectedTool: ToolId = "grass";
 let groupId = 0;
 let direction: (typeof DIRECTIONS)[number] = "right";
@@ -726,7 +730,7 @@ function onKeyDown(e: KeyboardEvent) {
     updatePropertyUI();
   }
   if (e.key === "]") {
-    groupId = Math.min(9, groupId + 1);
+    groupId = Math.min(29, groupId + 1);
     updatePropertyUI();
   }
 }
@@ -752,7 +756,7 @@ function updatePropertyUI() {
 
   if (selectedTool === "barrier" || selectedTool === "switch") {
     html += `<div class="prop-row"><label>Group:</label>`;
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 30; i++) {
       html += `<button class="prop-btn ${groupId === i ? "active" : ""}" onclick="window._edSetGroup(${i})">${i}</button>`;
     }
     html += `</div>`;
@@ -806,23 +810,79 @@ function updateStatus(msg: string) {
 };
 
 // ---------------------------------------------------------------------------
+// Level navigation
+// ---------------------------------------------------------------------------
+
+function syncMapFromUI() {
+  mapData.name = nameInput.value || "Untitled";
+  mapData.timeLimit = (parseFloat(timeLimitInput.value) || 0) * 1000;
+}
+
+function syncUIFromMap() {
+  nameInput.value = mapData.name;
+  timeLimitInput.value = String(mapData.timeLimit / 1000);
+  updateLevelIndicator();
+  centerCamera();
+}
+
+function switchToLevel(index: number) {
+  syncMapFromUI();
+  project.levels[currentLevelIndex] = mapData;
+  currentLevelIndex = index;
+  mapData = project.levels[currentLevelIndex];
+  syncUIFromMap();
+}
+
+function prevLevel() {
+  if (currentLevelIndex > 0) switchToLevel(currentLevelIndex - 1);
+}
+
+function nextLevel() {
+  syncMapFromUI();
+  project.levels[currentLevelIndex] = mapData;
+  if (currentLevelIndex >= project.levels.length - 1) {
+    // Add a new level
+    project.levels.push(createEmptyMap(GRID_COLS, GRID_ROWS));
+  }
+  switchToLevel(currentLevelIndex + 1);
+}
+
+function deleteLevel() {
+  if (project.levels.length <= 1) return;
+  if (!confirm(`Delete level ${currentLevelIndex + 1}?`)) return;
+  project.levels.splice(currentLevelIndex, 1);
+  if (currentLevelIndex >= project.levels.length) {
+    currentLevelIndex = project.levels.length - 1;
+  }
+  mapData = project.levels[currentLevelIndex];
+  syncUIFromMap();
+}
+
+function updateLevelIndicator() {
+  if (levelIndicator != null) {
+    levelIndicator.textContent = `Level ${currentLevelIndex + 1} / ${project.levels.length}`;
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Save / Load
 // ---------------------------------------------------------------------------
 
-function saveMap() {
-  mapData.name = nameInput.value || "Untitled";
-  mapData.timeLimit = (parseFloat(timeLimitInput.value) || 0) * 1000;
-  const json = serializeMap(mapData);
+function saveProject() {
+  syncMapFromUI();
+  project.levels[currentLevelIndex] = mapData;
+  const json = serializeProject(project);
   const blob = new Blob([json], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `${mapData.name.replace(/\s+/g, "_")}.json`;
+  const projectName = mapData.name.replace(/\s+/g, "_");
+  a.download = `${projectName}.json`;
   a.click();
   URL.revokeObjectURL(url);
 }
 
-function loadMap() {
+function loadProject() {
   const input = document.createElement("input");
   input.type = "file";
   input.accept = ".json";
@@ -832,22 +892,23 @@ function loadMap() {
     const reader = new FileReader();
     reader.onload = () => {
       try {
-        const loaded = deserializeMap(reader.result as string);
-        // Validate basic structure
-        if (!loaded.tiles || !Array.isArray(loaded.tiles)) {
-          alert("Invalid map file");
+        const loaded = deserializeProject(reader.result as string);
+        if (loaded.levels.length === 0) {
+          alert("Invalid project file");
           return;
         }
-        // Pad or truncate tiles to match expected grid
-        const expected = loaded.cols * loaded.rows;
-        while (loaded.tiles.length < expected) loaded.tiles.push("g");
-        if (loaded.tiles.length > expected) loaded.tiles.length = expected;
-        mapData = loaded;
-        nameInput.value = mapData.name;
-        timeLimitInput.value = String(mapData.timeLimit / 1000);
-        centerCamera();
+        // Validate/pad each level
+        for (const level of loaded.levels) {
+          const expected = level.cols * level.rows;
+          while (level.tiles.length < expected) level.tiles.push("g");
+          if (level.tiles.length > expected) level.tiles.length = expected;
+        }
+        project = loaded;
+        currentLevelIndex = 0;
+        mapData = project.levels[0];
+        syncUIFromMap();
       } catch {
-        alert("Failed to parse map file");
+        alert("Failed to parse project file");
       }
     };
     reader.readAsText(file);
@@ -856,29 +917,44 @@ function loadMap() {
 }
 
 function testMap() {
-  mapData.name = nameInput.value || "Untitled";
-  mapData.timeLimit = (parseFloat(timeLimitInput.value) || 0) * 1000;
-  sessionStorage.setItem("customMap", serializeMap(mapData));
-  sessionStorage.setItem("editorMap", serializeMap(mapData));
+  syncMapFromUI();
+  project.levels[currentLevelIndex] = mapData;
+  // Store the full project and which level to test
+  localStorage.setItem("customProject", serializeProject(project));
+  localStorage.setItem("customProjectLevel", String(currentLevelIndex));
+  localStorage.setItem("editorProject", serializeProject(project));
+  localStorage.setItem("editorLevel", String(currentLevelIndex));
+  location.reload();
+}
+
+function playFromStart() {
+  syncMapFromUI();
+  project.levels[currentLevelIndex] = mapData;
+  // Start at level 0 with fresh lives
+  localStorage.setItem("customProject", serializeProject(project));
+  localStorage.setItem("customProjectLevel", "0");
+  localStorage.setItem("editorProject", serializeProject(project));
+  localStorage.setItem("editorLevel", String(currentLevelIndex));
   location.reload();
 }
 
 function backToMenu() {
-  // Store current map so we can resume editing
-  mapData.name = nameInput.value || "Untitled";
-  mapData.timeLimit = (parseFloat(timeLimitInput.value) || 0) * 1000;
-  sessionStorage.setItem("editorMap", serializeMap(mapData));
+  syncMapFromUI();
+  project.levels[currentLevelIndex] = mapData;
+  localStorage.setItem("editorProject", serializeProject(project));
+  localStorage.setItem("editorLevel", String(currentLevelIndex));
   container.style.display = "none";
   cancelAnimationFrame(animFrame);
   document.getElementById("start-screen")!.style.display = "flex";
 }
 
 function newMap() {
-  if (!confirm("Create a new empty map? Unsaved changes will be lost.")) return;
-  mapData = createEmptyMap(GRID_COLS, GRID_ROWS);
-  nameInput.value = mapData.name;
-  timeLimitInput.value = String(mapData.timeLimit / 1000);
-  centerCamera();
+  if (!confirm("Create a new empty project? Unsaved changes will be lost."))
+    return;
+  project = { levels: [createEmptyMap(GRID_COLS, GRID_ROWS)] };
+  currentLevelIndex = 0;
+  mapData = project.levels[0];
+  syncUIFromMap();
 }
 
 function centerCamera() {
@@ -908,11 +984,18 @@ function buildEditorUI() {
         <input id="editor-timelimit" type="number" min="0" step="5" value="60"
           style="width:60px;font-family:monospace;font-size:14px;padding:4px 6px;background:#34393c;color:#d0e3e9;border:1px solid #5e676b;" />
       </label>
+      <div style="display:flex;align-items:center;gap:4px;">
+        <button id="ed-prev-level" class="ed-lvl-btn">&lt;</button>
+        <span id="ed-level-indicator" style="font-size:12px;color:#929fa4;min-width:90px;text-align:center;">Level 1 / 1</span>
+        <button id="ed-next-level" class="ed-lvl-btn">&gt;</button>
+        <button id="ed-del-level" class="ed-lvl-btn" style="margin-left:2px;color:#e74c3c;">✕</button>
+      </div>
       <div id="editor-buttons">
         <button id="ed-new">New</button>
         <button id="ed-save">Save</button>
         <button id="ed-load">Load</button>
         <button id="ed-test">Test</button>
+        <button id="ed-play" style="background:#2e7d32;color:#fff;">Play</button>
         <button id="ed-back">Back</button>
       </div>
     </div>
@@ -991,6 +1074,12 @@ function buildEditorUI() {
     .prop-btn.active { background: #5e676b; color: #fff; border-color: #929fa4; }
     .prop-btn:hover { background: #5e676b; }
     #editor-status { font-size: 11px; color: #5e676b; margin-left: auto; }
+    .ed-lvl-btn {
+      font-family: monospace; font-size: 14px; padding: 4px 8px;
+      background: #34393c; color: #d0e3e9; border: 1px solid #5e676b;
+      cursor: pointer; min-width: 24px; text-align: center;
+    }
+    .ed-lvl-btn:hover { background: #5e676b; }
   `;
   document.head.appendChild(style);
   document.body.appendChild(container);
@@ -1026,10 +1115,23 @@ function buildEditorUI() {
 
   // Wire buttons
   container.querySelector("#ed-new")!.addEventListener("click", newMap);
-  container.querySelector("#ed-save")!.addEventListener("click", saveMap);
-  container.querySelector("#ed-load")!.addEventListener("click", loadMap);
+  container.querySelector("#ed-save")!.addEventListener("click", saveProject);
+  container.querySelector("#ed-load")!.addEventListener("click", loadProject);
   container.querySelector("#ed-test")!.addEventListener("click", testMap);
+  container.querySelector("#ed-play")!.addEventListener("click", playFromStart);
   container.querySelector("#ed-back")!.addEventListener("click", backToMenu);
+
+  // Level navigation
+  levelIndicator = container.querySelector("#ed-level-indicator")!;
+  container
+    .querySelector("#ed-prev-level")!
+    .addEventListener("click", prevLevel);
+  container
+    .querySelector("#ed-next-level")!
+    .addEventListener("click", nextLevel);
+  container
+    .querySelector("#ed-del-level")!
+    .addEventListener("click", deleteLevel);
 
   // Canvas events
   canvas.addEventListener("mousedown", onMouseDown);
@@ -1075,19 +1177,26 @@ export function showEditor() {
     if (loaded >= 2) imagesReady = true;
   }
 
-  // Load saved editor map if available
-  const saved = sessionStorage.getItem("editorMap");
-  if (saved) {
+  // Load saved editor project if available
+  const savedProject = localStorage.getItem("editorProject");
+  if (savedProject) {
     try {
-      mapData = deserializeMap(saved);
+      project = deserializeProject(savedProject);
+      currentLevelIndex = parseInt(
+        localStorage.getItem("editorLevel") || "0",
+        10,
+      );
+      if (currentLevelIndex >= project.levels.length) currentLevelIndex = 0;
     } catch {
-      mapData = createEmptyMap(GRID_COLS, GRID_ROWS);
+      project = { levels: [createEmptyMap(GRID_COLS, GRID_ROWS)] };
+      currentLevelIndex = 0;
     }
   } else {
-    mapData = createEmptyMap(GRID_COLS, GRID_ROWS);
+    project = { levels: [createEmptyMap(GRID_COLS, GRID_ROWS)] };
+    currentLevelIndex = 0;
   }
-  nameInput.value = mapData.name;
-  timeLimitInput.value = String(mapData.timeLimit / 1000);
+  mapData = project.levels[currentLevelIndex];
+  syncUIFromMap();
 
   container.style.display = "flex";
   document.getElementById("start-screen")!.style.display = "none";

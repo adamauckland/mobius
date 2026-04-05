@@ -19,6 +19,9 @@ export const model = {
   isRecording: false,
   isReplaying: false,
   timeLimit: 60000, // ms before time rewind triggers (60 seconds)
+  currentLevel: 0,
+  totalLevels: 1,
+  projectJson: null as string | null, // serialized project for level transitions
   diagClicked: () => {
     resetDijkstraGraph();
   },

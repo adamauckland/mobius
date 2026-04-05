@@ -26,12 +26,14 @@
         background: #5e676b; color: #d0e3e9; border: none; cursor: pointer;
       }
       #btn-start:hover { background: #929fa4; color: #131617; }
-      #btn-restart {
-        display: none; position: fixed; left: 50%; top: 60%; transform: translate(-50%, -50%);
+      #btn-restart, #btn-continue {
+        display: none; position: fixed; left: 50%; transform: translate(-50%, -50%);
         font-family: monospace; font-size: 32px; padding: 16px 48px;
         background: #5e676b; color: #d0e3e9; border: none; cursor: pointer; z-index: 300000;
       }
-      #btn-restart:hover { background: #929fa4; color: #131617; }
+      #btn-restart { top: 60%; }
+      #btn-continue { top: 68%; }
+      #btn-restart:hover, #btn-continue:hover { background: #929fa4; color: #131617; }
     </style>
   </head>
   <body>
@@ -42,10 +44,15 @@
         <input id="seed-input" type="text" />
         <button id="btn-new-seed" style="font-family: monospace; font-size: 18px; padding: 8px 16px; background: #34393c; color: #d0e3e9; border: 2px solid #5e676b; cursor: pointer;">New</button>
       </div>
-      <button id="btn-start">START</button>
-      <button id="btn-editor" style="font-family: monospace; font-size: 18px; padding: 10px 36px; background: #34393c; color: #d0e3e9; border: 2px solid #5e676b; cursor: pointer; margin-top: 16px;">EDITOR</button>
+      <button id="btn-start">Generate
+      </button>
+      <div style="display: flex; gap: 12px; margin-top: 16px;">
+        <button id="btn-play-project" style="font-family: monospace; font-size: 18px; padding: 10px 36px; background: #2e7d32; color: #fff; border: none; cursor: pointer;">PLAY PROJECT</button>
+        <button id="btn-editor" style="font-family: monospace; font-size: 18px; padding: 10px 36px; background: #34393c; color: #d0e3e9; border: 2px solid #5e676b; cursor: pointer;">EDITOR</button>
+      </div>
     </div>
     <button id="btn-restart">RESTART</button>
+    <button id="btn-continue">CONTINUE</button>
     <script type="module" src="./src/main.ts"></script>
     <canvas id='cnv'> </canvas>
   </body>

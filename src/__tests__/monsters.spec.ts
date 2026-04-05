@@ -5,8 +5,13 @@ vi.mock("excalibur", () => {
   class MockVector {
     x: number;
     y: number;
-    constructor(x = 0, y = 0) { this.x = x; this.y = y; }
-    clone() { return new MockVector(this.x, this.y); }
+    constructor(x = 0, y = 0) {
+      this.x = x;
+      this.y = y;
+    }
+    clone() {
+      return new MockVector(this.x, this.y);
+    }
   }
   class MockActor {
     pos: MockVector;
@@ -15,7 +20,9 @@ vi.mock("excalibur", () => {
     z = 0;
     graphics = { use: vi.fn(), visible: true };
     constructor(options?: any) {
-      this.pos = options?.pos ? new MockVector(options.pos.x, options.pos.y) : new MockVector();
+      this.pos = options?.pos
+        ? new MockVector(options.pos.x, options.pos.y)
+        : new MockVector();
     }
   }
   return { Actor: MockActor, Vector: MockVector };
@@ -94,7 +101,7 @@ describe("monsters", () => {
       // Position should have changed (or at least not crash)
       const moved = actor.pos.x !== initialX || actor.pos.y !== initialY;
       // It's possible the position hasn't changed much depending on phase, but the function shouldn't crash
-      expect(true).toBe(true);
+      expect(moved).toBe(true);
     });
 
     it("kills player when monster is close enough", () => {
