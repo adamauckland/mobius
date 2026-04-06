@@ -15,17 +15,6 @@
         background: #131617; color: #d0e3e9; font-family: monospace; z-index: 1000;
       }
       #start-screen h1 { font-size: 48px; margin-bottom: 32px; }
-      #start-screen label { font-size: 18px; margin-bottom: 8px; }
-      #seed-input {
-        font-family: monospace; font-size: 24px; text-align: center;
-        padding: 8px 16px; width: 200px;
-        background: #34393c; color: #d0e3e9; border: 2px solid #5e676b;
-      }
-      #btn-start {
-        font-family: monospace; font-size: 24px; padding: 12px 48px;
-        background: #5e676b; color: #d0e3e9; border: none; cursor: pointer;
-      }
-      #btn-start:hover { background: #929fa4; color: #131617; }
       #btn-restart, #btn-continue {
         display: none; position: fixed; left: 50%; transform: translate(-50%, -50%);
         font-family: monospace; font-size: 32px; padding: 16px 48px;
@@ -39,13 +28,6 @@
   <body>
     <div id="start-screen">
       <h1>MOBIUS</h1>
-      <label for="seed-input">Map Seed</label>
-      <div style="display: flex; gap: 8px; margin-bottom: 24px;">
-        <input id="seed-input" type="text" />
-        <button id="btn-new-seed" style="font-family: monospace; font-size: 18px; padding: 8px 16px; background: #34393c; color: #d0e3e9; border: 2px solid #5e676b; cursor: pointer;">New</button>
-      </div>
-      <button id="btn-start">Generate
-      </button>
       <div style="display: flex; gap: 12px; margin-top: 16px;">
         <button id="btn-play-project" style="font-family: monospace; font-size: 18px; padding: 10px 36px; background: #2e7d32; color: #fff; border: none; cursor: pointer;">PLAY PROJECT</button>
         <button id="btn-browse-packs" style="font-family: monospace; font-size: 18px; padding: 10px 36px; background: #1565c0; color: #fff; border: none; cursor: pointer;">BROWSE PACKS</button>

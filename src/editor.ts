@@ -960,7 +960,7 @@ async function publishProject() {
     prompt("Short description of this level pack:", "") ?? "";
 
   const publishBtn = container.querySelector("#ed-publish") as HTMLButtonElement;
-  publishBtn.textContent = "Publishing...";
+  publishBtn.textContent = "Sharing...";
   publishBtn.disabled = true;
 
   try {
@@ -981,7 +981,7 @@ async function publishProject() {
   } catch (err) {
     alert("Failed to publish: " + (err as Error).message);
   } finally {
-    publishBtn.textContent = "Publish";
+    publishBtn.textContent = "Share";
     publishBtn.disabled = false;
   }
 }
@@ -1034,7 +1034,7 @@ function buildEditorUI() {
         <button id="ed-load">Load</button>
         <button id="ed-test">Test</button>
         <button id="ed-play" style="background:#2e7d32;color:#fff;">Play</button>
-        <button id="ed-publish" style="background:#1565c0;color:#fff;">Publish</button>
+        <button id="ed-publish" style="background:#1565c0;color:#fff;">Share</button>
         <button id="ed-back">Back</button>
       </div>
     </div>

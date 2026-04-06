@@ -24,10 +24,8 @@ import {
   TILE_SIZE,
   GRID_COLS,
   GRID_ROWS,
-  generateWorld,
   loadWorld,
   customStartTile,
-  COLLECTABLE_COUNT,
 } from "./tiledata";
 import { deserializeMap, deserializeProject, type MapData } from "./mapData";
 import { player } from "./chap";
@@ -42,23 +40,18 @@ import {
   setOnNewActivePlayer,
 } from "./playerManager";
 import {
-  spawnRocks,
   spawnRocksAt,
-  spawnCollectables,
   spawnCollectablesAt,
-  spawnParcels,
   spawnParcelsAt,
   PARCEL_SPRITES,
   getScore,
 } from "./worldObjects";
 import { initBarriers, spawnBarriers } from "./barriers";
 import {
-  spawnMovingBlocks,
   spawnMovingBlocksAt,
   updateMovingBlocks,
 } from "./movingBlocks";
 import {
-  spawnMonsters,
   spawnMonstersAt,
   updateMonsters,
   setOnPlayerKilled,
@@ -73,25 +66,7 @@ import {
   Z_COUNTDOWN,
 } from "./zIndex";
 
-// Seed management
-const seedInput = document.getElementById("seed-input") as HTMLInputElement;
-const btnNewSeed = document.getElementById("btn-new-seed")!;
-
-function generateNewSeed() {
-  return Math.floor(Math.random() * 100000);
-}
-
-// Load seed from localStorage, or generate a new one
-const storedSeed = localStorage.getItem("mapSeed");
-seedInput.value = storedSeed ?? String(generateNewSeed());
-
-btnNewSeed.addEventListener("click", () => {
-  seedInput.value = String(generateNewSeed());
-});
-
-// Wait for START button
 const startScreen = document.getElementById("start-screen")!;
-const btnStart = document.getElementById("btn-start")!;
 const restartButton = document.getElementById(
   "btn-restart",
 ) as HTMLButtonElement;
@@ -165,46 +140,37 @@ function getFenceSprite(index: number) {
   return rlSS.getSprite(46, 23); // isolated post
 }
 
-function startGame(customMapData?: MapData) {
-  if (customMapData) {
-    loadWorld(customMapData);
-    // Apply custom time limit (0 = no limit)
-    if (customMapData.timeLimit > 0) {
-      model.timeLimit = customMapData.timeLimit;
-    } else {
-      model.timeLimit = 0;
-    }
+function startGame(customMapData: MapData) {
+  loadWorld(customMapData);
+  if (customMapData.timeLimit > 0) {
+    model.timeLimit = customMapData.timeLimit;
   } else {
-    const seed = parseInt(seedInput.value, 10) || generateNewSeed();
-    localStorage.setItem("mapSeed", String(seed));
-    generateWorld(seed);
+    model.timeLimit = 0;
   }
 
   // Hide start screen
   startScreen.style.display = "none";
 
-  // Show "Back to Editor" button for custom maps
-  if (customMapData) {
-    const backBtn = document.createElement("button");
-    backBtn.textContent = "EDITOR";
-    backBtn.style.cssText = `
-      position: fixed; left: 10px; bottom: 10px;
-      font-family: monospace; font-size: 14px; padding: 8px 16px;
-      background: #34393c; color: #d0e3e9; border: 1px solid #5e676b;
-      cursor: pointer; z-index: 300000; opacity: 0.7;
-    `;
-    backBtn.addEventListener("click", () => {
-      localStorage.setItem("editorMode", "true");
-      location.reload();
-    });
-    backBtn.addEventListener("mouseenter", () => {
-      backBtn.style.opacity = "1";
-    });
-    backBtn.addEventListener("mouseleave", () => {
-      backBtn.style.opacity = "0.7";
-    });
-    document.body.appendChild(backBtn);
-  }
+  // Show "Back to Editor" button
+  const backBtn = document.createElement("button");
+  backBtn.textContent = "EDITOR";
+  backBtn.style.cssText = `
+    position: fixed; left: 10px; bottom: 10px;
+    font-family: monospace; font-size: 14px; padding: 8px 16px;
+    background: #34393c; color: #d0e3e9; border: 1px solid #5e676b;
+    cursor: pointer; z-index: 300000; opacity: 0.7;
+  `;
+  backBtn.addEventListener("click", () => {
+    localStorage.setItem("editorMode", "true");
+    location.reload();
+  });
+  backBtn.addEventListener("mouseenter", () => {
+    backBtn.style.opacity = "1";
+  });
+  backBtn.addEventListener("mouseleave", () => {
+    backBtn.style.opacity = "0.7";
+  });
+  document.body.appendChild(backBtn);
 
   // Create tilemap
   const tilemap = new TileMap({
@@ -383,20 +349,12 @@ function startGame(customMapData?: MapData) {
   initBarriers(tilemap);
   spawnBarriers();
 
-  // Spawn entities from custom map or procedurally
-  if (customMapData) {
-    spawnRocksAt(customMapData.rocks);
-    spawnParcelsAt(customMapData.parcels);
-    spawnCollectablesAt(customMapData.collectables);
-    spawnMovingBlocksAt(customMapData.movingBlocks);
-    spawnMonstersAt(customMapData.monsters);
-  } else {
-    spawnRocks(5);
-    spawnParcels();
-    spawnCollectables(COLLECTABLE_COUNT);
-    spawnMovingBlocks(3);
-    spawnMonsters(5);
-  }
+  // Spawn entities from map data
+  spawnRocksAt(customMapData.rocks);
+  spawnParcelsAt(customMapData.parcels);
+  spawnCollectablesAt(customMapData.collectables);
+  spawnMovingBlocksAt(customMapData.movingBlocks);
+  spawnMonstersAt(customMapData.monsters);
 
   // Game timer
   const timerText = new Text({
@@ -705,11 +663,6 @@ function startGame(customMapData?: MapData) {
     scoreText.text = `${displayedScore}`;
   });
 }
-
-btnStart.addEventListener("click", () => startGame());
-seedInput.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") startGame();
-});
 
 // "Play Project" button on start screen — pick a .json file and play from level 1
 const btnPlayProject = document.getElementById("btn-play-project");
