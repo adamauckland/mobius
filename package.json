@@ -26,6 +26,8 @@
   "dependencies": {
     "@excaliburjs/plugin-pathfinding": "^0.32.0",
     "excalibur": "0.32.0",
+    "firebase": "^12.11.0",
+    "firebase-tools": "^15.13.0",
     "vitest": "^4.1.2"
   },
   "devDependencies": {

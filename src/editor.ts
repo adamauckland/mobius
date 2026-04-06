@@ -10,6 +10,7 @@ import {
   deserializeProject,
 } from "./mapData";
 import { GRID_COLS, GRID_ROWS, TILE_SIZE } from "./tiledata";
+import { publishPack } from "./levelPacks";
 
 // ---------------------------------------------------------------------------
 // Sprite helpers – draw directly from loaded PNGs
@@ -948,6 +949,43 @@ function backToMenu() {
   document.getElementById("start-screen")!.style.display = "flex";
 }
 
+async function publishProject() {
+  syncMapFromUI();
+  project.levels[currentLevelIndex] = mapData;
+
+  const name = mapData.name || "Untitled";
+  const author = prompt("Your name (shown to other players):", "") ?? "";
+  if (!author) return;
+  const description =
+    prompt("Short description of this level pack:", "") ?? "";
+
+  const publishBtn = container.querySelector("#ed-publish") as HTMLButtonElement;
+  publishBtn.textContent = "Publishing...";
+  publishBtn.disabled = true;
+
+  try {
+    const packId = await publishPack(project, name, author, description);
+    const shareUrl = `${location.origin}${location.pathname}?pack=${packId}`;
+
+    // Copy to clipboard
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      alert(
+        `Published! Share this link (copied to clipboard):\n\n${shareUrl}\n\nPack ID: ${packId}`,
+      );
+    } catch {
+      alert(
+        `Published! Share this link:\n\n${shareUrl}\n\nPack ID: ${packId}`,
+      );
+    }
+  } catch (err) {
+    alert("Failed to publish: " + (err as Error).message);
+  } finally {
+    publishBtn.textContent = "Publish";
+    publishBtn.disabled = false;
+  }
+}
+
 function newMap() {
   if (!confirm("Create a new empty project? Unsaved changes will be lost."))
     return;
@@ -996,6 +1034,7 @@ function buildEditorUI() {
         <button id="ed-load">Load</button>
         <button id="ed-test">Test</button>
         <button id="ed-play" style="background:#2e7d32;color:#fff;">Play</button>
+        <button id="ed-publish" style="background:#1565c0;color:#fff;">Publish</button>
         <button id="ed-back">Back</button>
       </div>
     </div>
@@ -1119,6 +1158,9 @@ function buildEditorUI() {
   container.querySelector("#ed-load")!.addEventListener("click", loadProject);
   container.querySelector("#ed-test")!.addEventListener("click", testMap);
   container.querySelector("#ed-play")!.addEventListener("click", playFromStart);
+  container
+    .querySelector("#ed-publish")!
+    .addEventListener("click", publishProject);
   container.querySelector("#ed-back")!.addEventListener("click", backToMenu);
 
   // Level navigation

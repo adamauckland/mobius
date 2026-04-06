@@ -40,6 +40,29 @@ game
       return;
     }
 
+    // Check for ?pack=ID in URL — load a shared pack from Firebase
+    const urlParams = new URLSearchParams(window.location.search);
+    const packId = urlParams.get("pack");
+    if (packId) {
+      // Clear the URL param so reloads don't re-fetch
+      window.history.replaceState({}, "", window.location.pathname);
+      import("./levelPacks").then(async ({ loadPack, getPackProject }) => {
+        try {
+          const pack = await loadPack(packId);
+          if (!pack) {
+            alert(`Level pack "${packId}" not found.`);
+            return;
+          }
+          const proj = getPackProject(pack);
+          const json = JSON.stringify(proj);
+          startProjectLevel(json, 0);
+        } catch (err) {
+          alert("Failed to load pack: " + (err as Error).message);
+        }
+      });
+      return;
+    }
+
     // Check if we should reopen the editor (from "Back to Editor" button)
     if (localStorage.getItem("editorMode") === "true") {
       localStorage.removeItem("editorMode");
