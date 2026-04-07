@@ -23,8 +23,8 @@ import {
   portalTileIndices,
   dropZoneTileIndices,
   customStartTile,
-} from "../tiledata";
-import { type MapData } from "../mapData";
+} from "../tiles/tiledata";
+import { type MapData } from "../levels/mapData";
 
 describe("constants", () => {
   it("has correct tile size", () => {

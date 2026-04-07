@@ -6,7 +6,7 @@ import {
   serializeMap,
   deserializeMap,
   type MapData,
-} from "../mapData";
+} from "../levels/mapData";
 
 describe("tileToCode", () => {
   it("encodes grass as 'g'", () => {

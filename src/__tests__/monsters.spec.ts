@@ -46,7 +46,7 @@ vi.mock("../zIndex", () => ({
   Z_LAYER_PLAYER: 3,
 }));
 
-vi.mock("../playerManager", () => ({
+vi.mock("../entities/playerManager", () => ({
   entries: mockEntries,
 }));
 
@@ -55,8 +55,8 @@ import {
   resetMonsters,
   updateMonsters,
   setOnPlayerKilled,
-} from "../monsters";
-import { generateWorld, TILE_SIZE, GRID_COLS } from "../tiledata";
+} from "../entities/monsters";
+import { generateWorld, TILE_SIZE, GRID_COLS } from "../tiles/tiledata";
 
 describe("monsters", () => {
   beforeEach(() => {

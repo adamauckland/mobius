@@ -1,5 +1,5 @@
-import tilesImgUrl from "./assets/tiles.png";
-import roguelikeImgUrl from "./assets/roguelike.png";
+import tilesImgUrl from "../assets/tiles.png";
+import roguelikeImgUrl from "../assets/roguelike.png";
 import {
   type MapData,
   type ProjectData,
@@ -9,7 +9,7 @@ import {
   serializeProject,
   deserializeProject,
 } from "./mapData";
-import { GRID_COLS, GRID_ROWS, TILE_SIZE } from "./tiledata";
+import { GRID_COLS, GRID_ROWS, TILE_SIZE } from "../tiles/tiledata";
 import { publishPack } from "./levelPacks";
 
 // ---------------------------------------------------------------------------
@@ -956,10 +956,11 @@ async function publishProject() {
   const name = mapData.name || "Untitled";
   const author = prompt("Your name (shown to other players):", "") ?? "";
   if (!author) return;
-  const description =
-    prompt("Short description of this level pack:", "") ?? "";
+  const description = prompt("Short description of this level pack:", "") ?? "";
 
-  const publishBtn = container.querySelector("#ed-publish") as HTMLButtonElement;
+  const publishBtn = container.querySelector(
+    "#ed-publish",
+  ) as HTMLButtonElement;
   publishBtn.textContent = "Sharing...";
   publishBtn.disabled = true;
 
@@ -974,9 +975,7 @@ async function publishProject() {
         `Published! Share this link (copied to clipboard):\n\n${shareUrl}\n\nPack ID: ${packId}`,
       );
     } catch {
-      alert(
-        `Published! Share this link:\n\n${shareUrl}\n\nPack ID: ${packId}`,
-      );
+      alert(`Published! Share this link:\n\n${shareUrl}\n\nPack ID: ${packId}`);
     }
   } catch (err) {
     alert("Failed to publish: " + (err as Error).message);

@@ -73,7 +73,7 @@ vi.mock("../sounds", () => ({
   sfxPlatformStop: vi.fn(),
 }));
 
-vi.mock("../lightTrail", () => ({
+vi.mock("../entities/lightTrail", () => ({
   spawnLight: vi.fn(),
   spawnScoreLight: vi.fn(),
 }));
@@ -85,7 +85,7 @@ vi.mock("../pathfinding", () => ({
   initPathfinding: vi.fn(),
 }));
 
-vi.mock("../worldObjects", () => ({
+vi.mock("../entities/worldObjects", () => ({
   resetRocks: vi.fn(),
   resetParcels: vi.fn(),
   getRockAtTile: vi.fn(),
@@ -99,36 +99,36 @@ vi.mock("../worldObjects", () => ({
   tryCollectAtTile: vi.fn(),
 }));
 
-vi.mock("../monsters", () => ({
+vi.mock("../entities/monsters", () => ({
   resetMonsters: vi.fn(),
 }));
 
-vi.mock("../barriers", () => ({
+vi.mock("../entities/barriers", () => ({
   resetBarriers: vi.fn(),
   tryActivateSwitch: vi.fn(),
 }));
 
-vi.mock("../movingBlocks", () => ({
+vi.mock("../entities/movingBlocks", () => ({
   resetMovingBlocks: vi.fn(),
   getMovingBlockNear: vi.fn(),
   mountBlock: vi.fn(),
 }));
 
-vi.mock("../startScreen", () => ({
+vi.mock("../gameSetup", () => ({
   resetGameTimer: vi.fn(),
 }));
 
-import { entries, activeEntry, replayAll, setupClickHandler } from "../playerManager";
+import { entries, activeEntry, replayAll, setupClickHandler } from "../entities/playerManager";
 import { model } from "../model";
 import {
   START_POS_X,
   START_POS_Y,
   START_TILE_INDEX,
-} from "../tiledata";
-import { resetRocks, resetParcels } from "../worldObjects";
-import { resetMonsters } from "../monsters";
-import { resetBarriers } from "../barriers";
-import { resetMovingBlocks } from "../movingBlocks";
+} from "../tiles/tiledata";
+import { resetRocks, resetParcels } from "../entities/worldObjects";
+import { resetMonsters } from "../entities/monsters";
+import { resetBarriers } from "../entities/barriers";
+import { resetMovingBlocks } from "../entities/movingBlocks";
 import { game } from "../game";
 
 describe("playerManager", () => {

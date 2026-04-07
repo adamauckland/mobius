@@ -3,9 +3,9 @@ import { Loader } from "excalibur";
 import { Resources } from "./resources";
 import { game } from "./game";
 import { model } from "./model";
-import "./startScreen";
-import { startCustomMap, startProjectLevel } from "./startScreen";
-import { showEditor } from "./editor";
+import "./gameSetup";
+import { startCustomMap, startProjectLevel } from "./gameSetup";
+import { showEditor } from "./levels/editor";
 
 // Load resources, then handle custom map / editor mode / project play
 const loader = new Loader();
@@ -46,7 +46,7 @@ game
     if (packId) {
       // Clear the URL param so reloads don't re-fetch
       window.history.replaceState({}, "", window.location.pathname);
-      import("./levelPacks").then(async ({ loadPack, getPackProject }) => {
+      import("./levels/levelPacks").then(async ({ loadPack, getPackProject }) => {
         try {
           const pack = await loadPack(packId);
           if (!pack) {

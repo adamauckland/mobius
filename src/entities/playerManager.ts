@@ -1,6 +1,6 @@
 import { Vector, Actor, Circle, Color } from "excalibur";
 import { Player, player } from "./chap";
-import { plrWalk, plrImage } from "./resources";
+import { plrWalk, plrImage } from "../resources";
 import { GameRecorder, type GameRecording } from "./recorder";
 import {
   TILE_SIZE,
@@ -10,16 +10,17 @@ import {
   START_POS_Y,
   START_TILE_INDEX,
   customStartTile,
-} from "./tiledata";
-import { model } from "./model";
-import { game } from "./game";
-import { handleTileClick } from "./pathfinding";
+} from "../tiles/tiledata";
+import { model } from "../model";
+import { game } from "../game";
+import { handleTileClick } from "../pathfinding";
 import { resetRocks, resetParcels } from "./worldObjects";
 import { resetMonsters } from "./monsters";
 import { resetBarriers } from "./barriers";
-import { resetGameTimer } from "./startScreen";
+import { resetGameTimer } from "../gameLoop";
 import { resetMovingBlocks } from "./movingBlocks";
-import { zFromY, Z_LAYER_PLAYER, Z_RIPPLE } from "./zIndex";
+import { zFromY, Z_LAYER_PLAYER, Z_RIPPLE } from "../zIndex";
+import { spawnRewindPixels, REWIND_EFFECT_DURATION } from "./lightTrail";
 
 let inputLockedUntil = 0;
 
@@ -171,6 +172,9 @@ export function stopAndSpawnNext() {
   const active = activeEntry();
   if (!active.recorder.isRecording) return;
 
+  // Capture position before rewind for the pixel effect
+  const oldPos = active.player.pos.clone();
+
   // Stop recording the active player and save its recording
   active.recording = active.recorder.stopRecording();
   model.isRecording = false;
@@ -206,6 +210,17 @@ export function stopAndSpawnNext() {
   replayAll();
   newEntry.recorder.startRecording();
   model.isRecording = true;
+
+  // Rewind pixel effect: explode at old position, rebuild at start
+  const startPos = new Vector(startPosX(), startPosY());
+  newPlayer.graphics.visible = false;
+  spawnRewindPixels(oldPos, startPos);
+  game.clock.schedule(() => {
+    newPlayer.graphics.visible = true;
+    newPlayer.scale.x = 0.2;
+    newPlayer.scale.y = 0.2;
+    newPlayer.actions.scaleTo(new Vector(1, 1), new Vector(4, 4));
+  }, REWIND_EFFECT_DURATION - 200);
 
   // Follow the new player
   const cameraRadius =

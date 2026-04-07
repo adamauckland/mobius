@@ -1,5 +1,5 @@
 import { Actor, Vector } from "excalibur";
-import { rlSS } from "./resources";
+import { rlSS } from "../resources";
 import {
   TILE_SIZE,
   GRID_COLS,
@@ -8,11 +8,11 @@ import {
   tiles,
   seededRandom,
   START_TILE_INDEX,
-} from "./tiledata";
-import { game } from "./game";
-import { zFromY, Z_LAYER_PICKUP } from "./zIndex";
+} from "../tiles/tiledata";
+import { game } from "../game";
+import { zFromY, Z_LAYER_PICKUP } from "../zIndex";
 import type { Player } from "./chap";
-import { sfxPlatformStart, sfxPlatformStop } from "./sounds";
+import { sfxPlatformStart, sfxPlatformStop } from "../sounds";
 
 /** Accumulated elapsed time — advances only via delta, so pauses are excluded. */
 let blockElapsed = 0;

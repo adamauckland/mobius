@@ -10,7 +10,7 @@ import {
   serverTimestamp,
   Timestamp,
 } from "firebase/firestore";
-import { db } from "./firebase";
+import { db } from "../firebase";
 import type { ProjectData } from "./mapData";
 import { serializeProject, deserializeProject } from "./mapData";
 

@@ -1,5 +1,5 @@
 import { Actor, Vector } from "excalibur";
-import { rlSS } from "./resources";
+import { rlSS } from "../resources";
 import {
   TILE_SIZE,
   GRID_COLS,
@@ -9,9 +9,9 @@ import {
   seededRandom,
   START_TILE_INDEX,
   dropZoneTileIndices,
-} from "./tiledata";
-import { game } from "./game";
-import { zFromY, Z_LAYER_PICKUP, Z_LAYER_ROCK } from "./zIndex";
+} from "../tiles/tiledata";
+import { game } from "../game";
+import { zFromY, Z_LAYER_PICKUP, Z_LAYER_ROCK } from "../zIndex";
 import { spawnLight, spawnScoreLight } from "./lightTrail";
 import {
   sfxCollect,
@@ -20,7 +20,7 @@ import {
   sfxPickUpParcel,
   sfxDropParcel,
   sfxParcelPlaced,
-} from "./sounds";
+} from "../sounds";
 import { Player } from "./chap";
 
 export interface Rock {

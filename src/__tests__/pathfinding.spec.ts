@@ -77,18 +77,18 @@ vi.mock("../sounds", () => ({
   sfxPlatformStop: vi.fn(),
 }));
 
-vi.mock("../lightTrail", () => ({
+vi.mock("../entities/lightTrail", () => ({
   spawnLight: vi.fn(),
   spawnScoreLight: vi.fn(),
 }));
 
-vi.mock("../movingBlocks", () => ({
+vi.mock("../entities/movingBlocks", () => ({
   dismountBlock: vi.fn(() => true),
   getMovingBlockNear: vi.fn(),
   mountBlock: vi.fn(),
 }));
 
-vi.mock("../worldObjects", () => ({
+vi.mock("../entities/worldObjects", () => ({
   getRockAtTile: vi.fn(),
   pickUpRock: vi.fn(),
   dropRock: vi.fn(),
@@ -98,7 +98,7 @@ vi.mock("../worldObjects", () => ({
   tryCollectAtTile: vi.fn(),
 }));
 
-vi.mock("../barriers", () => ({
+vi.mock("../entities/barriers", () => ({
   tryActivateSwitch: vi.fn(),
 }));
 
@@ -119,9 +119,9 @@ import {
   GRID_COLS,
   GRID_ROWS,
   START_TILE_INDEX,
-} from "../tiledata";
+} from "../tiles/tiledata";
 import { model } from "../model";
-import { dropRock, dropParcel, getRockAtTile } from "../worldObjects";
+import { dropRock, dropParcel, getRockAtTile } from "../entities/worldObjects";
 
 describe("pathfinding", () => {
   let mockTileMap: any;

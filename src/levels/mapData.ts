@@ -1,4 +1,4 @@
-import type { Direction } from "./tiledata";
+import type { Direction } from "../tiles/tiledata";
 
 export interface MapData {
   name: string;

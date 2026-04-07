@@ -1,5 +1,5 @@
 import { Actor, Vector } from "excalibur";
-import { rlSS } from "./resources";
+import { rlSS } from "../resources";
 import {
   TILE_SIZE,
   GRID_COLS,
@@ -8,9 +8,9 @@ import {
   tiles,
   seededRandom,
   START_TILE_INDEX,
-} from "./tiledata";
-import { game } from "./game";
-import { zFromY, Z_LAYER_PLAYER } from "./zIndex";
+} from "../tiles/tiledata";
+import { game } from "../game";
+import { zFromY, Z_LAYER_PLAYER } from "../zIndex";
 import type { Player } from "./chap";
 import { entries } from "./playerManager";
 

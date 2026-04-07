@@ -1,11 +1,11 @@
 import { Actor, Vector, vec, TileMap } from "excalibur";
-import { rlSS } from "./resources";
-import { tiles, Barrier, Switch, GRID_COLS, TILE_SIZE } from "./tiledata";
-import { game } from "./game";
-import { zFromY, Z_LAYER_TREE, Z_LAYER_PICKUP } from "./zIndex";
-import { rebuildPathfinding } from "./pathfinding";
+import { rlSS } from "../resources";
+import { tiles, Barrier, Switch, GRID_COLS, TILE_SIZE } from "../tiles/tiledata";
+import { game } from "../game";
+import { zFromY, Z_LAYER_TREE, Z_LAYER_PICKUP } from "../zIndex";
+import { rebuildPathfinding } from "../pathfinding";
 import { spawnLight } from "./lightTrail";
-import { sfxSwitch } from "./sounds";
+import { sfxSwitch } from "../sounds";
 
 interface BarrierEntry {
   actor: Actor;

@@ -1,5 +1,5 @@
 import { DefaultLoader, Engine, ExcaliburGraphicsContext, Scene, SceneActivationContext } from "excalibur";
-import { Player } from "./player";
+import { Player } from "../entities/player";
 
 export class MyLevel extends Scene {
     override onInitialize(engine: Engine): void {

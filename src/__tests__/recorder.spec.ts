@@ -21,7 +21,7 @@ vi.mock("../game", () => ({
   },
 }));
 
-import { GameRecorder, type GameRecording } from "../recorder";
+import { GameRecorder, type GameRecording } from "../entities/recorder";
 
 describe("GameRecorder", () => {
   let recorder: GameRecorder;

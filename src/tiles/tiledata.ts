@@ -1,5 +1,5 @@
-import type { MapData } from "./mapData";
-import { codeToTile } from "./mapData";
+import type { MapData } from "../levels/mapData";
+import { codeToTile } from "../levels/mapData";
 
 // for tilemap creation, create tiles with a sprite info and
 // a collider setting for Graph parsing

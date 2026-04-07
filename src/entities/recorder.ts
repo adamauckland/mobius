@@ -1,6 +1,6 @@
 // Records and replays tile click events
 
-import { game } from "./game";
+import { game } from "../game";
 
 export interface ClickEvent {
   timestamp: number; // ms since recording started

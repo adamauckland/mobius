@@ -6,12 +6,12 @@ import {
   GraphNode,
 } from "@excaliburjs/plugin-pathfinding";
 import { TileMap } from "excalibur";
-import { Tree, Barrier, Fence, tiles, TILE_SIZE, GRID_COLS, GRID_ROWS } from "./tiledata";
-import { Player } from "./chap";
+import { Tree, Barrier, Fence, tiles, TILE_SIZE, GRID_COLS, GRID_ROWS } from "./tiles/tiledata";
+import { Player } from "./entities/chap";
 import { model } from "./model";
-import { getRockAtTile, pickUpRock, dropRock, getParcelAtTile, pickUpParcel, dropParcel } from "./worldObjects";
+import { getRockAtTile, pickUpRock, dropRock, getParcelAtTile, pickUpParcel, dropParcel } from "./entities/worldObjects";
 import { game } from "./game";
-import { dismountBlock } from "./movingBlocks";
+import { dismountBlock } from "./entities/movingBlocks";
 
 // create graph for dijkstra — deferred until initPathfinding so tiles are populated
 let myDijkstraGraph = new ExcaliburGraph();

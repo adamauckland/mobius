@@ -45,9 +45,9 @@ import {
   getMovingBlockNear,
   mountBlock,
   dismountBlock,
-} from "../movingBlocks";
+} from "../entities/movingBlocks";
 import { Vector } from "excalibur";
-import { generateWorld, tiles, TILE_SIZE, GRID_COLS } from "../tiledata";
+import { generateWorld, tiles, TILE_SIZE, GRID_COLS } from "../tiles/tiledata";
 import { game } from "../game";
 
 describe("movingBlocks", () => {

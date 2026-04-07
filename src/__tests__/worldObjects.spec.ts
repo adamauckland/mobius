@@ -64,13 +64,13 @@ vi.mock("../sounds", () => ({
   sfxParcelPlaced: vi.fn(),
 }));
 
-vi.mock("../lightTrail", () => ({
+vi.mock("../entities/lightTrail", () => ({
   spawnLight: vi.fn(),
   spawnScoreLight: vi.fn(),
 }));
 
 // Mock chap module - Player class (imported by worldObjects for typing)
-vi.mock("../chap", () => ({
+vi.mock("../entities/chap", () => ({
   Player: class {},
 }));
 
@@ -94,8 +94,8 @@ import {
   spawnParcelsAt,
   getParcels,
   PARCEL_SPRITES,
-} from "../worldObjects";
-import { generateWorld, TILE_SIZE, GRID_COLS } from "../tiledata";
+} from "../entities/worldObjects";
+import { generateWorld, TILE_SIZE, GRID_COLS } from "../tiles/tiledata";
 
 describe("worldObjects", () => {
   beforeEach(() => {

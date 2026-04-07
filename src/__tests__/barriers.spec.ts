@@ -50,7 +50,7 @@ vi.mock("../pathfinding", () => ({
   rebuildPathfinding: vi.fn(),
 }));
 
-vi.mock("../lightTrail", () => ({
+vi.mock("../entities/lightTrail", () => ({
   spawnLight: vi.fn(),
 }));
 
@@ -63,8 +63,8 @@ import {
   spawnBarriers,
   resetBarriers,
   tryActivateSwitch,
-} from "../barriers";
-import { generateWorld, tiles, Barrier, Switch } from "../tiledata";
+} from "../entities/barriers";
+import { generateWorld, tiles, Barrier, Switch } from "../tiles/tiledata";
 import { rebuildPathfinding } from "../pathfinding";
 import { game } from "../game";
 
