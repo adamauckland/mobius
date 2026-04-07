@@ -1,5 +1,7 @@
 // Synthesized retro sound effects using Web Audio API — no files needed.
 
+import { game } from "./game";
+
 let ctx: AudioContext | null = null;
 
 function getCtx(): AudioContext {
@@ -35,7 +37,7 @@ function playArpeggio(
   volume = 0.12,
 ) {
   freqs.forEach((freq, i) => {
-    setTimeout(() => playTone(freq, noteDuration, type, volume), i * noteDuration * 600);
+    game.clock.schedule(() => playTone(freq, noteDuration, type, volume), i * noteDuration * 600);
   });
 }
 
@@ -97,6 +99,41 @@ export function sfxPortal() {
   osc.stop(ac.currentTime + duration);
 }
 
+export function sfxHeartbeat() {
+  const ac = getCtx();
+  const t = ac.currentTime;
+  // lub
+  const osc1 = ac.createOscillator();
+  const gain1 = ac.createGain();
+  osc1.type = "sine";
+  osc1.frequency.value = 55;
+  gain1.gain.setValueAtTime(0.25, t);
+  gain1.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+  osc1.connect(gain1);
+  gain1.connect(ac.destination);
+  osc1.start(t);
+  osc1.stop(t + 0.15);
+  // dub
+  const osc2 = ac.createOscillator();
+  const gain2 = ac.createGain();
+  osc2.type = "sine";
+  osc2.frequency.value = 45;
+  gain2.gain.setValueAtTime(0.18, t + 0.15);
+  gain2.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+  osc2.connect(gain2);
+  gain2.connect(ac.destination);
+  osc2.start(t + 0.15);
+  osc2.stop(t + 0.3);
+}
+
+export function sfxCountdownTick() {
+  playTone(220, 0.15, "square", 0.12);
+}
+
+export function sfxCountdownGo() {
+  playArpeggio([220, 330, 440], 0.08, "square", 0.15);
+}
+
 // --- Looping platform hum ---
 
 let platformOsc: OscillatorNode | null = null;
@@ -120,7 +157,7 @@ export function sfxPlatformStop() {
   const ac = getCtx();
   platformGain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.2);
   const osc = platformOsc;
-  setTimeout(() => {
+  game.clock.schedule(() => {
     osc.stop();
   }, 250);
   platformOsc = null;

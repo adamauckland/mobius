@@ -21,6 +21,12 @@ import { resetGameTimer } from "./startScreen";
 import { resetMovingBlocks } from "./movingBlocks";
 import { zFromY, Z_LAYER_PLAYER, Z_RIPPLE } from "./zIndex";
 
+let inputLockedUntil = 0;
+
+export function lockInput(durationMs: number) {
+  inputLockedUntil = game.clock.now() + durationMs;
+}
+
 export interface PlayerEntry {
   player: Player;
   recorder: GameRecorder;
@@ -226,6 +232,7 @@ function showTapRipple(worldPos: Vector) {
 }
 
 function handlePointerDown(worldPos: Vector) {
+  if (game.clock.now() < inputLockedUntil) return;
   const tile = game.currentScene.tileMaps[0].getTileByPoint(worldPos);
   if (!tile) return;
   if (tile.x < 0 || tile.x >= GRID_COLS || tile.y < 0 || tile.y >= GRID_ROWS)

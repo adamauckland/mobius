@@ -12,6 +12,7 @@ vi.mock("excalibur", () => {
       return new MockVector(this.x, this.y);
     }
   }
+
   class MockActor {
     pos: MockVector;
     width = 0;

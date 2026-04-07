@@ -113,7 +113,7 @@ export class Player extends Actor {
     let target = new Vector(x * TILE_SIZE + TILE_SIZE / 2, y * TILE_SIZE + TILE_SIZE / 2);
 
     this.actions
-      .easeTo(target, 400, EasingFunctions.Linear)
+      .easeTo(target, 200, EasingFunctions.Linear)
       .callMethod(() => {
         model.movesRemaining--;
         // Check for collectables on this tile
@@ -149,11 +149,8 @@ export class Player extends Actor {
               });
           }
         }
-        // If path is complete and we landed on the exit door
-        if (
-          this.playerActionBuffer.length === 0 &&
-          exitDoorTileIndices.includes(node)
-        ) {
+        // If we landed on the exit door, complete immediately
+        if (exitDoorTileIndices.includes(node)) {
           if (this.onReachedExitDoor) {
             this.onReachedExitDoor();
           }

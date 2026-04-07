@@ -1,0 +1,96 @@
+flowchart TD
+subgraph INIT["Program Initialization"]
+A["index.html loads main.ts"] --> B["game.ts: create Excalibur Engine"]
+B --> C["main.ts: Loader loads all resources<br/>(sprites, spritesheets)"]
+C --> D{"Check localStorage / URL"}
+D -->|"customProject"| E["startProjectLevel()"]
+D -->|"customMap"| F["startCustomMap()"]
+D -->|"?pack=ID"| G["loadPack() → startProjectLevel()"]
+D -->|"editorMode"| H["showEditor()"]
+D -->|"none"| I["Show start screen buttons"]
+E --> J["startGame(mapData)"]
+F --> J
+G --> J
+end
+
+    subgraph SETUP["startGame() Setup Sequence"]
+        J --> K["loadWorld() — build tiles array"]
+        K --> L["Set model.timeLimit"]
+        L --> M["Create TileMap + visual overlays<br/>(trees, fences, gates, drop zones, doors)"]
+        M --> N["initPathfinding(tilemap)"]
+        N --> O["Add player to scene, set camera"]
+        O --> P["Start recording: activeEntry().recorder.startRecording()"]
+        P --> Q["Spawn entities<br/>(rocks, parcels, collectables, monsters, moving blocks)"]
+        Q --> R["Create HUD<br/>(timer, score, pause, lives, level)"]
+        R --> S["Create overlays<br/>(GAME OVER, LEVEL COMPLETE)"]
+        S --> T["wireExitDoor() + setOnPlayerKilled()"]
+        T --> U["Countdown: 3 → 2 → 1 → GO!"]
+        U -->|"GO! at 1500ms"| V["gameStarted = true<br/>setupClickHandler()"]
+    end
+
+    subgraph LOOP["Game Loop (postupdate, every frame)"]
+        V --> W{"gameStarted?"}
+        W -->|no| W
+        W -->|yes| X{"model.gameOver?"}
+        X -->|yes| X
+        X -->|no| Y["updateMovingBlocks(elapsed)"]
+        Y --> Z["updateMonsters(elapsed)"]
+        Z --> AA["elapsedGameTime += elapsed"]
+        AA --> AB{"timeLimit > 0?"}
+        AB -->|yes| AC["Display countdown timer"]
+        AB -->|no| AD["Display elapsed time"]
+        AC --> AE{"remaining < 10s?"}
+        AE -->|yes| AF["Flash timer red"]
+        AE -->|no| AG["Timer white"]
+        AF --> AH{"Time's up?"}
+        AG --> AH
+        AH -->|yes| TIME_UP
+        AH -->|no| SCORE
+        AD --> SCORE["Animate score display"]
+    end
+
+    subgraph INPUT["Player Input"]
+        CLICK["Pointer down event"] --> LOCK{"input locked?<br/>(game.clock.now < inputLockedUntil)"}
+        LOCK -->|yes| IGNORE["Ignore click"]
+        LOCK -->|no| TILE["Get tile from world pos"]
+        TILE --> RECORD["recorder.recordClick(tileIndex)"]
+        RECORD --> PATH["handleTileClick() → A* pathfinding"]
+        PATH --> MOVE["Player walks tile-by-tile"]
+    end
+
+    subgraph EVENTS["Game Events"]
+        direction TB
+        MOVE --> ARRIVE{"Arrived at tile type?"}
+
+        ARRIVE -->|"Portal"| PORTAL["stopAndSpawnNext()"]
+        PORTAL --> P1["Stop recording, save recording"]
+        P1 --> P2["Create new Player at start"]
+        P2 --> P3["replayAll():<br/>reset world + replay all ghost recordings"]
+        P3 --> P4["Start recording new player"]
+        P4 --> P5["Camera follows new player"]
+        P5 --> P6["wireExitDoor() via callback"]
+
+        ARRIVE -->|"Exit Door"| EXIT["Level Complete"]
+        EXIT --> E1["model.gameOver = true"]
+        E1 --> E2["sfxLevelComplete()"]
+        E2 --> E3["Show LEVEL COMPLETE overlay"]
+        E3 --> E4["Show RESTART / CONTINUE buttons"]
+
+        ARRIVE -->|"Monster collision"| DEATH["Player Killed"]
+        DEATH --> D1["model.lives--"]
+        D1 --> D2{"lives <= 0?"}
+        D2 -->|yes| D3["model.gameOver = true<br/>Show GAME OVER + RESTART"]
+        D2 -->|no| D4["replayAll()<br/>Start recording, wireExitDoor()"]
+
+        TIME_UP["Time's Up"] --> TU1["stopAndSpawnNext()<br/>(same as portal rewind)"]
+        TU1 --> TU2["lockInput(3000)<br/>3-second penalty"]
+    end
+
+    subgraph RESTART["Restart / Continue"]
+        E4 --> R1{"Button clicked?"}
+        R1 -->|RESTART| R2["Save project to localStorage<br/>Reset lives → location.reload()"]
+        R1 -->|CONTINUE| R3["Save project + next level + lives<br/>→ location.reload()"]
+        D3 --> R4["Show RESTART button"]
+        R2 --> A
+        R3 --> A
+    end

@@ -4,7 +4,11 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 function createMockOscillator() {
   return {
     type: "sine",
-    frequency: { value: 0, setValueAtTime: vi.fn(), exponentialRampToValueAtTime: vi.fn() },
+    frequency: {
+      value: 0,
+      setValueAtTime: vi.fn(),
+      exponentialRampToValueAtTime: vi.fn(),
+    },
     connect: vi.fn(),
     start: vi.fn(),
     stop: vi.fn(),
@@ -13,7 +17,11 @@ function createMockOscillator() {
 
 function createMockGain() {
   return {
-    gain: { value: 0, setValueAtTime: vi.fn(), exponentialRampToValueAtTime: vi.fn() },
+    gain: {
+      value: 0,
+      setValueAtTime: vi.fn(),
+      exponentialRampToValueAtTime: vi.fn(),
+    },
     connect: vi.fn(),
   };
 }
@@ -54,7 +62,7 @@ describe("sound effects", () => {
   it("sfxCollect creates oscillators for an arpeggio", async () => {
     const { sfxCollect } = await import("../sounds");
     sfxCollect();
-    // playArpeggio uses setTimeout even for the first note (delay 0)
+    // playArpeggio uses game.clock.schedule even for the first note (delay 0)
     vi.advanceTimersByTime(0);
     expect(mockOscillators.length).toBeGreaterThanOrEqual(1);
     expect(mockOscillators[0].start).toHaveBeenCalled();
@@ -123,8 +131,13 @@ describe("sound effects", () => {
     sfxPortal();
     expect(mockOscillators).toHaveLength(1);
     expect(mockOscillators[0].type).toBe("sine");
-    expect(mockOscillators[0].frequency.setValueAtTime).toHaveBeenCalledWith(200, 0);
-    expect(mockOscillators[0].frequency.exponentialRampToValueAtTime).toHaveBeenCalled();
+    expect(mockOscillators[0].frequency.setValueAtTime).toHaveBeenCalledWith(
+      200,
+      0,
+    );
+    expect(
+      mockOscillators[0].frequency.exponentialRampToValueAtTime,
+    ).toHaveBeenCalled();
   });
 
   it("sfxPlatformStart creates a looping sine oscillator", async () => {

@@ -36,7 +36,8 @@ import {
   activeEntry,
   setupClickHandler,
   replayAll,
-  timeRewind,
+  stopAndSpawnNext,
+  lockInput,
   setOnNewActivePlayer,
 } from "./playerManager";
 import {
@@ -56,7 +57,7 @@ import {
   updateMonsters,
   setOnPlayerKilled,
 } from "./monsters";
-import { sfxDeath, sfxLevelComplete } from "./sounds";
+import { sfxDeath, sfxLevelComplete, sfxCountdownTick, sfxCountdownGo, sfxHeartbeat } from "./sounds";
 import { togglePause, onPauseChange } from "./main";
 import {
   zFromY,
@@ -94,10 +95,12 @@ continueButton.addEventListener("click", () => {
 
 let gameStarted = false;
 let elapsedGameTime = 0;
+let lastHeartbeatSec = -1;
 
 export function resetGameTimer() {
   elapsedGameTime = 0;
   gameStarted = true;
+  lastHeartbeatSec = -1;
 }
 
 // Auto-tile fence sprites from roguelike sheet (wooden fence at rows 23-24, cols 45-51)
@@ -491,6 +494,31 @@ function startGame(customMapData: MapData) {
   });
   game.add(gameOverLabel);
 
+  // Time's up penalty overlay
+  const timesUpText = new Text({
+    text: "TIME'S UP",
+    font: new Font({
+      size: 200,
+      unit: FontUnit.Px,
+      family: "monospace",
+      color: Color.fromHex("#ff6600"),
+      textAlign: TextAlign.Center,
+      baseAlign: BaseAlign.Middle,
+      shadow: { blur: 4, offset: vec(2, 2), color: Color.Black },
+    }),
+  });
+  const timesUpLabel = new ScreenElement({
+    pos: vec(0, 0),
+    z: Z_COUNTDOWN,
+  });
+  timesUpLabel.graphics.use(timesUpText);
+  timesUpLabel.graphics.visible = false;
+  timesUpLabel.on("preupdate", () => {
+    timesUpLabel.pos.x = game.screen.resolution.width / 2;
+    timesUpLabel.pos.y = game.screen.resolution.height / 2;
+  });
+  game.add(timesUpLabel);
+
   // Level complete overlay
   const levelCompleteText = new Text({
     text: "LEVEL COMPLETE",
@@ -592,6 +620,7 @@ function startGame(customMapData: MapData) {
     countdownLabel.actions.scaleTo(vec(1, 1), vec(3, 3));
   }
   popIn();
+  sfxCountdownTick();
 
   let countdown = 3;
   for (let i = 1; i <= 3; i++) {
@@ -600,9 +629,11 @@ function startGame(customMapData: MapData) {
       if (countdown > 0) {
         countdownText.text = String(countdown);
         popIn();
+        sfxCountdownTick();
       } else {
         countdownText.text = "GO!";
         popIn();
+        sfxCountdownGo();
 
         // Start the game clock and enable input immediately at "GO!"
         gameStarted = true;
@@ -610,9 +641,9 @@ function startGame(customMapData: MapData) {
         setupClickHandler();
 
         // Remove the "GO!" text after a short delay
-        game.clock.schedule(() => countdownLabel.kill(), 500);
+        game.clock.schedule(() => countdownLabel.kill(), 250);
       }
-    }, i * 1000);
+    }, i * 500);
   }
 
   game.on("postupdate", (evt) => {
@@ -630,20 +661,33 @@ function startGame(customMapData: MapData) {
       const tenths = Math.floor((remaining % 1000) / 100);
       timerText.text = `${mins}:${secs.toString().padStart(2, "0")}.${tenths}`;
 
-      // Flash red when under 10 seconds
+      // Flash red and play heartbeat when under 10 seconds
       if (remaining < 10000) {
         const flash = Math.sin(game.clock.now() * 0.01) > 0;
         (timerText.font as Font).color = flash ? Color.Red : Color.White;
+        if (secs !== lastHeartbeatSec) {
+          lastHeartbeatSec = secs;
+          sfxHeartbeat();
+        }
       } else {
         (timerText.font as Font).color = Color.White;
+        lastHeartbeatSec = -1;
       }
 
-      // Time's up — trigger time rewind (erase everything, no ghosts)
+      // Time's up — rewind like a portal (keep ghosts) but lock input as penalty
       if (elapsedGameTime >= model.timeLimit) {
-        timeRewind();
-        activeEntry().recorder.startRecording();
-        model.isRecording = true;
-        wireExitDoor();
+        stopAndSpawnNext();
+        lockInput(3000);
+        timesUpLabel.graphics.visible = true;
+        timesUpLabel.scale.x = 0.3;
+        timesUpLabel.scale.y = 0.3;
+        timesUpLabel.actions.scaleTo(vec(1, 1), vec(3, 3));
+        game.clock.schedule(() => {
+          timesUpLabel.actions.fade(0, 500).callMethod(() => {
+            timesUpLabel.graphics.visible = false;
+            timesUpLabel.graphics.opacity = 1;
+          });
+        }, 2500);
       }
     } else {
       // No time limit — show elapsed time counting up
