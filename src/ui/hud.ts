@@ -237,16 +237,17 @@ export function createHUD(): HUDRefs {
 			shadow: { blur: 2, offset: vec(1, 1), color: Color.Black },
 		}),
 	});
+	const bgOffset = vec(-REWIND_RADIUS, -REWIND_RADIUS);
 	const arrowOffset = vec(1, 4);
 	const rewindNormalGfx = new GraphicsGroup({
 		members: [
-			{ graphic: rewindBgNormal, offset: vec(0, 0) },
+			{ graphic: rewindBgNormal, offset: bgOffset },
 			{ graphic: rewindArrow, offset: arrowOffset },
 		],
 	});
 	const rewindPressedGfx = new GraphicsGroup({
 		members: [
-			{ graphic: rewindBgPressed, offset: vec(0, 0) },
+			{ graphic: rewindBgPressed, offset: bgOffset },
 			{ graphic: rewindArrow, offset: arrowOffset },
 		],
 	});

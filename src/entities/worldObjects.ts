@@ -269,12 +269,19 @@ export interface Parcel {
 
 const parcels: Parcel[] = [];
 
-// Each parcel/drop zone pair uses a distinct sprite so the match is obvious
+// Each parcel uses a distinct item sprite
 // [col, row] into the roguelike spritesheet
 export const PARCEL_SPRITES: [number, number][] = [
 	[45, 10], // gem
 	[41, 9], // key
 	[43, 8], // potion
+];
+
+// Drop zones use distinct receptacle/container sprites so they aren't confused with parcels
+export const DROPZONE_SPRITES: [number, number][] = [
+	[45, 7], // chest/container for gem
+	[41, 11], // scroll/pedestal for key
+	[43, 13], // crate/stand for potion
 ];
 
 export function getParcels() {

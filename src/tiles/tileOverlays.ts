@@ -11,7 +11,7 @@ import {
 } from "./tiledata";
 import { game } from "../game";
 import { zFromY, Z_LAYER_TREE, Z_LAYER_PICKUP } from "../zIndex";
-import { PARCEL_SPRITES } from "../entities/worldObjects";
+import { DROPZONE_SPRITES } from "../entities/worldObjects";
 
 export function spawnTreeOverlays() {
 	for (let i = 0; i < tiles.length; i++) {
@@ -87,8 +87,9 @@ export function spawnDropZoneOverlays() {
 				z: zFromY(ty * TILE_SIZE + TILE_SIZE / 2, Z_LAYER_PICKUP),
 			});
 			const dz = tiles[i] as DropZone;
-			const [sc, sr] = PARCEL_SPRITES[dz.id % PARCEL_SPRITES.length];
+			const [sc, sr] = DROPZONE_SPRITES[dz.id % DROPZONE_SPRITES.length];
 			dzActor.graphics.use(rlSS.getSprite(sc, sr));
+			dzActor.graphics.opacity = 0.7;
 			const phase = i * 0.5;
 			dzActor.graphics.onPreDraw = () => {
 				const pulse = 0.8 + Math.sin(game.clock.now() * 0.003 + phase) * 0.2;

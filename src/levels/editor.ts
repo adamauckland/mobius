@@ -165,6 +165,13 @@ const PARCEL_SPRITES: [number, number][] = [
 	[43, 8],
 ];
 
+// Drop zone sprite coords – distinct from parcels so they read as destinations
+const DROPZONE_SPRITES: [number, number][] = [
+	[45, 7],
+	[41, 11],
+	[43, 13],
+];
+
 const DIRECTIONS = ["up", "down", "left", "right"] as const;
 
 // ---------------------------------------------------------------------------
@@ -298,7 +305,7 @@ function render() {
 				drawGateSprite(ctx, info.direction, dx, dy, ts);
 				break;
 			case "dropZone": {
-				const [sc, sr] = PARCEL_SPRITES[info.id % PARCEL_SPRITES.length];
+				const [sc, sr] = DROPZONE_SPRITES[info.id % DROPZONE_SPRITES.length];
 				drawRL(ctx, sc, sr, dx, dy, ts);
 				ctx.strokeStyle = "#e91e63";
 				ctx.lineWidth = 1;

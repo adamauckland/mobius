@@ -1,4 +1,4 @@
-import { Vector, Actor, Circle, Color } from "excalibur";
+import { Vector, Actor, Circle, Color, Polygon } from "excalibur";
 import { PlayerActor, player } from "./PlayerActor";
 import { playerWalkAnimation, playerImage } from "../resources";
 import { GameRecorder, type GameRecording } from "./recorder";
@@ -50,6 +50,27 @@ export const entries: PlayerEntry[] = [
 // The active entry is always the last one in the array
 export function activeEntry() {
 	return entries[entries.length - 1];
+}
+
+// Arrow indicator hovering above the active player
+let arrowActor: Actor | null = null;
+
+export function spawnArrowIndicator() {
+	if (arrowActor) return;
+	arrowActor = new Actor({ z: 0 });
+	const triangle = new Polygon({
+		points: [new Vector(-5, 0), new Vector(5, 0), new Vector(0, 5)],
+		color: Color.fromHex("#FFD700"),
+	});
+	arrowActor.graphics.use(triangle);
+	arrowActor.on("postupdate", () => {
+		const active = activeEntry();
+		arrowActor!.pos.x = active.player.pos.x;
+		arrowActor!.pos.y =
+			active.player.pos.y - TILE_SIZE + Math.sin(game.clock.now() * 0.005) * 2;
+		arrowActor!.z = zFromY(active.player.pos.y, Z_LAYER_PLAYER + 1);
+	});
+	game.add(arrowActor);
 }
 
 // Called whenever a new active player is created (after portal spawn)
@@ -271,6 +292,7 @@ function handlePointerDown(worldPos: Vector) {
 }
 
 export function setupClickHandler() {
+	spawnArrowIndicator();
 	game.input.pointers.primary.on("down", (evt) => {
 		if (evt.worldPos == undefined) return;
 		handlePointerDown(evt.worldPos);
