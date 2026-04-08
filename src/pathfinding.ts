@@ -81,6 +81,117 @@ function showWarning() {
 	}, 2000);
 }
 
+/** Returns the tile index the player is currently on (or moving toward). */
+function getPlayerTileIndex(player: PlayerActor): number {
+	if (player.actions.getQueue().hasNext()) {
+		return player.currentMoveTileIndex;
+	}
+	const tx = Math.floor(player.pos.x / TILE_SIZE);
+	const ty = Math.floor(player.pos.y / TILE_SIZE);
+	return tx + ty * GRID_COLS;
+}
+
+/** Returns a warning message if the tile is impassable, or null if walkable. */
+function getBlockedTileWarning(tileIndex: number): string | null {
+	if (tiles[tileIndex] instanceof Tree) return "CLICKING A TREE WILL BE IGNORED";
+	if (tiles[tileIndex] instanceof Fence) return "CAN'T WALK THROUGH A FENCE";
+	const tile = tiles[tileIndex];
+	if (tile instanceof Barrier && tile.collider) return "BARRIER IS LOCKED — FIND THE SWITCH";
+	return null;
+}
+
+/** If clicking own tile while carrying something, drop it. Returns true if an item was dropped. */
+function tryDropCarriedItem(targetTileIndex: number, player: PlayerActor): boolean {
+	const playerTile = getPlayerTileIndex(player);
+	if (targetTileIndex !== playerTile) return false;
+
+	if (player.carriedRock) {
+		dropRock(player);
+		return true;
+	}
+	if (player.carriedParcel) {
+		dropParcel(player);
+		return true;
+	}
+	return false;
+}
+
+/** Set up an arrival callback to pick up a rock or parcel at the target tile. */
+function setArrivalPickup(targetTileIndex: number, player: PlayerActor) {
+	player.onArriveAtTile = null;
+
+	const isCarrying = player.carriedRock || player.carriedParcel;
+	if (isCarrying) return;
+
+	const rock = getRockAtTile(targetTileIndex);
+	if (rock) {
+		player.onArriveAtTile = () => {
+			if (!rock.carriedBy && !player.carriedRock && !player.carriedParcel) {
+				pickUpRock(rock, player);
+			}
+		};
+		return;
+	}
+
+	const parcel = getParcelAtTile(targetTileIndex);
+	if (parcel) {
+		player.onArriveAtTile = () => {
+			if (!parcel.carriedBy && !player.carriedRock && !player.carriedParcel) {
+				pickUpParcel(parcel, player);
+			}
+		};
+	}
+}
+
+/** Run the selected pathfinding algorithm and return { path, startingIndex }. */
+function findPath(
+	playerTileIndex: number,
+	targetTileIndex: number,
+): { path: GraphNode[] | aStarNode[]; startingIndex: number } {
+	const letDiag = !!model.inputDiagonal;
+
+	if (model.inputAlgo?.value == "dijkstra") {
+		const path = myDijkstraGraph.shortestPath(
+			myDijkstraGraph.nodes.get(`${playerTileIndex}`)!,
+			myDijkstraGraph.nodes.get(`${targetTileIndex}`)!,
+		);
+		model.algoDuration = myDijkstraGraph.duration.toFixed(3);
+		model.movesRemaining = path.length - 1;
+		if (path.length == 1) {
+			model.warningText = "UNREACHABLE TILE";
+			showWarning();
+		}
+		return { path, startingIndex: 1 };
+	}
+
+	const path = myGraph.astar(
+		myGraph.getNodeByIndex(playerTileIndex),
+		myGraph.getNodeByIndex(targetTileIndex),
+		letDiag,
+	);
+	model.algoDuration = myGraph.duration.toFixed(3);
+	model.movesRemaining = path.length;
+	if (path.length == 0) {
+		model.warningText = "UNREACHABLE TILE";
+		showWarning();
+	}
+	return { path, startingIndex: 0 };
+}
+
+/** Push path nodes into the player's action buffer and update logical destination. */
+function queuePath(
+	player: PlayerActor,
+	path: GraphNode[] | aStarNode[],
+	startingIndex: number,
+) {
+	for (let i = startingIndex; i < path.length; i++) {
+		player.playerActionBuffer.push(parseInt(path[i].id.toString()));
+	}
+	if (path.length > 0) {
+		player.logicalTileIndex = parseInt(path[path.length - 1].id.toString());
+	}
+}
+
 // Process a click on a target tile index: run pathfinding and queue movement
 export function handleTileClick(
 	targetTileIndex: number,
@@ -95,149 +206,30 @@ export function handleTileClick(
 			showWarning();
 			return;
 		}
-		// Player is now dismounted — continue with normal pathfinding
 	}
 
-	// guard: solid tiles are not valid targets
-	if (tiles[targetTileIndex] instanceof Tree) {
-		model.warningText = "CLICKING A TREE WILL BE IGNORED";
-		showWarning();
-		return;
-	}
-	if (tiles[targetTileIndex] instanceof Fence) {
-		model.warningText = "CAN'T WALK THROUGH A FENCE";
-		showWarning();
-		return;
-	}
-	const barrierTile = tiles[targetTileIndex];
-	if (barrierTile instanceof Barrier && barrierTile.collider) {
-		model.warningText = "BARRIER IS LOCKED — FIND THE SWITCH";
+	const blockedWarning = getBlockedTileWarning(targetTileIndex);
+	if (blockedWarning) {
+		model.warningText = blockedWarning;
 		showWarning();
 		return;
 	}
 
-	// If carrying a rock and clicking the player's own tile, drop it
-	const idleMoving = targetPlayer.actions.getQueue().hasNext();
-	let playerTileIdle: number;
-	if (idleMoving) {
-		playerTileIdle = targetPlayer.currentMoveTileIndex;
-	} else {
-		const itx = Math.floor(targetPlayer.pos.x / TILE_SIZE);
-		const ity = Math.floor(targetPlayer.pos.y / TILE_SIZE);
-		playerTileIdle = itx + ity * GRID_COLS;
-	}
-	if (targetTileIndex === playerTileIdle) {
-		if (targetPlayer.carriedRock) {
-			dropRock(targetPlayer);
-			return;
-		}
-		if (targetPlayer.carriedParcel) {
-			dropParcel(targetPlayer);
-			return;
-		}
-	}
+	if (tryDropCarriedItem(targetTileIndex, targetPlayer)) return;
 
-	// Clear stale arrival callback — a new click replaces the old destination
-	targetPlayer.onArriveAtTile = null;
+	setArrivalPickup(targetTileIndex, targetPlayer);
 
-	// Check if there's a rock or parcel at the target tile — pathfind to it then pick up on arrival
-	// Player can only carry one thing at a time (rock OR parcel)
-	const isCarrying = targetPlayer.carriedRock || targetPlayer.carriedParcel;
-	const rock = getRockAtTile(targetTileIndex);
-	if (rock && !isCarrying) {
-		targetPlayer.onArriveAtTile = () => {
-			if (
-				!rock.carriedBy &&
-				!targetPlayer.carriedRock &&
-				!targetPlayer.carriedParcel
-			) {
-				pickUpRock(rock, targetPlayer);
-			}
-		};
-	}
-	const parcel = getParcelAtTile(targetTileIndex);
-	if (!rock && parcel && !isCarrying) {
-		targetPlayer.onArriveAtTile = () => {
-			if (
-				!parcel.carriedBy &&
-				!targetPlayer.carriedRock &&
-				!targetPlayer.carriedParcel
-			) {
-				pickUpParcel(parcel, targetPlayer);
-			}
-		};
-	}
-
-	// Clear remaining path — the player will finish its current tile move then start the new path
 	targetPlayer.playerActionBuffer = [];
 
-	// Path starts from the tile the player is currently moving toward (or on if idle).
-	// When idle, derive from actual pixel position — NOT logicalTileIndex — because
-	// logicalTileIndex is set to the *destination* as soon as a path is calculated,
-	// which may not match the player's physical position if clicks arrive between frames.
-	const isMoving = targetPlayer.actions.getQueue().hasNext();
-	let playerTileIndex: number;
-	if (isMoving) {
-		playerTileIndex = targetPlayer.currentMoveTileIndex;
-	} else {
-		const tx = Math.floor(targetPlayer.pos.x / TILE_SIZE);
-		const ty = Math.floor(targetPlayer.pos.y / TILE_SIZE);
-		playerTileIndex = tx + ty * GRID_COLS;
-	}
+	// Derive start tile from pixel position when idle (not logicalTileIndex) because
+	// logicalTileIndex may not match the player's physical position between frames.
+	const playerTileIndex = getPlayerTileIndex(targetPlayer);
 
-	// Guard: both indices must be within the grid
 	const totalTiles = GRID_COLS * GRID_ROWS;
 	if (playerTileIndex < 0 || playerTileIndex >= totalTiles) return;
 	if (targetTileIndex < 0 || targetTileIndex >= totalTiles) return;
-
-	// Guard: already on the target tile — nothing to do
 	if (playerTileIndex === targetTileIndex) return;
 
-	const letDiag = model.inputDiagonal ? true : false;
-
-	// pick which algorithm
-	let startingIndex = 0;
-	let path: GraphNode[] | aStarNode[] = [];
-
-	if (model.inputAlgo?.value == "dijkstra") {
-		path = myDijkstraGraph.shortestPath(
-			myDijkstraGraph.nodes.get(`${playerTileIndex}`)!,
-			myDijkstraGraph.nodes.get(`${targetTileIndex}`)!,
-		);
-
-		model.algoDuration = myDijkstraGraph.duration.toFixed(3);
-		model.movesRemaining = path.length - 1;
-		startingIndex = 1;
-		if (path.length == 1 && startingIndex == 1) {
-			model.warningText = "UNREACHABLE TILE";
-			showWarning();
-		}
-	} else {
-		// Default to astar when no algorithm input is set
-		path = myGraph.astar(
-			myGraph.getNodeByIndex(playerTileIndex),
-			myGraph.getNodeByIndex(targetTileIndex),
-			letDiag,
-		);
-
-		model.algoDuration = myGraph.duration.toFixed(3);
-		model.movesRemaining = path.length;
-		if (path.length == 0) {
-			model.warningText = "UNREACHABLE TILE";
-			showWarning();
-		}
-	}
-
-	// don't push the player's current tile, so we start at index 1
-	for (let i = startingIndex; i < path.length; i++) {
-		const nxtPath = path[i];
-		targetPlayer.playerActionBuffer.push(parseInt(nxtPath.id.toString()));
-	}
-
-	// update the player's logical destination to the end of the path
-	if (path.length > 0) {
-		targetPlayer.logicalTileIndex = parseInt(
-			path[path.length - 1].id.toString(),
-		);
-	}
+	const { path, startingIndex } = findPath(playerTileIndex, targetTileIndex);
+	queuePath(targetPlayer, path, startingIndex);
 }

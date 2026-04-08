@@ -3,14 +3,21 @@ import { game } from "./game";
 import { model } from "./model";
 import { updateMovingBlocks } from "./entities/movingBlocks";
 import { updateMonsters } from "./entities/monsters";
-import { getScore } from "./entities/worldObjects";
-import { stopAndSpawnNext, lockInput } from "./entities/playerManager";
+import { getScore, addScore } from "./entities/worldObjects";
 import { sfxHeartbeat } from "./sounds";
+import { spawnDeathExplosion } from "./entities/lightTrail";
+import { activeEntry } from "./entities/playerManager";
 import type { HUDRefs } from "./ui/hud";
 
 let gameStarted = false;
 let elapsedGameTime = 0;
 let lastHeartbeatSec = -1;
+let bonusCountdown = false;
+let bonusRemaining = 0;
+let bonusAccumulator = 0;
+const BONUS_TICK_MS = 10; // real-time interval between each drain tick
+const BONUS_DRAIN_PER_TICK = 100; // drain 1 second of clock per tick
+const BONUS_POINTS_PER_TICK = 1;
 
 export function resetGameTimer() {
 	elapsedGameTime = 0;
@@ -18,9 +25,49 @@ export function resetGameTimer() {
 	lastHeartbeatSec = -1;
 }
 
-export function setupGameLoop(hud: HUDRefs) {
+export function startBonusCountdown() {
+	if (model.timeLimit <= 0) return;
+	bonusRemaining = Math.max(0, model.timeLimit - elapsedGameTime);
+	bonusAccumulator = 0;
+	bonusCountdown = true;
+}
+
+export function setupGameLoop(hud: HUDRefs, onTimeUp?: () => void) {
 	game.on("postupdate", (evt) => {
 		if (!gameStarted) return;
+
+		// Bonus countdown: drain remaining time into score after level complete
+		if (bonusCountdown) {
+			bonusAccumulator += evt.elapsed;
+			while (bonusAccumulator >= BONUS_TICK_MS && bonusRemaining > 0) {
+				bonusAccumulator -= BONUS_TICK_MS;
+				const drain = Math.min(BONUS_DRAIN_PER_TICK, bonusRemaining);
+				bonusRemaining -= drain;
+				addScore(BONUS_POINTS_PER_TICK);
+
+				// Update timer display
+				const MS_PER_MINUTE = 60000;
+				const mins = Math.floor(bonusRemaining / MS_PER_MINUTE);
+				const secs = Math.floor((bonusRemaining % MS_PER_MINUTE) / 1000);
+				const tenths = Math.floor((bonusRemaining % 1000) / 100);
+				hud.timerText.text = `${mins}:${secs.toString().padStart(2, "0")}.${tenths}`;
+			}
+			if (bonusRemaining <= 0) {
+				bonusCountdown = false;
+				hud.timerText.text = "0:00.0";
+			}
+			// Update score display during bonus
+			const targetScore = getScore();
+			if (hud.displayedScore.value < targetScore) {
+				const gap = targetScore - hud.displayedScore.value;
+				hud.displayedScore.value += Math.max(1, Math.ceil(gap * 0.1));
+				if (hud.displayedScore.value > targetScore)
+					hud.displayedScore.value = targetScore;
+			}
+			hud.scoreText.text = `${hud.displayedScore.value}`;
+			return;
+		}
+
 		if (model.gameOver) return;
 		updateMovingBlocks(evt.elapsed);
 		updateMonsters(evt.elapsed);
@@ -48,20 +95,17 @@ export function setupGameLoop(hud: HUDRefs) {
 				lastHeartbeatSec = -1;
 			}
 
-			// Time's up — rewind like a portal (keep ghosts) but lock input as penalty
+			// Time's up — game over
 			if (elapsedGameTime >= model.timeLimit) {
-				stopAndSpawnNext();
-				lockInput(3000);
-				hud.timesUpLabel.graphics.visible = true;
-				hud.timesUpLabel.scale.x = 0.3;
-				hud.timesUpLabel.scale.y = 0.3;
-				hud.timesUpLabel.actions.scaleTo(vec(1, 1), vec(3, 3));
-				game.clock.schedule(() => {
-					hud.timesUpLabel.actions.fade(0, 500).callMethod(() => {
-						hud.timesUpLabel.graphics.visible = false;
-						hud.timesUpLabel.graphics.opacity = 1;
-					});
-				}, 2500);
+				model.gameOver = true;
+				const player = activeEntry().player;
+				player.graphics.isVisible = false;
+				spawnDeathExplosion(player.pos.clone());
+				hud.gameOverLabel.graphics.visible = true;
+				hud.gameOverLabel.scale.x = 0.3;
+				hud.gameOverLabel.scale.y = 0.3;
+				hud.gameOverLabel.actions.scaleTo(vec(1, 1), vec(3, 3));
+				if (onTimeUp) onTimeUp();
 			}
 		} else {
 			// No time limit — show elapsed time counting up

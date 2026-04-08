@@ -1,5 +1,5 @@
 import "./style.css";
-import { Loader } from "excalibur";
+import { Engine, Loader } from "excalibur";
 import { Resources } from "./resources";
 import { game } from "./game";
 import { model } from "./model";

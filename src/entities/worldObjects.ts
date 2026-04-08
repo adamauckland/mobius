@@ -157,6 +157,10 @@ export function getScore() {
 	return score;
 }
 
+export function addScore(points: number) {
+	score += points;
+}
+
 // Check if a collectable is at this tile and collect it (permanently)
 export function tryCollectAtTile(tileIndex: number): boolean {
 	const c = collectables.find((c) => c.tileIndex === tileIndex && !c.collected);

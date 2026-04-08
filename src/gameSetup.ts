@@ -28,6 +28,7 @@ import {
 	activeEntry,
 	setupClickHandler,
 	replayAll,
+	stopAndSpawnNext,
 	setOnNewActivePlayer,
 } from "./entities/playerManager";
 import {
@@ -39,6 +40,7 @@ import { initBarriers, spawnBarriers } from "./entities/barriers";
 import { spawnMovingBlocksAt } from "./entities/movingBlocks";
 import { spawnMonstersAt, setOnPlayerKilled } from "./entities/monsters";
 import { sfxDeath, sfxLevelComplete } from "./sounds";
+import { spawnDeathExplosion } from "./entities/lightTrail";
 import { getFenceSprite } from "./tiles/fenceSprites";
 import {
 	spawnTreeOverlays,
@@ -48,7 +50,7 @@ import {
 } from "./tiles/tileOverlays";
 import { createHUD } from "./ui/hud";
 import { runCountdown } from "./ui/countdown";
-import { resetGameTimer, setupGameLoop } from "./gameLoop";
+import { resetGameTimer, setupGameLoop, startBonusCountdown } from "./gameLoop";
 import { initPackBrowser } from "./ui/packBrowser";
 
 export { resetGameTimer };
@@ -251,10 +253,11 @@ function startGame(customMapData: MapData) {
 			if (model.gameOver) return;
 			model.gameOver = true;
 			sfxLevelComplete();
-			hud.levelCompleteLabel.graphics.visible = true;
+			hud.levelCompleteLabel.graphics.isVisible = true;
 			hud.levelCompleteLabel.scale.x = 0.3;
 			hud.levelCompleteLabel.scale.y = 0.3;
 			hud.levelCompleteLabel.actions.scaleTo(vec(1, 1), vec(3, 3));
+			startBonusCountdown();
 			restartButton.style.display = "block";
 			// Show continue button if there are more levels
 			if (model.projectJson && model.currentLevel + 1 < model.totalLevels) {
@@ -275,22 +278,34 @@ function startGame(customMapData: MapData) {
 		hud.livesText.text =
 			"\u2665".repeat(model.lives) + "\u2661".repeat(3 - model.lives);
 		sfxDeath();
+		killedPlayer.graphics.isVisible = false;
+		spawnDeathExplosion(killedPlayer.pos.clone());
 
 		if (model.lives <= 0) {
-			model.gameOver = true;
-			hud.gameOverLabel.graphics.visible = true;
-			hud.gameOverLabel.scale.x = 0.3;
-			hud.gameOverLabel.scale.y = 0.3;
-			hud.gameOverLabel.actions.scaleTo(vec(1, 1), vec(3, 3));
-			// Show restart button
-			restartButton.style.display = "block";
+			game.clock.schedule(() => {
+				model.gameOver = true;
+				hud.gameOverLabel.graphics.isVisible = true;
+				hud.gameOverLabel.scale.x = 0.3;
+				hud.gameOverLabel.scale.y = 0.3;
+				hud.gameOverLabel.actions.scaleTo(vec(1, 1), vec(3, 3));
+				restartButton.style.display = "block";
+			}, 2000);
 			return;
 		}
 
-		// Rewind: reset player to start, reset timer, replay all previous recordings
-		replayAll();
-		activeEntry().recorder.startRecording();
-		model.isRecording = true;
+		// Rewind: delay so the explosion plays out, then reset
+		game.clock.schedule(() => {
+			replayAll();
+			activeEntry().recorder.startRecording();
+			model.isRecording = true;
+			wireExitDoor();
+		}, 2000);
+	});
+
+	// Rewind button — triggers time rewind without blocking input
+	hud.rewindButton.on("pointerup", () => {
+		if (model.gameOver) return;
+		stopAndSpawnNext();
 		wireExitDoor();
 	});
 
@@ -301,7 +316,9 @@ function startGame(customMapData: MapData) {
 	});
 
 	// Game loop
-	setupGameLoop(hud);
+	setupGameLoop(hud, () => {
+		restartButton.style.display = "block";
+	});
 }
 
 // "Play Project" button on start screen — pick a .json file and play from level 1

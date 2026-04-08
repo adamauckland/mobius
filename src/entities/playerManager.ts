@@ -98,7 +98,7 @@ export function replayAll() {
 		entry.player.previousTileIndex = startTileIdx();
 		entry.player.scale.x = 1;
 		entry.player.scale.y = 1;
-		entry.player.graphics.visible = true;
+		entry.player.graphics.isVisible = true;
 		entry.player.carriedRock = null;
 		entry.player.carriedParcel = null;
 		entry.player.ridingBlock = null;
@@ -147,7 +147,7 @@ export function timeRewind() {
 	keeper.previousTileIndex = startTileIdx();
 	keeper.scale.x = 1;
 	keeper.scale.y = 1;
-	keeper.graphics.visible = true;
+	keeper.graphics.isVisible = true;
 	keeper.carriedRock = null;
 	keeper.carriedParcel = null;
 	keeper.ridingBlock = null;
@@ -221,14 +221,14 @@ export function stopAndSpawnNext() {
 
 	// Rewind pixel effect: explode at old position, rebuild at start
 	const startPos = new Vector(startPosX(), startPosY());
-	newPlayer.graphics.visible = false;
+	newPlayer.graphics.isVisible = false;
 	spawnRewindPixels(oldPos, startPos);
 	game.clock.schedule(() => {
-		newPlayer.graphics.visible = true;
+		newPlayer.graphics.isVisible = true;
 		newPlayer.scale.x = 0.2;
 		newPlayer.scale.y = 0.2;
 		newPlayer.actions.scaleTo(new Vector(1, 1), new Vector(4, 4));
-	}, REWIND_EFFECT_DURATION - 200);
+	}, REWIND_EFFECT_DURATION);
 
 	// Follow the new player
 	const cameraRadius =
