@@ -25,15 +25,15 @@ index.html
 
 After resources load, `main.ts` checks these in order and takes the first match:
 
-| Priority | Condition | Action |
-|----------|-----------|--------|
-| 1 | `localStorage.customProject` | `startProjectLevel(json, level)` |
-| 2 | `localStorage.customMap` | `startCustomMap(json)` |
-| 3 | URL `?pack=ID` | Fetch from Firebase → `startProjectLevel()` |
-| 4 | `localStorage.editorMode` | `showEditor()` |
-| 5 | None | Show start screen (PLAY PROJECT, BROWSE PACKS, EDITOR) |
+| Priority | Condition                    | Action                                                 |
+| -------- | ---------------------------- | ------------------------------------------------------ |
+| 1        | `localStorage.customProject` | `startProjectLevel(json, level)`                       |
+| 2        | `localStorage.customMap`     | `startCustomMap(json)`                                 |
+| 3        | URL `?pack=ID`               | Fetch from Firebase → `startProjectLevel()`            |
+| 4        | `localStorage.editorMode`    | `showEditor()`                                         |
+| 5        | None                         | Show start screen (PLAY PROJECT, BROWSE PACKS, EDITOR) |
 
-### 3. Level Setup (`startScreen.ts` → `startGame()`)
+### 3. Level Setup (`gameSetup.ts` → `startGame()`)
 
 Once a `MapData` is resolved, `startGame()` runs this sequence:
 
@@ -68,7 +68,7 @@ GO!                                   gameStarted = true
                                       setupClickHandler() — input enabled
 ```
 
-### 4. Game Loop (`game.on("postupdate")`)
+### 4. Game Loop (`gameLoop.ts` → `setupGameLoop()`)
 
 Runs every frame after the countdown finishes:
 
@@ -81,7 +81,7 @@ elapsedGameTime += elapsed
 
 if timeLimit > 0:
   display remaining time (countdown)
-  if < 10s: flash timer red
+  if < 10s: flash timer red, play heartbeat
   if time's up:
     stopAndSpawnNext()                portal-style rewind (ghosts preserved)
     lockInput(3000)                   3-second penalty
@@ -191,26 +191,38 @@ The core time-loop mechanic uses `GameRecorder` (`recorder.ts`):
 
 ## Module Map
 
-| Module | Purpose |
-|--------|---------|
-| `main.ts` | Entry point, resource loading, launch decision, pause |
-| `game.ts` | Excalibur Engine singleton |
-| `model.ts` | Global game state (lives, timer, flags) |
-| `resources.ts` | Sprites, spritesheets, animations |
-| `chap.ts` | Player class — movement, tile arrival, inventory |
-| `playerManager.ts` | Multi-player entries, portal/rewind, input lock |
-| `recorder.ts` | Click recording and scheduled replay |
-| `startScreen.ts` | Level setup, HUD, game loop, countdown, event wiring |
-| `pathfinding.ts` | A*/Dijkstra routing, click-to-move |
-| `tiledata.ts` | Tile types, world generation, grid constants |
-| `mapData.ts` | Map/project serialization and deserialization |
-| `worldObjects.ts` | Rocks, parcels, collectables, score tracking |
-| `barriers.ts` | Barrier gates and switch toggles |
-| `movingBlocks.ts` | Oscillating platforms, rider management |
-| `monsters.ts` | Enemy patrols and collision detection |
-| `editor.ts` | Level editor UI and tools |
-| `levelPacks.ts` | Firebase level pack publishing and browsing |
-| `sounds.ts` | Web Audio API synthesized sound effects |
-| `lightTrail.ts` | Particle effects for pickups |
-| `zIndex.ts` | Depth-sorting layers |
-| `firebase.ts` | Firestore initialization |
+| Module                       | Purpose                                               |
+| ---------------------------- | ----------------------------------------------------- |
+| `main.ts`                    | Entry point, resource loading, launch decision, pause |
+| `game.ts`                    | Excalibur Engine singleton                            |
+| `model.ts`                   | Global game state (lives, timer, flags)               |
+| `resources.ts`               | Sprites, spritesheets, animations                     |
+| `gameSetup.ts`               | Level setup, event wiring, start screen               |
+| `gameLoop.ts`                | Post-update loop — timer, score, time-up handling     |
+| `pathfinding.ts`             | A\*/Dijkstra routing, click-to-move                   |
+| `sounds.ts`                  | Web Audio API synthesized sound effects               |
+| `zIndex.ts`                  | Depth-sorting layers                                  |
+| `firebase.ts`                | Firestore initialization                              |
+| **entities/**                |                                                       |
+| `entities/chap.ts`           | Player class — movement, tile arrival, inventory      |
+| `entities/player.ts`         | Base Player actor (template)                          |
+| `entities/playerManager.ts`  | Multi-player entries, portal/rewind, input lock       |
+| `entities/recorder.ts`       | Click recording and scheduled replay                  |
+| `entities/worldObjects.ts`   | Rocks, parcels, collectables, score tracking          |
+| `entities/barriers.ts`       | Barrier gates and switch toggles                      |
+| `entities/movingBlocks.ts`   | Oscillating platforms, rider management               |
+| `entities/monsters.ts`       | Enemy patrols and collision detection                 |
+| `entities/lightTrail.ts`     | Particle effects for pickups                          |
+| **tiles/**                   |                                                       |
+| `tiles/tiledata.ts`          | Tile types, world generation, grid constants          |
+| `tiles/tileOverlays.ts`      | Tree, gate, drop zone, exit door overlays             |
+| `tiles/fenceSprites.ts`      | Auto-tiled fence sprite selection                     |
+| **levels/**                  |                                                       |
+| `levels/mapData.ts`          | Map/project serialization and deserialization          |
+| `levels/levelPacks.ts`       | Firebase level pack publishing and browsing           |
+| `levels/editor.ts`           | Level editor UI and tools                             |
+| `levels/level.ts`            | Scene subclass for level lifecycle                    |
+| **ui/**                      |                                                       |
+| `ui/hud.ts`                  | HUD creation (timer, score, lives, overlays)          |
+| `ui/countdown.ts`            | 3-2-1-GO countdown sequence                           |
+| `ui/packBrowser.ts`          | Firebase pack browsing UI                             |

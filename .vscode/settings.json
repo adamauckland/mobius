@@ -1,4 +1,6 @@
 {
   "vitest.configSearchPatternExclude": "**/node_modules/**",
-  "vitest.enable": true
+  "vitest.enable": true,
+  "editor.insertSpaces": false,
+  "editor.detectIndentation": false
 }

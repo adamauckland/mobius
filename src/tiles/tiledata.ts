@@ -12,101 +12,110 @@ export const PARCEL_COUNT = 3;
 
 // Seeded PRNG (mulberry32) — same seed always produces the same map
 function mulberry32(seed: number) {
-  let s = seed | 0;
-  return () => {
-    s = (s + 0x6d2b79f5) | 0;
-    let t = Math.imul(s ^ (s >>> 15), 1 | s);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
+	let s = seed | 0;
+	return () => {
+		s = (s + 0x6d2b79f5) | 0;
+		let t = Math.imul(s ^ (s >>> 15), 1 | s);
+		t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+		return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+	};
 }
 
 export let seededRandom: () => number;
 
 const grassTileIndices = [
-  { value: 2, weight: 1 },
-  { value: 1, weight: 3 },
-  { value: 0, weight: 6 },
+	{ value: 2, weight: 1 },
+	{ value: 1, weight: 3 },
+	{ value: 0, weight: 6 },
 ];
 
 function weightedRandom<T>(options: { value: T; weight: number }[]): T {
-  const total = options.reduce((sum, o) => sum + o.weight, 0);
-  let r = seededRandom() * total;
-  for (const o of options) {
-    if ((r -= o.weight) <= 0) return o.value;
-  }
-  return options[options.length - 1].value; // fallback
+	const total = options.reduce((sum, o) => sum + o.weight, 0);
+	let r = seededRandom() * total;
+	for (const o of options) {
+		if ((r -= o.weight) <= 0) return o.value;
+	}
+	return options[options.length - 1].value; // fallback
 }
 
 export class Grass {
-  sprite: number[];
-  collider: boolean = false;
-  constructor() {
-    this.sprite = [weightedRandom(grassTileIndices), 0];
-  }
+	sprite: number[];
+	collider: boolean = false;
+	constructor() {
+		this.sprite = [weightedRandom(grassTileIndices), 0];
+	}
 }
 
 export class Tree {
-  sprite = [3, 0];
-  collider: boolean = true;
+	sprite = [3, 0];
+	collider: boolean = true;
 }
 
 export class Portal {
-  sprite = [0, 0]; // base grass sprite, overlay added separately
-  collider: boolean = false;
+	sprite = [0, 0]; // base grass sprite, overlay added separately
+	collider: boolean = false;
 }
 
 export class Barrier {
-  sprite = [0, 0]; // grass base, overlay added as separate Actor
-  collider: boolean = true;
-  groupId: number;
-  constructor(groupId: number) {
-    this.groupId = groupId;
-  }
+	sprite = [0, 0]; // grass base, overlay added as separate Actor
+	collider: boolean = true;
+	groupId: number;
+	constructor(groupId: number) {
+		this.groupId = groupId;
+	}
 }
 
 export class Switch {
-  sprite = [0, 0]; // grass base, overlay added as separate Actor
-  collider: boolean = false;
-  groupId: number;
-  activated: boolean = false;
-  constructor(groupId: number) {
-    this.groupId = groupId;
-  }
+	sprite = [0, 0]; // grass base, overlay added as separate Actor
+	collider: boolean = false;
+	groupId: number;
+	activated: boolean = false;
+	constructor(groupId: number) {
+		this.groupId = groupId;
+	}
 }
 
 export class Fence {
-  sprite = [0, 0]; // grass base, overlay chosen by auto-tiling
-  collider: boolean = true;
+	sprite = [0, 0]; // grass base, overlay chosen by auto-tiling
+	collider: boolean = true;
 }
 
 export type Direction = "up" | "down" | "left" | "right";
 
 export class OneWayGate {
-  sprite = [0, 0]; // grass base, overlay added as separate Actor
-  collider: boolean = false;
-  direction: Direction;
-  constructor(direction: Direction) {
-    this.direction = direction;
-  }
+	sprite = [0, 0]; // grass base, overlay added as separate Actor
+	collider: boolean = false;
+	direction: Direction;
+	constructor(direction: Direction) {
+		this.direction = direction;
+	}
 }
 
 export class DropZone {
-  sprite = [0, 0]; // grass base, overlay added as separate Actor
-  collider: boolean = false;
-  id: number; // which parcel belongs here
-  fulfilled: boolean = false;
-  constructor(id: number) {
-    this.id = id;
-  }
+	sprite = [0, 0]; // grass base, overlay added as separate Actor
+	collider: boolean = false;
+	id: number; // which parcel belongs here
+	fulfilled: boolean = false;
+	constructor(id: number) {
+		this.id = id;
+	}
 }
 
 export class ExitDoor {
-  sprite = [0, 0]; // grass base, overlay added as separate Actor
-  collider: boolean = false;
+	sprite = [0, 0]; // grass base, overlay added as separate Actor
+	collider: boolean = false;
 }
 
-export type TileType = Grass | Tree | Portal | Barrier | Switch | Fence | OneWayGate | DropZone | ExitDoor;
+export type TileType =
+	| Grass
+	| Tree
+	| Portal
+	| Barrier
+	| Switch
+	| Fence
+	| OneWayGate
+	| DropZone
+	| ExitDoor;
 
 export let tiles: TileType[] = [];
 export let portalTileIndices: number[] = [];
@@ -123,220 +132,220 @@ export const START_TILE_INDEX = START_TILE_X + START_TILE_Y * GRID_COLS;
 
 // Call this with a seed to generate the world
 export function generateWorld(seed: number) {
-  seededRandom = mulberry32(seed);
+	seededRandom = mulberry32(seed);
 
-  const total = GRID_COLS * GRID_ROWS;
-  const result: (Grass | Tree | Portal)[] = [];
-  for (let i = 0; i < total; i++) {
-    if (i === START_TILE_INDEX) {
-      result.push(new Grass());
-    } else {
-      result.push(seededRandom() < 0.15 ? new Tree() : new Grass());
-    }
-  }
+	const total = GRID_COLS * GRID_ROWS;
+	const result: (Grass | Tree | Portal)[] = [];
+	for (let i = 0; i < total; i++) {
+		if (i === START_TILE_INDEX) {
+			result.push(new Grass());
+		} else {
+			result.push(seededRandom() < 0.15 ? new Tree() : new Grass());
+		}
+	}
 
-  // Place 4 portals on random grass tiles (not the spawn)
-  const grassIndices = result
-    .map((t, i) => (t instanceof Grass && i !== START_TILE_INDEX ? i : -1))
-    .filter((i) => i !== -1);
-  const portalIndices: number[] = [];
-  for (let p = 0; p < 4; p++) {
-    if (grassIndices.length === 0) break;
-    const pick = Math.floor(seededRandom() * grassIndices.length);
-    const portalIdx = grassIndices.splice(pick, 1)[0];
-    result[portalIdx] = new Portal();
-    portalIndices.push(portalIdx);
-  }
+	// Place 4 portals on random grass tiles (not the spawn)
+	const grassIndices = result
+		.map((t, i) => (t instanceof Grass && i !== START_TILE_INDEX ? i : -1))
+		.filter((i) => i !== -1);
+	const portalIndices: number[] = [];
+	for (let p = 0; p < 4; p++) {
+		if (grassIndices.length === 0) break;
+		const pick = Math.floor(seededRandom() * grassIndices.length);
+		const portalIdx = grassIndices.splice(pick, 1)[0];
+		result[portalIdx] = new Portal();
+		portalIndices.push(portalIdx);
+	}
 
-  // Place barrier groups with corresponding switches
-  const BARRIER_GROUP_COUNT = 3;
-  for (let g = 0; g < BARRIER_GROUP_COUNT; g++) {
-    // Find grass tiles to place barriers on
-    const barrierCandidates = result
-      .map((t, i) => (t instanceof Grass && i !== START_TILE_INDEX ? i : -1))
-      .filter((i) => i !== -1);
+	// Place barrier groups with corresponding switches
+	const BARRIER_GROUP_COUNT = 3;
+	for (let g = 0; g < BARRIER_GROUP_COUNT; g++) {
+		// Find grass tiles to place barriers on
+		const barrierCandidates = result
+			.map((t, i) => (t instanceof Grass && i !== START_TILE_INDEX ? i : -1))
+			.filter((i) => i !== -1);
 
-    if (barrierCandidates.length === 0) break;
+		if (barrierCandidates.length === 0) break;
 
-    const startIdx =
-      barrierCandidates[Math.floor(seededRandom() * barrierCandidates.length)];
-    const startX = startIdx % GRID_COLS;
-    const startY = Math.floor(startIdx / GRID_COLS);
+		const startIdx =
+			barrierCandidates[Math.floor(seededRandom() * barrierCandidates.length)];
+		const startX = startIdx % GRID_COLS;
+		const startY = Math.floor(startIdx / GRID_COLS);
 
-    // Choose direction and length
-    const horizontal = seededRandom() < 0.5;
-    const length = 3 + Math.floor(seededRandom() * 3); // 3–5 tiles
+		// Choose direction and length
+		const horizontal = seededRandom() < 0.5;
+		const length = 3 + Math.floor(seededRandom() * 3); // 3–5 tiles
 
-    let placed = 0;
-    for (let j = 0; j < length; j++) {
-      const bx = horizontal ? startX + j : startX;
-      const by = horizontal ? startY : startY + j;
-      if (bx >= GRID_COLS || by >= GRID_ROWS) break;
-      const bi = bx + by * GRID_COLS;
-      if (bi === START_TILE_INDEX) continue;
-      if (result[bi] instanceof Grass) {
-        result[bi] = new Barrier(g);
-        placed++;
-      }
-    }
+		let placed = 0;
+		for (let j = 0; j < length; j++) {
+			const bx = horizontal ? startX + j : startX;
+			const by = horizontal ? startY : startY + j;
+			if (bx >= GRID_COLS || by >= GRID_ROWS) break;
+			const bi = bx + by * GRID_COLS;
+			if (bi === START_TILE_INDEX) continue;
+			if (result[bi] instanceof Grass) {
+				result[bi] = new Barrier(g);
+				placed++;
+			}
+		}
 
-    if (placed === 0) continue;
+		if (placed === 0) continue;
 
-    // Place a switch on a random grass tile for this group
-    const switchCandidates = result
-      .map((t, i) => (t instanceof Grass && i !== START_TILE_INDEX ? i : -1))
-      .filter((i) => i !== -1);
+		// Place a switch on a random grass tile for this group
+		const switchCandidates = result
+			.map((t, i) => (t instanceof Grass && i !== START_TILE_INDEX ? i : -1))
+			.filter((i) => i !== -1);
 
-    if (switchCandidates.length > 0) {
-      const switchIdx =
-        switchCandidates[Math.floor(seededRandom() * switchCandidates.length)];
-      result[switchIdx] = new Switch(g);
-    }
-  }
+		if (switchCandidates.length > 0) {
+			const switchIdx =
+				switchCandidates[Math.floor(seededRandom() * switchCandidates.length)];
+			result[switchIdx] = new Switch(g);
+		}
+	}
 
-  // Place fence enclosures
-  const FENCE_ENCLOSURE_COUNT = 5;
-  for (let f = 0; f < FENCE_ENCLOSURE_COUNT; f++) {
-    const fw = 4 + Math.floor(seededRandom() * 5); // 4–8 tiles wide
-    const fh = 4 + Math.floor(seededRandom() * 5); // 4–8 tiles tall
-    const fx = 3 + Math.floor(seededRandom() * (GRID_COLS - fw - 6));
-    const fy = 3 + Math.floor(seededRandom() * (GRID_ROWS - fh - 6));
+	// Place fence enclosures
+	const FENCE_ENCLOSURE_COUNT = 5;
+	for (let f = 0; f < FENCE_ENCLOSURE_COUNT; f++) {
+		const fw = 4 + Math.floor(seededRandom() * 5); // 4–8 tiles wide
+		const fh = 4 + Math.floor(seededRandom() * 5); // 4–8 tiles tall
+		const fx = 3 + Math.floor(seededRandom() * (GRID_COLS - fw - 6));
+		const fy = 3 + Math.floor(seededRandom() * (GRID_ROWS - fh - 6));
 
-    for (let x = fx; x < fx + fw; x++) {
-      for (let y = fy; y < fy + fh; y++) {
-        // Only place on perimeter
-        if (x > fx && x < fx + fw - 1 && y > fy && y < fy + fh - 1) continue;
-        const idx = x + y * GRID_COLS;
-        if (idx === START_TILE_INDEX) continue;
-        if (result[idx] instanceof Grass) {
-          result[idx] = new Fence();
-        }
-      }
-    }
+		for (let x = fx; x < fx + fw; x++) {
+			for (let y = fy; y < fy + fh; y++) {
+				// Only place on perimeter
+				if (x > fx && x < fx + fw - 1 && y > fy && y < fy + fh - 1) continue;
+				const idx = x + y * GRID_COLS;
+				if (idx === START_TILE_INDEX) continue;
+				if (result[idx] instanceof Grass) {
+					result[idx] = new Fence();
+				}
+			}
+		}
 
-    // Add a doorway: remove one fence tile from a random side
-    const side = Math.floor(seededRandom() * 4);
-    let doorX: number, doorY: number;
-    if (side === 0) {
-      doorX = fx + 1 + Math.floor(seededRandom() * (fw - 2));
-      doorY = fy;
-    } else if (side === 1) {
-      doorX = fx + 1 + Math.floor(seededRandom() * (fw - 2));
-      doorY = fy + fh - 1;
-    } else if (side === 2) {
-      doorX = fx;
-      doorY = fy + 1 + Math.floor(seededRandom() * (fh - 2));
-    } else {
-      doorX = fx + fw - 1;
-      doorY = fy + 1 + Math.floor(seededRandom() * (fh - 2));
-    }
-    const doorIdx = doorX + doorY * GRID_COLS;
-    if (result[doorIdx] instanceof Fence) {
-      result[doorIdx] = new Grass();
-    }
-  }
+		// Add a doorway: remove one fence tile from a random side
+		const side = Math.floor(seededRandom() * 4);
+		let doorX: number, doorY: number;
+		if (side === 0) {
+			doorX = fx + 1 + Math.floor(seededRandom() * (fw - 2));
+			doorY = fy;
+		} else if (side === 1) {
+			doorX = fx + 1 + Math.floor(seededRandom() * (fw - 2));
+			doorY = fy + fh - 1;
+		} else if (side === 2) {
+			doorX = fx;
+			doorY = fy + 1 + Math.floor(seededRandom() * (fh - 2));
+		} else {
+			doorX = fx + fw - 1;
+			doorY = fy + 1 + Math.floor(seededRandom() * (fh - 2));
+		}
+		const doorIdx = doorX + doorY * GRID_COLS;
+		if (result[doorIdx] instanceof Fence) {
+			result[doorIdx] = new Grass();
+		}
+	}
 
-  // Place one-way gates on random grass tiles
-  const ONE_WAY_GATE_COUNT = 8;
-  const directions: Direction[] = ["up", "down", "left", "right"];
-  for (let g = 0; g < ONE_WAY_GATE_COUNT; g++) {
-    const gateCandidates = result
-      .map((t, i) => (t instanceof Grass && i !== START_TILE_INDEX ? i : -1))
-      .filter((i) => i !== -1);
-    if (gateCandidates.length === 0) break;
+	// Place one-way gates on random grass tiles
+	const ONE_WAY_GATE_COUNT = 8;
+	const directions: Direction[] = ["up", "down", "left", "right"];
+	for (let g = 0; g < ONE_WAY_GATE_COUNT; g++) {
+		const gateCandidates = result
+			.map((t, i) => (t instanceof Grass && i !== START_TILE_INDEX ? i : -1))
+			.filter((i) => i !== -1);
+		if (gateCandidates.length === 0) break;
 
-    const pick = Math.floor(seededRandom() * gateCandidates.length);
-    const gateIdx = gateCandidates[pick];
-    const dir = directions[Math.floor(seededRandom() * directions.length)];
+		const pick = Math.floor(seededRandom() * gateCandidates.length);
+		const gateIdx = gateCandidates[pick];
+		const dir = directions[Math.floor(seededRandom() * directions.length)];
 
-    // Ensure the tile in the gate's direction is walkable
-    const gx = gateIdx % GRID_COLS;
-    const gy = Math.floor(gateIdx / GRID_COLS);
-    let nx = gx,
-      ny = gy;
-    if (dir === "up") ny--;
-    else if (dir === "down") ny++;
-    else if (dir === "left") nx--;
-    else if (dir === "right") nx++;
+		// Ensure the tile in the gate's direction is walkable
+		const gx = gateIdx % GRID_COLS;
+		const gy = Math.floor(gateIdx / GRID_COLS);
+		let nx = gx,
+			ny = gy;
+		if (dir === "up") ny--;
+		else if (dir === "down") ny++;
+		else if (dir === "left") nx--;
+		else if (dir === "right") nx++;
 
-    if (nx < 0 || nx >= GRID_COLS || ny < 0 || ny >= GRID_ROWS) continue;
-    const destIdx = nx + ny * GRID_COLS;
-    if (!(result[destIdx] instanceof Grass)) continue;
+		if (nx < 0 || nx >= GRID_COLS || ny < 0 || ny >= GRID_ROWS) continue;
+		const destIdx = nx + ny * GRID_COLS;
+		if (!(result[destIdx] instanceof Grass)) continue;
 
-    result[gateIdx] = new OneWayGate(dir);
-  }
+		result[gateIdx] = new OneWayGate(dir);
+	}
 
-  // Place drop zones for parcels
-  const dropZoneIndices: number[] = [];
-  for (let d = 0; d < PARCEL_COUNT; d++) {
-    const dzCandidates = result
-      .map((t, i) => (t instanceof Grass && i !== START_TILE_INDEX ? i : -1))
-      .filter((i) => i !== -1);
-    if (dzCandidates.length === 0) break;
-    const pick = Math.floor(seededRandom() * dzCandidates.length);
-    const dzIdx = dzCandidates[pick];
-    result[dzIdx] = new DropZone(d);
-    dropZoneIndices.push(dzIdx);
-  }
+	// Place drop zones for parcels
+	const dropZoneIndices: number[] = [];
+	for (let d = 0; d < PARCEL_COUNT; d++) {
+		const dzCandidates = result
+			.map((t, i) => (t instanceof Grass && i !== START_TILE_INDEX ? i : -1))
+			.filter((i) => i !== -1);
+		if (dzCandidates.length === 0) break;
+		const pick = Math.floor(seededRandom() * dzCandidates.length);
+		const dzIdx = dzCandidates[pick];
+		result[dzIdx] = new DropZone(d);
+		dropZoneIndices.push(dzIdx);
+	}
 
-  tiles = result;
-  portalTileIndices = portalIndices;
-  dropZoneTileIndices = dropZoneIndices;
+	tiles = result;
+	portalTileIndices = portalIndices;
+	dropZoneTileIndices = dropZoneIndices;
 }
 
 /** Load a hand-crafted map from editor data instead of procedural generation. */
 export function loadWorld(map: MapData) {
-  // Ensure seededRandom is available for Grass sprite variation
-  if (!seededRandom) {
-    seededRandom = mulberry32(0);
-  }
+	// Ensure seededRandom is available for Grass sprite variation
+	if (!seededRandom) {
+		seededRandom = mulberry32(0);
+	}
 
-  const total = map.cols * map.rows;
-  const result: TileType[] = [];
-  const portalIndices: number[] = [];
-  const exitDoorIndices: number[] = [];
-  const dzIndices: number[] = [];
+	const total = map.cols * map.rows;
+	const result: TileType[] = [];
+	const portalIndices: number[] = [];
+	const exitDoorIndices: number[] = [];
+	const dzIndices: number[] = [];
 
-  for (let i = 0; i < total; i++) {
-    const code = map.tiles[i] || "g";
-    const info = codeToTile(code);
-    switch (info.type) {
-      case "grass":
-        result.push(new Grass());
-        break;
-      case "tree":
-        result.push(new Tree());
-        break;
-      case "portal":
-        result.push(new Portal());
-        portalIndices.push(i);
-        break;
-      case "barrier":
-        result.push(new Barrier(info.groupId));
-        break;
-      case "switch":
-        result.push(new Switch(info.groupId));
-        break;
-      case "fence":
-        result.push(new Fence());
-        break;
-      case "oneWayGate":
-        result.push(new OneWayGate(info.direction));
-        break;
-      case "dropZone":
-        result.push(new DropZone(info.id));
-        dzIndices.push(i);
-        break;
-      case "exitDoor":
-        result.push(new ExitDoor());
-        exitDoorIndices.push(i);
-        break;
-    }
-  }
+	for (let i = 0; i < total; i++) {
+		const code = map.tiles[i] || "g";
+		const info = codeToTile(code);
+		switch (info.type) {
+			case "grass":
+				result.push(new Grass());
+				break;
+			case "tree":
+				result.push(new Tree());
+				break;
+			case "portal":
+				result.push(new Portal());
+				portalIndices.push(i);
+				break;
+			case "barrier":
+				result.push(new Barrier(info.groupId));
+				break;
+			case "switch":
+				result.push(new Switch(info.groupId));
+				break;
+			case "fence":
+				result.push(new Fence());
+				break;
+			case "oneWayGate":
+				result.push(new OneWayGate(info.direction));
+				break;
+			case "dropZone":
+				result.push(new DropZone(info.id));
+				dzIndices.push(i);
+				break;
+			case "exitDoor":
+				result.push(new ExitDoor());
+				exitDoorIndices.push(i);
+				break;
+		}
+	}
 
-  tiles = result;
-  portalTileIndices = portalIndices;
-  exitDoorTileIndices = exitDoorIndices;
-  dropZoneTileIndices = dzIndices;
-  customStartTile = map.startTile;
+	tiles = result;
+	portalTileIndices = portalIndices;
+	exitDoorTileIndices = exitDoorIndices;
+	dropZoneTileIndices = dzIndices;
+	customStartTile = map.startTile;
 }

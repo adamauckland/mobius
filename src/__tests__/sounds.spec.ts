@@ -1,5 +1,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
+vi.mock("excalibur", () => ({}));
+vi.mock("../game", () => ({
+  game: {
+    clock: {
+      schedule: (fn: () => void, _delay: number) => fn(),
+    },
+  },
+}));
+
 // Mock AudioContext and its nodes
 function createMockOscillator() {
   return {

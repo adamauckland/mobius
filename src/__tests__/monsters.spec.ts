@@ -111,14 +111,16 @@ describe("monsters", () => {
       const killCb = vi.fn();
       setOnPlayerKilled(killCb);
 
-      // Place a player at the exact same position as the monster
+      // Run one update to let the monster settle at its phase-offset position
+      updateMonsters(0);
+
+      // Place a player at the monster's actual position after update
       const mockPlayer = {
         pos: { x: actor.pos.x, y: actor.pos.y },
         graphics: { visible: true },
       };
       mockEntries.push({ player: mockPlayer });
 
-      // Update with 0 delta so monster doesn't move from its start pos
       updateMonsters(0);
       expect(killCb).toHaveBeenCalledWith(mockPlayer);
     });

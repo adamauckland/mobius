@@ -12,7 +12,7 @@ export const Z_LAYER_PLAYER = 3;
 export const Z_LAYER_ROCK = 4;
 
 export function zFromY(y: number, layer: number) {
-  return y * LAYER_SCALE + layer;
+	return y * LAYER_SCALE + layer;
 }
 
 export const Z_RIPPLE = 50000;

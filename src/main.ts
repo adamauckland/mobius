@@ -12,65 +12,67 @@ const loader = new Loader();
 loader.suppressPlayButton = true;
 for (const resource of Object.values(Resources)) loader.addResource(resource);
 game
-  .start(loader)
-  .then(() => {
-    // Check if we should auto-start a project level (from editor "Test" or "Continue" button)
-    const projectJson = localStorage.getItem("customProject");
-    if (projectJson) {
-      const levelStr = localStorage.getItem("customProjectLevel") || "0";
-      localStorage.removeItem("customProject");
-      localStorage.removeItem("customProjectLevel");
-      try {
-        startProjectLevel(projectJson, parseInt(levelStr, 10));
-      } catch {
-        console.error("Failed to load project level");
-      }
-      return;
-    }
+	.start(loader)
+	.then(() => {
+		// Check if we should auto-start a project level (from editor "Test" or "Continue" button)
+		const projectJson = localStorage.getItem("customProject");
+		if (projectJson) {
+			const levelStr = localStorage.getItem("customProjectLevel") || "0";
+			localStorage.removeItem("customProject");
+			localStorage.removeItem("customProjectLevel");
+			try {
+				startProjectLevel(projectJson, parseInt(levelStr, 10));
+			} catch {
+				console.error("Failed to load project level");
+			}
+			return;
+		}
 
-    // Legacy single-map support
-    const customMapJson = localStorage.getItem("customMap");
-    if (customMapJson) {
-      localStorage.removeItem("customMap");
-      try {
-        startCustomMap(customMapJson);
-      } catch {
-        console.error("Failed to load custom map");
-      }
-      return;
-    }
+		// Legacy single-map support
+		const customMapJson = localStorage.getItem("customMap");
+		if (customMapJson) {
+			localStorage.removeItem("customMap");
+			try {
+				startCustomMap(customMapJson);
+			} catch {
+				console.error("Failed to load custom map");
+			}
+			return;
+		}
 
-    // Check for ?pack=ID in URL — load a shared pack from Firebase
-    const urlParams = new URLSearchParams(window.location.search);
-    const packId = urlParams.get("pack");
-    if (packId) {
-      // Clear the URL param so reloads don't re-fetch
-      window.history.replaceState({}, "", window.location.pathname);
-      import("./levels/levelPacks").then(async ({ loadPack, getPackProject }) => {
-        try {
-          const pack = await loadPack(packId);
-          if (!pack) {
-            alert(`Level pack "${packId}" not found.`);
-            return;
-          }
-          const proj = getPackProject(pack);
-          const json = JSON.stringify(proj);
-          startProjectLevel(json, 0);
-        } catch (err) {
-          alert("Failed to load pack: " + (err as Error).message);
-        }
-      });
-      return;
-    }
+		// Check for ?pack=ID in URL — load a shared pack from Firebase
+		const urlParams = new URLSearchParams(window.location.search);
+		const packId = urlParams.get("pack");
+		if (packId) {
+			// Clear the URL param so reloads don't re-fetch
+			window.history.replaceState({}, "", window.location.pathname);
+			import("./levels/levelPacks").then(
+				async ({ loadPack, getPackProject }) => {
+					try {
+						const pack = await loadPack(packId);
+						if (!pack) {
+							alert(`Level pack "${packId}" not found.`);
+							return;
+						}
+						const proj = getPackProject(pack);
+						const json = JSON.stringify(proj);
+						startProjectLevel(json, 0);
+					} catch (err) {
+						alert("Failed to load pack: " + (err as Error).message);
+					}
+				},
+			);
+			return;
+		}
 
-    // Check if we should reopen the editor (from "Back to Editor" button)
-    if (localStorage.getItem("editorMode") === "true") {
-      localStorage.removeItem("editorMode");
-      showEditor();
-      return;
-    }
-  })
-  .catch(console.error);
+		// Check if we should reopen the editor (from "Back to Editor" button)
+		if (localStorage.getItem("editorMode") === "true") {
+			localStorage.removeItem("editorMode");
+			showEditor();
+			return;
+		}
+	})
+	.catch(console.error);
 model.showHUD = true;
 
 // Pause state and toggle — shared between Escape key and HUD button
@@ -78,25 +80,25 @@ export let paused = false;
 let onPauseChanged: ((paused: boolean) => void) | null = null;
 
 export function onPauseChange(cb: (paused: boolean) => void) {
-  onPauseChanged = cb;
+	onPauseChanged = cb;
 }
 
 export function togglePause() {
-  paused = !paused;
-  if (paused) {
-    game.clock.stop();
-  } else {
-    game.clock.start();
-  }
-  onPauseChanged?.(paused);
+	paused = !paused;
+	if (paused) {
+		game.clock.stop();
+	} else {
+		game.clock.start();
+	}
+	onPauseChanged?.(paused);
 }
 
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") togglePause();
+	if (e.key === "Escape") togglePause();
 });
 
 // Editor button on start screen
 const btnEditor = document.getElementById("btn-editor");
 if (btnEditor) {
-  btnEditor.addEventListener("click", () => showEditor());
+	btnEditor.addEventListener("click", () => showEditor());
 }
