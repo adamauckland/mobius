@@ -15,7 +15,7 @@ import {
 	Fence,
 	Barrier,
 } from "../tiles/tiledata";
-import { plrWalk, plrImage } from "../resources";
+import { playerWalkAnimation, playerImage } from "../resources";
 import type { Rock, Parcel } from "./worldObjects";
 import {
 	dropRockAtTile,
@@ -28,8 +28,21 @@ import { sfxOneWayGate, sfxPortal } from "../sounds";
 import { game } from "../game";
 import type { MovingBlock } from "./movingBlocks";
 import { getMovingBlockNear, mountBlock } from "./movingBlocks";
+import { Collider, CollisionContact, Side } from "excalibur";
 
 // create and configure player, and his action buffer
+
+// Actors are the main unit of composition you'll likely use, anything that you want to draw and move around the screen
+// is likely built with an actor
+
+// They contain a bunch of useful components that you might use
+// actor.transform
+// actor.motion
+// actor.graphics
+// actor.body
+// actor.collider
+// actor.actions
+// actor.pointer
 
 export class PlayerActor extends Actor {
 	playerActionBuffer: any = [];
@@ -47,13 +60,21 @@ export class PlayerActor extends Actor {
 	private walkGraphic: Graphic;
 
 	constructor(options: any, walkGraphic: Graphic, idleGraphic: Graphic) {
+		// Giving your actor a name is optional, but helps in debugging using the dev tools or debug mode
+		// https://github.com/excaliburjs/excalibur-extension/
+		// Chrome: https://chromewebstore.google.com/detail/excalibur-dev-tools/dinddaeielhddflijbbcmpefamfffekc
+		// Firefox: https://addons.mozilla.org/en-US/firefox/addon/excalibur-dev-tools/
+		// anchor: vec(0, 0), // Actors default center colliders and graphics with anchor (0.5, 0.5)
+		// collisionType: CollisionType.Active, // Collision Type Active means this participates in collisions read more https://excaliburjs.com/docs/collisiontypes
 		super(options);
+
 		this.walkGraphic = walkGraphic;
 		this.idleGraphic = idleGraphic;
 		this.graphics.use(walkGraphic);
 		this.graphics.onPreDraw = () => {
 			const isMoving =
 				this.playerActionBuffer.length > 0 || this.actions.getQueue().hasNext();
+
 			if (isMoving) {
 				this.graphics.use(this.walkGraphic);
 				this.graphics.offset.y =
@@ -63,6 +84,10 @@ export class PlayerActor extends Actor {
 				this.graphics.offset.y = 0;
 			}
 		};
+	}
+
+	override onPreUpdate(engine: Engine, elapsedMs: number): void {
+		// Put any update logic here runs every frame before Actor builtins
 	}
 
 	override onPostUpdate(engine: Engine<any>, delta: number): void {
@@ -210,6 +235,42 @@ export class PlayerActor extends Actor {
 			}
 		});
 	}
+
+	override onPreCollisionResolve(
+		self: Collider,
+		other: Collider,
+		side: Side,
+		contact: CollisionContact,
+	): void {
+		// Called before a collision is resolved, if you want to opt out of this specific collision call contact.cancel()
+	}
+
+	override onPostCollisionResolve(
+		self: Collider,
+		other: Collider,
+		side: Side,
+		contact: CollisionContact,
+	): void {
+		// Called every time a collision is resolved and overlap is solved
+	}
+
+	override onCollisionStart(
+		self: Collider,
+		other: Collider,
+		side: Side,
+		contact: CollisionContact,
+	): void {
+		// Called when a pair of objects are in contact
+	}
+
+	override onCollisionEnd(
+		self: Collider,
+		other: Collider,
+		side: Side,
+		lastContact: CollisionContact,
+	): void {
+		// Called when a pair of objects separates
+	}
 }
 
 export let player = new PlayerActor(
@@ -219,6 +280,6 @@ export let player = new PlayerActor(
 		height: TILE_SIZE,
 		z: zFromY(START_POS_Y, Z_LAYER_PLAYER),
 	},
-	plrWalk,
-	plrImage,
+	playerWalkAnimation,
+	playerImage,
 );

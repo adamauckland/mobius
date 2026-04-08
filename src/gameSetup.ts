@@ -69,15 +69,55 @@ restartButton.addEventListener("click", () => {
 const continueButton = document.getElementById(
 	"btn-continue",
 ) as HTMLButtonElement;
+const levelTransition = document.getElementById("level-transition")!;
+const transitionSubtitle = document.getElementById("transition-subtitle")!;
+const transitionTitle = document.getElementById("transition-title")!;
+const transitionLives = document.getElementById("transition-lives")!;
+
 continueButton.addEventListener("click", () => {
 	if (!model.projectJson || model.currentLevel + 1 >= model.totalLevels) return;
-	// Persist lives and advance level via localStorage + reload
 	const nextLevel = model.currentLevel + 1;
+
+	// Parse the project to get the next level's name
+	const proj = deserializeProject(model.projectJson);
+	const nextLevelName = proj.levels[nextLevel]?.name || "Untitled";
+
+	// Show the transition overlay immediately (before reload)
+	transitionSubtitle.textContent = `Level ${nextLevel + 1} of ${model.totalLevels}`;
+	transitionTitle.textContent = nextLevelName;
+	transitionLives.textContent = "\u2665".repeat(model.lives) + "\u2661".repeat(3 - model.lives);
+	levelTransition.style.display = "flex";
+
+	// Hide buttons and start screen so nothing peeks through
+	continueButton.style.display = "none";
+	restartButton.style.display = "none";
+
+	// Persist state and reload
 	localStorage.setItem("customProject", model.projectJson);
 	localStorage.setItem("customProjectLevel", String(nextLevel));
 	localStorage.setItem("projectLives", String(model.lives));
+	localStorage.setItem("levelTransition", JSON.stringify({
+		level: nextLevel + 1,
+		total: model.totalLevels,
+		name: nextLevelName,
+		lives: model.lives,
+	}));
 	location.reload();
 });
+
+// On page load: if a level transition is in progress, show the overlay immediately
+// so the start screen never flashes.
+const savedTransition = localStorage.getItem("levelTransition");
+if (savedTransition) {
+	try {
+		const t = JSON.parse(savedTransition);
+		transitionSubtitle.textContent = `Level ${t.level} of ${t.total}`;
+		transitionTitle.textContent = t.name;
+		transitionLives.textContent = "\u2665".repeat(t.lives) + "\u2661".repeat(3 - t.lives);
+		levelTransition.style.display = "flex";
+		startScreen.style.display = "none";
+	} catch { /* ignore parse errors */ }
+}
 
 function startGame(customMapData: MapData) {
 	loadWorld(customMapData);
@@ -89,6 +129,13 @@ function startGame(customMapData: MapData) {
 
 	// Hide start screen
 	startScreen.style.display = "none";
+
+	// Fade out level transition overlay if visible
+	if (localStorage.getItem("levelTransition")) {
+		localStorage.removeItem("levelTransition");
+		levelTransition.style.opacity = "0";
+		setTimeout(() => { levelTransition.style.display = "none"; levelTransition.style.opacity = "1"; }, 400);
+	}
 
 	// Show "Back to Editor" button
 	const backBtn = document.createElement("button");

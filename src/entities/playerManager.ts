@@ -1,6 +1,6 @@
 import { Vector, Actor, Circle, Color } from "excalibur";
 import { PlayerActor, player } from "./PlayerActor";
-import { plrWalk, plrImage } from "../resources";
+import { playerWalkAnimation, playerImage } from "../resources";
 import { GameRecorder, type GameRecording } from "./recorder";
 import {
 	TILE_SIZE,
@@ -190,8 +190,8 @@ export function stopAndSpawnNext() {
 			width: TILE_SIZE,
 			height: TILE_SIZE,
 		},
-		plrWalk,
-		plrImage,
+		playerWalkAnimation,
+		playerImage,
 	);
 	newPlayer.onReachedPortal = () => {
 		if (activeEntry().player === newPlayer) {

@@ -23,6 +23,15 @@
       #btn-restart { top: 60%; }
       #btn-continue { top: 68%; }
       #btn-restart:hover, #btn-continue:hover { background: #929fa4; color: #131617; }
+      #level-transition {
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        display: none; flex-direction: column; align-items: center; justify-content: center;
+        background: #131617; color: #d0e3e9; font-family: monospace; z-index: 1001;
+        transition: opacity 0.4s ease;
+      }
+      #level-transition h2 { font-size: 28px; margin: 0; opacity: 0.5; letter-spacing: 4px; text-transform: uppercase; }
+      #level-transition h1 { font-size: 56px; margin: 12px 0 0; }
+      #level-transition .lives { font-size: 32px; margin-top: 24px; color: #e57373; }
     </style>
   </head>
   <body>
@@ -35,7 +44,12 @@
       </div>
     </div>
     <button id="btn-restart">RESTART</button>
-    <button id="btn-continue">CONTINUE</button>
+    <button id="btn-continue">Next</button>
+    <div id="level-transition">
+      <h2 id="transition-subtitle"></h2>
+      <h1 id="transition-title"></h1>
+      <div class="lives" id="transition-lives"></div>
+    </div>
     <script type="module" src="./src/main.ts"></script>
     <canvas id='cnv'> </canvas>
   </body>

@@ -10,7 +10,8 @@
     "serve": "vite preview",
     "test": "npm run build && npx playwright test",
     "test:unit": "vitest run",
-    "test:integration-update": "npx playwright test --update-snapshots"
+    "test:integration-update": "npx playwright test --update-snapshots",
+	"knip": "knip"
   },
   "repository": {},
   "keywords": [
@@ -28,6 +29,7 @@
     "excalibur": "0.32.0",
     "firebase": "^12.11.0",
     "firebase-tools": "^15.13.0",
+    "knip": "^6.3.0",
     "vitest": "^4.1.2"
   },
   "devDependencies": {

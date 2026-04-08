@@ -10,9 +10,9 @@ const PlayerSheet = SpriteSheet.fromImageSource({
 	image: dudeSpritesheet,
 	grid: { columns: 3, rows: 1, spriteHeight: 16, spriteWidth: 16 },
 });
-export const plrImage = PlayerSheet.sprites[0];
+export const playerImage = PlayerSheet.sprites[0];
 
-export const plrWalk = new Animation({
+export const playerWalkAnimation = new Animation({
 	// put your desired frame numbers here
 	frames: [0, 1, 0, 2].map((i) => ({
 		graphic: PlayerSheet.sprites[i],
@@ -20,6 +20,7 @@ export const plrWalk = new Animation({
 	})),
 	strategy: AnimationStrategy.Loop,
 });
+
 const kennyRougeLikePack = new ImageSource(roguelikess);
 export const rlSS = SpriteSheet.fromImageSource({
 	image: kennyRougeLikePack,
