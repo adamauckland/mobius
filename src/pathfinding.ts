@@ -10,6 +10,7 @@ import {
 	Tree,
 	Barrier,
 	Fence,
+	DropZone,
 	tiles,
 	TILE_SIZE,
 	GRID_COLS,
@@ -93,15 +94,20 @@ function getPlayerTileIndex(player: PlayerActor): number {
 
 /** Returns a warning message if the tile is impassable, or null if walkable. */
 function getBlockedTileWarning(tileIndex: number): string | null {
-	if (tiles[tileIndex] instanceof Tree) return "CLICKING A TREE WILL BE IGNORED";
+	if (tiles[tileIndex] instanceof Tree)
+		return "CLICKING A TREE WILL BE IGNORED";
 	if (tiles[tileIndex] instanceof Fence) return "CAN'T WALK THROUGH A FENCE";
 	const tile = tiles[tileIndex];
-	if (tile instanceof Barrier && tile.collider) return "BARRIER IS LOCKED — FIND THE SWITCH";
+	if (tile instanceof Barrier && tile.collider)
+		return "BARRIER IS LOCKED — FIND THE SWITCH";
 	return null;
 }
 
 /** If clicking own tile while carrying something, drop it. Returns true if an item was dropped. */
-function tryDropCarriedItem(targetTileIndex: number, player: PlayerActor): boolean {
+function tryDropCarriedItem(
+	targetTileIndex: number,
+	player: PlayerActor,
+): boolean {
 	const playerTile = getPlayerTileIndex(player);
 	if (targetTileIndex !== playerTile) return false;
 
@@ -208,11 +214,22 @@ export function handleTileClick(
 		}
 	}
 
-	const blockedWarning = getBlockedTileWarning(targetTileIndex);
-	if (blockedWarning) {
-		model.warningText = blockedWarning;
-		showWarning();
-		return;
+	// Carrying the matching parcel? Allow routing onto the (otherwise blocked)
+	// drop zone for this single pathfinding call.
+	const targetTile = tiles[targetTileIndex];
+	const isMatchingDropZone =
+		targetTile instanceof DropZone &&
+		!targetTile.fulfilled &&
+		targetPlayer.carriedParcel != null &&
+		targetTile.id === targetPlayer.carriedParcel.id;
+
+	if (!isMatchingDropZone) {
+		const blockedWarning = getBlockedTileWarning(targetTileIndex);
+		if (blockedWarning) {
+			model.warningText = blockedWarning;
+			showWarning();
+			return;
+		}
 	}
 
 	if (tryDropCarriedItem(targetTileIndex, targetPlayer)) return;
@@ -230,6 +247,25 @@ export function handleTileClick(
 	if (targetTileIndex < 0 || targetTileIndex >= totalTiles) return;
 	if (playerTileIndex === targetTileIndex) return;
 
+	// Temporarily mark the matching drop zone as walkable for pathfinding,
+	// then restore so the world stays consistent for other actors.
+	let restoreDropZone: (() => void) | null = null;
+	if (isMatchingDropZone && targetTile instanceof DropZone) {
+		const tilemapTile = storedTilemap.tiles[targetTileIndex];
+		const prevSolid = tilemapTile.solid;
+		const prevCollider = targetTile.collider;
+		tilemapTile.solid = false;
+		targetTile.collider = false;
+		rebuildPathfinding();
+		restoreDropZone = () => {
+			tilemapTile.solid = prevSolid;
+			targetTile.collider = prevCollider;
+			rebuildPathfinding();
+		};
+	}
+
 	const { path, startingIndex } = findPath(playerTileIndex, targetTileIndex);
 	queuePath(targetPlayer, path, startingIndex);
+
+	if (restoreDropZone) restoreDropZone();
 }

@@ -168,19 +168,33 @@ export class PlayerActor extends Actor {
 			model.movesRemaining--;
 			// Check for collectables on this tile
 			tryCollectAtTile(node);
-			// Auto-drop parcel when adjacent to its matching drop zone
+			// Auto-drop parcel on or next to its matching drop zone
 			if (this.carriedParcel) {
-				const px = node % GRID_COLS;
-				const py = Math.floor(node / GRID_COLS);
-				for (const [dx, dy] of [[0, -1], [0, 1], [-1, 0], [1, 0]]) {
-					const nx = px + dx;
-					const ny = py + dy;
-					if (nx < 0 || nx >= GRID_COLS || ny < 0 || ny >= GRID_ROWS) continue;
-					const adjIdx = nx + ny * GRID_COLS;
-					const adjTile = tiles[adjIdx];
-					if (adjTile instanceof DropZone && adjTile.id === this.carriedParcel.id && !adjTile.fulfilled) {
-						dropParcelAtTile(this, adjIdx);
-						break;
+				const currentTile = tiles[node];
+				if (
+					currentTile instanceof DropZone &&
+					currentTile.id === this.carriedParcel.id &&
+					!currentTile.fulfilled
+				) {
+					dropParcelAtTile(this, node);
+				} else {
+					const px = node % GRID_COLS;
+					const py = Math.floor(node / GRID_COLS);
+					for (const [dx, dy] of [[0, -1], [0, 1], [-1, 0], [1, 0]]) {
+						const nx = px + dx;
+						const ny = py + dy;
+						if (nx < 0 || nx >= GRID_COLS || ny < 0 || ny >= GRID_ROWS) continue;
+						const adjIdx = nx + ny * GRID_COLS;
+						const adjTile = tiles[adjIdx];
+						if (
+							adjTile instanceof DropZone &&
+							this.carriedParcel &&
+							adjTile.id === this.carriedParcel.id &&
+							!adjTile.fulfilled
+						) {
+							dropParcelAtTile(this, adjIdx);
+							break;
+						}
 					}
 				}
 			}

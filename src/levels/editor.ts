@@ -50,6 +50,7 @@ function drawRL(
 type ToolId =
 	| "grass"
 	| "tree"
+	| "void"
 	| "portal"
 	| "barrier"
 	| "switch"
@@ -76,6 +77,7 @@ interface ToolDef {
 const TOOLS: ToolDef[] = [
 	{ id: "grass", label: "Grass", color: "#4a7c47", category: "tile", key: "1" },
 	{ id: "tree", label: "Tree", color: "#2d5a1e", category: "tile", key: "2" },
+	{ id: "void", label: "Void", color: "#000000", category: "tile", key: "0" },
 	{
 		id: "portal",
 		label: "Portal",
@@ -218,6 +220,10 @@ let rightDown = false;
 let lastMouseX = 0;
 let lastMouseY = 0;
 let hoveredTile = -1;
+// Rectangle fill: when shift is held during a paintable drag, anchor the
+// starting tile and apply the tool to every tile in the rectangle on mouseup.
+let rectAnchorTile = -1;
+let rectErasing = false;
 
 // ---------------------------------------------------------------------------
 // Coordinate helpers
@@ -274,6 +280,13 @@ function render() {
 		const dx = tx * ts;
 		const dy = ty * ts;
 		const info = codeToTile(mapData.tiles[i]);
+
+		// Void tiles render as the editor background (no grass base, no overlay)
+		if (info.type === "void") {
+			ctx.fillStyle = "#1a1a2e";
+			ctx.fillRect(dx, dy, ts, ts);
+			continue;
+		}
 
 		// Grass base
 		drawTileSprite(ctx, 0, 0, dx, dy, ts);
@@ -428,6 +441,27 @@ function render() {
 		ctx.setLineDash([]);
 	}
 
+	// Rectangle fill preview
+	if (rectAnchorTile >= 0 && hoveredTile >= 0) {
+		const ax = tileX(rectAnchorTile);
+		const ay = tileY(rectAnchorTile);
+		const bx = tileX(hoveredTile);
+		const by = tileY(hoveredTile);
+		const x0 = Math.min(ax, bx) * ts;
+		const y0 = Math.min(ay, by) * ts;
+		const w = (Math.abs(bx - ax) + 1) * ts;
+		const h = (Math.abs(by - ay) + 1) * ts;
+		ctx.fillStyle = rectErasing
+			? "rgba(231,76,60,0.2)"
+			: "rgba(255,255,255,0.2)";
+		ctx.fillRect(x0, y0, w, h);
+		ctx.strokeStyle = rectErasing ? "#e74c3c" : "#ffffff";
+		ctx.lineWidth = 1;
+		ctx.setLineDash([4, 4]);
+		ctx.strokeRect(x0 + 0.5, y0 + 0.5, w - 1, h - 1);
+		ctx.setLineDash([]);
+	}
+
 	// Hover highlight
 	if (hoveredTile >= 0) {
 		const hx = tileX(hoveredTile) * ts;
@@ -567,6 +601,9 @@ function applyTool(tileIdx: number) {
 		case "tree":
 			mapData.tiles[tileIdx] = tileToCode({ type: "tree" });
 			break;
+		case "void":
+			mapData.tiles[tileIdx] = tileToCode({ type: "void" });
+			break;
 		case "portal":
 			mapData.tiles[tileIdx] = tileToCode({ type: "portal" });
 			break;
@@ -606,6 +643,26 @@ function applyTool(tileIdx: number) {
 		case "eraser":
 			eraseAt(tileIdx);
 			break;
+	}
+}
+
+function forEachTileInRect(
+	a: number,
+	b: number,
+	cb: (tileIdx: number) => void,
+) {
+	const ax = tileX(a);
+	const ay = tileY(a);
+	const bx = tileX(b);
+	const by = tileY(b);
+	const x0 = Math.min(ax, bx);
+	const x1 = Math.max(ax, bx);
+	const y0 = Math.min(ay, by);
+	const y1 = Math.max(ay, by);
+	for (let y = y0; y <= y1; y++) {
+		for (let x = x0; x <= x1; x++) {
+			cb(x + y * mapData.cols);
+		}
 	}
 }
 
@@ -652,6 +709,12 @@ function onMouseDown(e: MouseEvent) {
 		mouseDown = true;
 		const [wx, wy] = screenToWorld(e.clientX, e.clientY);
 		const idx = worldToTile(wx, wy);
+		const paintable = ["grass", "tree", "void", "fence", "barrier", "eraser"];
+		if (e.shiftKey && paintable.includes(selectedTool) && idx >= 0) {
+			rectAnchorTile = idx;
+			rectErasing = selectedTool === "eraser";
+			return;
+		}
 		applyTool(idx);
 	}
 }
@@ -668,9 +731,14 @@ function onMouseMove(e: MouseEvent) {
 		return;
 	}
 
-	// Drag-paint for paintable tools
-	const paintable = ["grass", "tree", "fence", "barrier", "eraser"];
-	if (mouseDown && paintable.includes(selectedTool) && hoveredTile >= 0) {
+	// Drag-paint for paintable tools (skipped while previewing a rect)
+	const paintable = ["grass", "tree", "void", "fence", "barrier", "eraser"];
+	if (
+		mouseDown &&
+		rectAnchorTile < 0 &&
+		paintable.includes(selectedTool) &&
+		hoveredTile >= 0
+	) {
 		if (selectedTool === "eraser") {
 			eraseAt(hoveredTile);
 		} else {
@@ -708,7 +776,21 @@ function onMouseMove(e: MouseEvent) {
 }
 
 function onMouseUp(e: MouseEvent) {
-	if (e.button === 0) mouseDown = false;
+	if (e.button === 0) {
+		// Commit a pending rectangle fill
+		if (rectAnchorTile >= 0 && hoveredTile >= 0) {
+			forEachTileInRect(rectAnchorTile, hoveredTile, (idx) => {
+				if (rectErasing) {
+					eraseAt(idx);
+				} else {
+					applyTool(idx);
+				}
+			});
+		}
+		rectAnchorTile = -1;
+		rectErasing = false;
+		mouseDown = false;
+	}
 	if (e.button === 1) middleDown = false;
 	if (e.button === 2) rightDown = false;
 }

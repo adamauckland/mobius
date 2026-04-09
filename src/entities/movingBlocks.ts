@@ -200,9 +200,17 @@ export function updateMovingBlocks(delta: number) {
 		// Apply the block's movement delta to riders — no snap on mount
 		const dx = newX - block.actor.pos.x;
 		const dy = newY - block.actor.pos.y;
+		// Smoothly nudge riders toward the block centre after mounting so
+		// they line up with exit tiles instead of keeping a fixed offset.
+		const CENTER_RATE = 0.04; // pixels per ms
+		const maxStep = CENTER_RATE * delta;
 		for (const rider of block.riders) {
 			rider.pos.x += dx;
 			rider.pos.y += dy;
+			const offX = newX - rider.pos.x;
+			const offY = newY - rider.pos.y;
+			rider.pos.x += Math.sign(offX) * Math.min(Math.abs(offX), maxStep);
+			rider.pos.y += Math.sign(offY) * Math.min(Math.abs(offY), maxStep);
 		}
 
 		block.actor.pos.x = newX;

@@ -2,6 +2,7 @@ import { TileMap, vec } from "excalibur";
 import { TileSheet, rlSS } from "./resources";
 import {
 	Tree,
+	Void,
 	Portal,
 	Barrier,
 	Fence,
@@ -177,6 +178,9 @@ function startGame(customMapData: MapData) {
 		);
 		if (tiles[tileIndex] instanceof Tree) {
 			tile.addGraphic(TileSheet.getSprite(0, 0)); // ground under tree
+			tile.solid = true;
+		} else if (tiles[tileIndex] instanceof Void) {
+			// no graphics — transparent edge of world
 			tile.solid = true;
 		} else if (tiles[tileIndex] instanceof Barrier) {
 			tile.addGraphic(TileSheet.getSprite(0, 0)); // ground under barrier

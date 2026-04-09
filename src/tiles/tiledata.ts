@@ -51,6 +51,11 @@ export class Tree {
 	collider: boolean = true;
 }
 
+export class Void {
+	sprite = [0, 0]; // not rendered, acts as edge of world
+	collider: boolean = true;
+}
+
 export class Portal {
 	sprite = [0, 0]; // base grass sprite, overlay added separately
 	collider: boolean = false;
@@ -109,6 +114,7 @@ export class ExitDoor {
 export type TileType =
 	| Grass
 	| Tree
+	| Void
 	| Portal
 	| Barrier
 	| Switch
@@ -316,6 +322,9 @@ export function loadWorld(map: MapData) {
 			case "tree":
 				result.push(new Tree());
 				break;
+			case "void":
+				result.push(new Void());
+				break;
 			case "portal":
 				result.push(new Portal());
 				portalIndices.push(i);
@@ -334,7 +343,7 @@ export function loadWorld(map: MapData) {
 				break;
 			case "dropZone":
 				result.push(new DropZone(info.id));
-				dzIndices.push(i);
+				dzIndices[info.id] = i;
 				break;
 			case "exitDoor":
 				result.push(new ExitDoor());

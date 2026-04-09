@@ -18,6 +18,7 @@ export interface MapData {
 export type TileInfo =
 	| { type: "grass" }
 	| { type: "tree" }
+	| { type: "void" }
 	| { type: "portal" }
 	| { type: "barrier"; groupId: number }
 	| { type: "switch"; groupId: number }
@@ -32,6 +33,8 @@ export function tileToCode(info: TileInfo): string {
 			return "g";
 		case "tree":
 			return "T";
+		case "void":
+			return "V";
 		case "portal":
 			return "P";
 		case "barrier":
@@ -63,6 +66,7 @@ export function tileToCode(info: TileInfo): string {
 export function codeToTile(code: string): TileInfo {
 	if (code === "g") return { type: "grass" };
 	if (code === "T") return { type: "tree" };
+	if (code === "V") return { type: "void" };
 	if (code === "P") return { type: "portal" };
 	if (code.startsWith("B"))
 		return { type: "barrier", groupId: parseInt(code.slice(1)) || 0 };
