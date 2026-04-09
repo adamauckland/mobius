@@ -6,7 +6,7 @@ import {
 	Engine,
 	Graphic,
 } from "excalibur";
-import { model } from "../model";
+import { model } from "../../model";
 import {
 	GRID_COLS,
 	GRID_ROWS,
@@ -22,22 +22,23 @@ import {
 	Fence,
 	Barrier,
 	DropZone,
-} from "../tiles/tiledata";
-import type { Direction } from "../tiles/tiledata";
-import { playerWalkAnimation, playerImage } from "../resources";
-import type { Rock, Parcel } from "./worldObjects";
+} from "../../tiles/tiledata";
+import type { Direction } from "../../tiles/tiledata";
+import { playerWalkAnimation, playerImage } from "../../resources";
+import type { Parcel } from "../worldObjects";
 import {
 	dropRockAtTile,
 	dropParcelAtTile,
 	tryCollectAtTile,
-} from "./worldObjects";
-import { tryActivateSwitch } from "./barriers";
-import { zFromY, Z_LAYER_PLAYER } from "../zIndex";
-import { sfxOneWayGate, sfxPortal } from "../sounds";
-import { game } from "../game";
-import type { MovingBlock } from "./movingBlocks";
-import { getMovingBlockNear, mountBlock } from "./movingBlocks";
+} from "../worldObjects";
+import { tryActivateSwitch } from "../barriers";
+import { zFromY, Z_LAYER_PLAYER } from "../../ui/zIndex";
+import { sfxOneWayGate, sfxPortal } from "../../audio/sounds";
+import { game } from "../../game";
+import type { MovingBlock } from "../movingBlocks";
+import { getMovingBlockNear, mountBlock } from "../movingBlocks";
 import { Collider, CollisionContact, Side } from "excalibur";
+import { IRock } from "../../interfaces/IRock";
 
 // --- Pure helpers (exported for unit testing) ---
 
@@ -140,7 +141,7 @@ export class PlayerActor extends Actor {
 	previousTileIndex = START_TILE_INDEX; // the tile the player was on before the current move
 	onReachedPortal: (() => boolean) | null = null; // return true if handled
 	onReachedExitDoor: (() => void) | null = null;
-	carriedRock: Rock | null = null;
+	carriedRock: IRock | null = null;
 	carriedParcel: Parcel | null = null;
 	onArriveAtTile: (() => void) | null = null; // called when path completes
 	ridingBlock: MovingBlock | null = null;

@@ -95,11 +95,12 @@ import {
   getParcels,
   PARCEL_SPRITES,
 } from "../entities/worldObjects";
-import { generateWorld, TILE_SIZE, GRID_COLS } from "../tiles/tiledata";
+import { TILE_SIZE, GRID_COLS } from "../tiles/tiledata";
+import { setupTestWorld } from "./testWorld";
 
 describe("worldObjects", () => {
   beforeEach(() => {
-    generateWorld(42);
+    setupTestWorld();
   });
 
   describe("rocks", () => {

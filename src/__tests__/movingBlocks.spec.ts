@@ -47,12 +47,13 @@ import {
   dismountBlock,
 } from "../entities/movingBlocks";
 import { Vector } from "excalibur";
-import { generateWorld, tiles, TILE_SIZE, GRID_COLS } from "../tiles/tiledata";
+import { tiles, TILE_SIZE, GRID_COLS } from "../tiles/tiledata";
+import { setupTestWorld } from "./testWorld";
 import { game } from "../game";
 
 describe("movingBlocks", () => {
   beforeEach(() => {
-    generateWorld(42);
+    setupTestWorld();
   });
 
   describe("spawnMovingBlocksAt", () => {

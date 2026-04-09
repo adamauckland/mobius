@@ -4,9 +4,9 @@ import { model } from "./model";
 import { updateMovingBlocks } from "./entities/movingBlocks";
 import { updateMonsters } from "./entities/monsters";
 import { getScore, addScore } from "./entities/worldObjects";
-import { sfxHeartbeat } from "./sounds";
+import { sfxHeartbeat } from "./audio/sounds";
 import { spawnDeathExplosion } from "./entities/lightTrail";
-import { activeEntry } from "./entities/playerManager";
+import { activeEntry } from "./entities/Player/playerManager";
 import type { HUDRefs } from "./ui/hud";
 
 let gameStarted = false;

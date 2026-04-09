@@ -3,15 +3,12 @@ import { rlSS } from "../resources";
 import {
 	TILE_SIZE,
 	GRID_COLS,
-	Grass,
 	DropZone,
 	tiles,
-	seededRandom,
-	START_TILE_INDEX,
 	dropZoneTileIndices,
 } from "../tiles/tiledata";
 import { game } from "../game";
-import { zFromY, Z_LAYER_PICKUP, Z_LAYER_ROCK } from "../zIndex";
+import { zFromY, Z_LAYER_PICKUP, Z_LAYER_ROCK } from "../ui/zIndex";
 import { spawnLight, spawnScoreLight } from "./lightTrail";
 import {
 	sfxCollect,
@@ -20,9 +17,10 @@ import {
 	sfxPickUpParcel,
 	sfxDropParcel,
 	sfxParcelPlaced,
-} from "../sounds";
-import { PlayerActor } from "./PlayerActor";
-import { rebuildPathfinding } from "../pathfinding";
+} from "../audio/sounds";
+import { PlayerActor } from "./Player/PlayerActor";
+import { rebuildPathfinding } from "../ui/pathfinding";
+import { IRock } from "../interfaces/IRock";
 
 let tileMapRef: TileMap;
 
@@ -30,26 +28,19 @@ export function initWorldObjectsTileMap(tilemap: TileMap) {
 	tileMapRef = tilemap;
 }
 
-export interface Rock {
-	actor: Actor;
-	originTileIndex: number;
-	tileIndex: number;
-	carriedBy: PlayerActor | null;
-}
-
-const rocks: Rock[] = [];
+const rocks: IRock[] = [];
 
 export function getRocks() {
 	return rocks;
 }
 
 // Find the rock at a given tile, if any (and not currently carried)
-export function getRockAtTile(tileIndex: number): Rock | undefined {
+export function getRockAtTile(tileIndex: number): IRock | undefined {
 	return rocks.find((r) => r.tileIndex === tileIndex && !r.carriedBy);
 }
 
 // Pick up a rock — it follows the player
-export function pickUpRock(rock: Rock, player: PlayerActor) {
+export function pickUpRock(rock: IRock, player: PlayerActor) {
 	rock.carriedBy = player;
 	player.carriedRock = rock;
 	sfxPickUpRock();
@@ -86,42 +77,6 @@ export function resetRocks() {
 	}
 }
 
-// Create rocks at random grass tiles (not spawn, not portal)
-export function spawnRocks(count: number) {
-	const validIndices = tiles
-		.map((t, i) => (t instanceof Grass && i !== START_TILE_INDEX ? i : -1))
-		.filter((i) => i !== -1);
-
-	for (let n = 0; n < count; n++) {
-		if (validIndices.length === 0) break;
-		const pick = Math.floor(seededRandom() * validIndices.length);
-		const tileIdx = validIndices.splice(pick, 1)[0];
-
-		const x = tileIdx % GRID_COLS;
-		const y = Math.floor(tileIdx / GRID_COLS);
-
-		const actor = new Actor({
-			pos: new Vector(
-				x * TILE_SIZE + TILE_SIZE / 2,
-				y * TILE_SIZE + TILE_SIZE / 2,
-			),
-			width: TILE_SIZE,
-			height: TILE_SIZE,
-			z: zFromY(y * TILE_SIZE + TILE_SIZE / 2, Z_LAYER_ROCK),
-		});
-		actor.graphics.use(rlSS.getSprite(30, 11)); // rock sprite from roguelike sheet
-
-		const rock: Rock = {
-			actor,
-			originTileIndex: tileIdx,
-			tileIndex: tileIdx,
-			carriedBy: null,
-		};
-		rocks.push(rock);
-		game.add(actor);
-	}
-}
-
 /** Spawn rocks at specific tile indices (for custom maps). */
 export function spawnRocksAt(indices: number[]) {
 	for (const tileIdx of indices) {
@@ -137,7 +92,7 @@ export function spawnRocksAt(indices: number[]) {
 			z: zFromY(y * TILE_SIZE + TILE_SIZE / 2, Z_LAYER_ROCK),
 		});
 		actor.graphics.use(rlSS.getSprite(30, 11));
-		const rock: Rock = {
+		const rock: IRock = {
 			actor,
 			originTileIndex: tileIdx,
 			tileIndex: tileIdx,
@@ -150,13 +105,13 @@ export function spawnRocksAt(indices: number[]) {
 
 // --- Collectables ---
 
-export interface Collectable {
+export interface ICollectable {
 	actor: Actor;
 	tileIndex: number;
 	collected: boolean;
 }
 
-const collectables: Collectable[] = [];
+const collectables: ICollectable[] = [];
 
 let score = 0;
 
@@ -187,52 +142,6 @@ export function getCollectableCount(): { total: number; collected: number } {
 	};
 }
 
-// Spawn collectables — these persist across rewinds once collected
-export function spawnCollectables(count: number) {
-	// Build valid indices excluding start tile, rocks, and portal
-	const rockTiles = new Set(rocks.map((r) => r.originTileIndex));
-	const validIndices = tiles
-		.map((t, i) =>
-			t instanceof Grass && i !== START_TILE_INDEX && !rockTiles.has(i)
-				? i
-				: -1,
-		)
-		.filter((i) => i !== -1);
-
-	for (let n = 0; n < count; n++) {
-		if (validIndices.length === 0) break;
-		const pick = Math.floor(seededRandom() * validIndices.length);
-		const tileIdx = validIndices.splice(pick, 1)[0];
-
-		const x = tileIdx % GRID_COLS;
-		const y = Math.floor(tileIdx / GRID_COLS);
-
-		const actor = new Actor({
-			pos: new Vector(
-				x * TILE_SIZE + TILE_SIZE / 2,
-				y * TILE_SIZE + TILE_SIZE / 2,
-			),
-			width: TILE_SIZE,
-			height: TILE_SIZE,
-			z: zFromY(y * TILE_SIZE + TILE_SIZE / 2, Z_LAYER_PICKUP),
-		});
-		actor.graphics.use(rlSS.getSprite(45, 10)); // gem/coin sprite
-		// Gentle bob animation
-		const phase = seededRandom() * Math.PI * 2;
-		actor.graphics.onPreDraw = () => {
-			actor.graphics.offset.y = Math.sin(game.clock.now() * 0.003 + phase) * 2;
-		};
-
-		const collectable: Collectable = {
-			actor,
-			tileIndex: tileIdx,
-			collected: false,
-		};
-		collectables.push(collectable);
-		game.add(actor);
-	}
-}
-
 /** Spawn collectables at specific tile indices (for custom maps). */
 export function spawnCollectablesAt(indices: number[]) {
 	for (const tileIdx of indices) {
@@ -252,7 +161,7 @@ export function spawnCollectablesAt(indices: number[]) {
 		actor.graphics.onPreDraw = () => {
 			actor.graphics.offset.y = Math.sin(game.clock.now() * 0.003 + phase) * 2;
 		};
-		const collectable: Collectable = {
+		const collectable: ICollectable = {
 			actor,
 			tileIndex: tileIdx,
 			collected: false,
@@ -390,48 +299,6 @@ export function resetParcels() {
 		}
 	}
 	rebuildPathfinding();
-}
-
-export function spawnParcels() {
-	// Place one parcel per drop zone, on a random grass tile nearby
-	for (let i = 0; i < dropZoneTileIndices.length; i++) {
-		const validIndices = tiles
-			.map((t, idx) =>
-				t instanceof Grass && idx !== START_TILE_INDEX ? idx : -1,
-			)
-			.filter((idx) => idx !== -1);
-
-		if (validIndices.length === 0) break;
-		const pick = Math.floor(seededRandom() * validIndices.length);
-		const tileIdx = validIndices[pick];
-
-		const x = tileIdx % GRID_COLS;
-		const y = Math.floor(tileIdx / GRID_COLS);
-
-		const actor = new Actor({
-			pos: new Vector(
-				x * TILE_SIZE + TILE_SIZE / 2,
-				y * TILE_SIZE + TILE_SIZE / 2,
-			),
-			width: TILE_SIZE,
-			height: TILE_SIZE,
-			z: zFromY(y * TILE_SIZE + TILE_SIZE / 2, Z_LAYER_ROCK),
-		});
-		const [sc, sr] = PARCEL_SPRITES[i % PARCEL_SPRITES.length];
-		actor.graphics.use(rlSS.getSprite(sc, sr));
-
-		const parcel: Parcel = {
-			actor,
-			id: i,
-			originTileIndex: tileIdx,
-			tileIndex: tileIdx,
-			carriedBy: null,
-			placed: false,
-			lightInterval: null,
-		};
-		parcels.push(parcel);
-		game.add(actor);
-	}
 }
 
 /** Spawn parcels at specific tile indices (for custom maps). */

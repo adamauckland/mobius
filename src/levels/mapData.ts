@@ -1,31 +1,6 @@
-import type { Direction } from "../tiles/tiledata";
-
-export interface MapData {
-	name: string;
-	cols: number;
-	rows: number;
-	startTile: number;
-	tiles: string[]; // compact tile codes: "g","T","P","B0","S1","F",">","<","^","v","D0", etc.
-	rocks: number[];
-	collectables: number[];
-	parcels: { id: number; tile: number }[];
-	monsters: { start: number; end: number }[];
-	movingBlocks: { start: number; end: number }[];
-	timeLimit: number; // ms before time rewind triggers (0 = no limit)
-}
-
-// Tile code encoding/decoding
-export type TileInfo =
-	| { type: "grass" }
-	| { type: "tree" }
-	| { type: "void" }
-	| { type: "portal" }
-	| { type: "barrier"; groupId: number }
-	| { type: "switch"; groupId: number }
-	| { type: "fence" }
-	| { type: "oneWayGate"; direction: Direction }
-	| { type: "dropZone"; id: number }
-	| { type: "exitDoor" };
+import { IMapData } from "./IMapData";
+import { IProjectData } from "./IProjectData";
+import { TileInfo } from "./TileInfo";
 
 export function tileToCode(info: TileInfo): string {
 	switch (info.type) {
@@ -83,7 +58,7 @@ export function codeToTile(code: string): TileInfo {
 	return { type: "grass" };
 }
 
-export function createEmptyMap(cols: number, rows: number): MapData {
+export function createEmptyMap(cols: number, rows: number): IMapData {
 	const tiles: string[] = [];
 	for (let i = 0; i < cols * rows; i++) {
 		tiles.push("g");
@@ -103,18 +78,13 @@ export function createEmptyMap(cols: number, rows: number): MapData {
 	};
 }
 
-// A project is a collection of levels
-export interface ProjectData {
-	levels: MapData[];
-}
-
-export function serializeProject(project: ProjectData): string {
+export function serializeProject(project: IProjectData): string {
 	return JSON.stringify(project);
 }
 
-export function deserializeProject(json: string): ProjectData {
+export function deserializeProject(json: string): IProjectData {
 	const data = JSON.parse(json);
-	const levels: MapData[] = Array.isArray(data.levels)
+	const levels: IMapData[] = Array.isArray(data.levels)
 		? data.levels.map((l: unknown) => deserializeMap(JSON.stringify(l)))
 		: [];
 	if (levels.length === 0) {
@@ -125,11 +95,11 @@ export function deserializeProject(json: string): ProjectData {
 	return { levels };
 }
 
-export function serializeMap(map: MapData): string {
+export function serializeMap(map: IMapData): string {
 	return JSON.stringify(map);
 }
 
-export function deserializeMap(json: string): MapData {
+export function deserializeMap(json: string): IMapData {
 	const data = JSON.parse(json);
 	return {
 		name: data.name ?? "Untitled",

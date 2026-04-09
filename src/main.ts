@@ -19,6 +19,7 @@ const sixtyfourFace = new FontFace(
 	"Sixtyfour",
 	'url("/fonts/Sixtyfour-Regular-VariableFont_BLED,SCAN.ttf") format("truetype")',
 );
+
 const fontReady = sixtyfourFace
 	.load()
 	.then((loaded) => {
@@ -28,68 +29,70 @@ const fontReady = sixtyfourFace
 		console.warn("Failed to load Sixtyfour font:", err);
 	});
 
-fontReady.then(() => game
-	.start(loader)
-	.then(() => {
-		// Check if we should auto-start a project level (from editor "Test" or "Continue" button)
-		const projectJson = localStorage.getItem("customProject");
-		if (projectJson) {
-			const levelStr = localStorage.getItem("customProjectLevel") || "0";
-			localStorage.removeItem("customProject");
-			localStorage.removeItem("customProjectLevel");
-			try {
-				startProjectLevel(projectJson, parseInt(levelStr, 10));
-			} catch {
-				console.error("Failed to load project level");
+fontReady.then(() =>
+	game
+		.start(loader)
+		.then(() => {
+			// Check if we should auto-start a project level (from editor "Test" or "Continue" button)
+			const projectJson = localStorage.getItem("customProject");
+			if (projectJson) {
+				const levelStr = localStorage.getItem("customProjectLevel") || "0";
+				localStorage.removeItem("customProject");
+				localStorage.removeItem("customProjectLevel");
+				try {
+					startProjectLevel(projectJson, parseInt(levelStr, 10));
+				} catch {
+					console.error("Failed to load project level");
+				}
+				return;
 			}
-			return;
-		}
 
-		// Legacy single-map support
-		const customMapJson = localStorage.getItem("customMap");
-		if (customMapJson) {
-			localStorage.removeItem("customMap");
-			try {
-				startCustomMap(customMapJson);
-			} catch {
-				console.error("Failed to load custom map");
+			// Legacy single-map support
+			const customMapJson = localStorage.getItem("customMap");
+			if (customMapJson) {
+				localStorage.removeItem("customMap");
+				try {
+					startCustomMap(customMapJson);
+				} catch {
+					console.error("Failed to load custom map");
+				}
+				return;
 			}
-			return;
-		}
 
-		// Check for ?pack=ID in URL — load a shared pack from Firebase
-		const urlParams = new URLSearchParams(window.location.search);
-		const packId = urlParams.get("pack");
-		if (packId) {
-			// Clear the URL param so reloads don't re-fetch
-			window.history.replaceState({}, "", window.location.pathname);
-			import("./levels/levelPacks").then(
-				async ({ loadPack, getPackProject }) => {
-					try {
-						const pack = await loadPack(packId);
-						if (!pack) {
-							alert(`Level pack "${packId}" not found.`);
-							return;
+			// Check for ?pack=ID in URL — load a shared pack from Firebase
+			const urlParams = new URLSearchParams(window.location.search);
+			const packId = urlParams.get("pack");
+			if (packId) {
+				// Clear the URL param so reloads don't re-fetch
+				window.history.replaceState({}, "", window.location.pathname);
+				import("./levels/levelPacks").then(
+					async ({ loadPack, getPackProject }) => {
+						try {
+							const pack = await loadPack(packId);
+							if (!pack) {
+								alert(`Level pack "${packId}" not found.`);
+								return;
+							}
+							const proj = getPackProject(pack);
+							const json = JSON.stringify(proj);
+							startProjectLevel(json, 0);
+						} catch (err) {
+							alert("Failed to load pack: " + (err as Error).message);
 						}
-						const proj = getPackProject(pack);
-						const json = JSON.stringify(proj);
-						startProjectLevel(json, 0);
-					} catch (err) {
-						alert("Failed to load pack: " + (err as Error).message);
-					}
-				},
-			);
-			return;
-		}
+					},
+				);
+				return;
+			}
 
-		// Check if we should reopen the editor (from "Back to Editor" button)
-		if (localStorage.getItem("editorMode") === "true") {
-			localStorage.removeItem("editorMode");
-			showEditor();
-			return;
-		}
-	})
-	.catch(console.error));
+			// Check if we should reopen the editor (from "Back to Editor" button)
+			if (localStorage.getItem("editorMode") === "true") {
+				localStorage.removeItem("editorMode");
+				showEditor();
+				return;
+			}
+		})
+		.catch(console.error),
+);
 model.showHUD = true;
 
 // Pause state and toggle — shared between Escape key and HUD button

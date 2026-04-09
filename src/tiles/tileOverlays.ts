@@ -10,7 +10,7 @@ import {
 	TILE_SIZE,
 } from "./tiledata";
 import { game } from "../game";
-import { zFromY, Z_LAYER_TREE, Z_LAYER_PICKUP } from "../zIndex";
+import { zFromY, Z_LAYER_TREE, Z_PLAYER_BACKGROUND_MOVER } from "../ui/zIndex";
 import { DROPZONE_SPRITES } from "../entities/worldObjects";
 
 export function spawnTreeOverlays() {
@@ -50,7 +50,7 @@ export function spawnGateOverlays() {
 				),
 				width: TILE_SIZE,
 				height: TILE_SIZE,
-				z: zFromY(ty * TILE_SIZE + TILE_SIZE / 2, Z_LAYER_PICKUP),
+				z: zFromY(ty * TILE_SIZE + TILE_SIZE / 2, Z_PLAYER_BACKGROUND_MOVER),
 			});
 			gateActor.graphics.use(rlSS.getSprite(29, 22));
 			switch (gate.direction) {
@@ -84,7 +84,7 @@ export function spawnDropZoneOverlays() {
 				),
 				width: TILE_SIZE,
 				height: TILE_SIZE,
-				z: zFromY(ty * TILE_SIZE + TILE_SIZE / 2, Z_LAYER_PICKUP),
+				z: zFromY(ty * TILE_SIZE + TILE_SIZE / 2, Z_PLAYER_BACKGROUND_MOVER),
 			});
 			const dz = tiles[i] as DropZone;
 			const [sc, sr] = DROPZONE_SPRITES[dz.id % DROPZONE_SPRITES.length];
@@ -113,7 +113,7 @@ export function spawnExitDoorOverlays() {
 				),
 				width: TILE_SIZE,
 				height: TILE_SIZE,
-				z: zFromY(ty * TILE_SIZE + TILE_SIZE / 2, Z_LAYER_PICKUP),
+				z: zFromY(ty * TILE_SIZE + TILE_SIZE / 2, Z_PLAYER_BACKGROUND_MOVER),
 			});
 			doorActor.graphics.use(rlSS.getSprite(35, 0));
 			game.add(doorActor);

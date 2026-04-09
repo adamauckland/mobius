@@ -14,7 +14,7 @@ import {
 } from "excalibur";
 import { game } from "../game";
 import { model } from "../model";
-import { Z_HUD, Z_COUNTDOWN } from "../zIndex";
+import { Z_HUD, Z_COUNTDOWN } from "./zIndex";
 import { togglePause, onPauseChange } from "../main";
 
 export interface HUDRefs {

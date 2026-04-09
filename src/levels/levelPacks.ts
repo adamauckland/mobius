@@ -11,7 +11,7 @@ import {
 	Timestamp,
 } from "firebase/firestore";
 import { db } from "../firebase";
-import type { ProjectData } from "./mapData";
+import type { IProjectData } from "./IProjectData";
 import { serializeProject, deserializeProject } from "./mapData";
 
 export interface LevelPack {
@@ -38,7 +38,7 @@ function generatePackId(): string {
 
 /** Publish a project as a shareable level pack. Returns the pack ID. */
 export async function publishPack(
-	project: ProjectData,
+	project: IProjectData,
 	name: string,
 	author: string,
 	description: string,
@@ -75,7 +75,7 @@ export async function loadPack(id: string): Promise<LevelPack | null> {
 }
 
 /** Get the project data from a pack. */
-export function getPackProject(pack: LevelPack): ProjectData {
+export function getPackProject(pack: LevelPack): IProjectData {
 	return deserializeProject(pack.projectJson);
 }
 

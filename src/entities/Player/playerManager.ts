@@ -1,7 +1,7 @@
 import { Vector, Actor, Circle, Color, Polygon } from "excalibur";
 import { PlayerActor, player } from "./PlayerActor";
-import { playerWalkAnimation, playerImage } from "../resources";
-import { GameRecorder, type GameRecording } from "./recorder";
+import { playerWalkAnimation, playerImage } from "../../resources";
+import { GameRecorder } from "../../interfaces/GameRecorder";
 import {
 	TILE_SIZE,
 	GRID_COLS,
@@ -10,28 +10,23 @@ import {
 	START_POS_Y,
 	START_TILE_INDEX,
 	customStartTile,
-} from "../tiles/tiledata";
-import { model } from "../model";
-import { game } from "../game";
-import { handleTileClick } from "../pathfinding";
-import { resetRocks, resetParcels } from "./worldObjects";
-import { resetMonsters } from "./monsters";
-import { resetBarriers } from "./barriers";
-import { resetGameTimer } from "../gameLoop";
-import { resetMovingBlocks } from "./movingBlocks";
-import { zFromY, Z_LAYER_PLAYER, Z_RIPPLE } from "../zIndex";
-import { spawnRewindPixels, REWIND_EFFECT_DURATION } from "./lightTrail";
+} from "../../tiles/tiledata";
+import { model } from "../../model";
+import { game } from "../../game";
+import { handleTileClick } from "../../ui/pathfinding";
+import { resetRocks, resetParcels } from "../worldObjects";
+import { resetMonsters } from "../monsters";
+import { resetBarriers } from "../barriers";
+import { resetGameTimer } from "../../gameLoop";
+import { resetMovingBlocks } from "../movingBlocks";
+import { zFromY, Z_LAYER_PLAYER, Z_RIPPLE } from "../../ui/zIndex";
+import { spawnRewindPixels, REWIND_EFFECT_DURATION } from "../lightTrail";
+import { IPlayerEntry } from "../../interfaces/IPlayerEntry";
 
 let inputLockedUntil = 0;
 
 export function lockInput(durationMs: number) {
 	inputLockedUntil = game.clock.now() + durationMs;
-}
-
-export interface PlayerEntry {
-	player: PlayerActor;
-	recorder: GameRecorder;
-	recording: GameRecording | null;
 }
 
 // Wire first player's portal callback — only triggers if this player is the active (recording) one
@@ -43,13 +38,13 @@ player.onReachedPortal = () => {
 	return false;
 };
 
-export const entries: PlayerEntry[] = [
+export const playerEntries: IPlayerEntry[] = [
 	{ player, recorder: new GameRecorder(), recording: null },
 ];
 
 // The active entry is always the last one in the array
 export function activeEntry() {
-	return entries[entries.length - 1];
+	return playerEntries[playerEntries.length - 1];
 }
 
 // Arrow indicator hovering above the active player
@@ -111,7 +106,7 @@ export function replayAll() {
 	resetMovingBlocks();
 	resetMonsters();
 	resetGameTimer();
-	for (const entry of entries) {
+	for (const entry of playerEntries) {
 		// Stop any in-progress replay
 		entry.recorder.stopReplay();
 		// Clear pending actions and movement
@@ -158,9 +153,9 @@ export function timeRewind() {
 	active.recorder.stopReplay();
 
 	// Kill and remove all extra spawned players (ghosts) from the scene
-	for (let i = 0; i < entries.length - 1; i++) {
-		entries[i].recorder.stopReplay();
-		entries[i].player.kill();
+	for (let i = 0; i < playerEntries.length - 1; i++) {
+		playerEntries[i].recorder.stopReplay();
+		playerEntries[i].player.kill();
 	}
 
 	// Reset the first player (reuse the original) back to start
@@ -181,8 +176,8 @@ export function timeRewind() {
 	keeper.onArriveAtTile = null;
 
 	// Collapse entries to just this one player with no recording
-	entries.length = 0;
-	entries.push({
+	playerEntries.length = 0;
+	playerEntries.push({
 		player: keeper,
 		recorder: new GameRecorder(),
 		recording: null,
@@ -229,15 +224,15 @@ export function stopAndSpawnNext() {
 	};
 	game.add(newPlayer);
 
-	const newEntry: PlayerEntry = {
+	const newEntry: IPlayerEntry = {
 		player: newPlayer,
 		recorder: new GameRecorder(),
 		recording: null,
 	};
-	entries.push(newEntry);
+	playerEntries.push(newEntry);
 
 	// Z-ordering is now handled dynamically by y-position in Player.onPostUpdate
-	for (const entry of entries) {
+	for (const entry of playerEntries) {
 		entry.player.z = zFromY(entry.player.pos.y, Z_LAYER_PLAYER);
 	}
 

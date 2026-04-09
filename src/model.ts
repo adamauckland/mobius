@@ -1,4 +1,4 @@
-import { resetDijkstraGraph } from "./pathfinding";
+import { resetDijkstraGraph } from "./ui/pathfinding";
 
 export const model = {
 	hudWidth: 800,

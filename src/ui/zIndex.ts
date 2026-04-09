@@ -7,9 +7,10 @@ const LAYER_SCALE = 10;
 
 // Intra-tile layer offsets (background/grass is the tilemap itself at z=0)
 export const Z_LAYER_TREE = 1;
-export const Z_LAYER_PICKUP = 2;
+export const Z_PLAYER_BACKGROUND_MOVER = 2;
 export const Z_LAYER_PLAYER = 3;
-export const Z_LAYER_ROCK = 4;
+export const Z_LAYER_PICKUP = 4;
+export const Z_LAYER_ROCK = 5;
 
 export function zFromY(y: number, layer: number) {
 	return y * LAYER_SCALE + layer;

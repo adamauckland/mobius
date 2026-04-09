@@ -16,22 +16,19 @@ import {
 	loadWorld,
 	customStartTile,
 } from "./tiles/tiledata";
-import {
-	deserializeMap,
-	deserializeProject,
-	type MapData,
-} from "./levels/mapData";
-import { player } from "./entities/PlayerActor";
+import { deserializeMap, deserializeProject } from "./levels/mapData";
+import { type IMapData } from "./levels/IMapData";
+import { player } from "./entities/Player/PlayerActor";
 import { game } from "./game";
 import { model } from "./model";
-import { initPathfinding } from "./pathfinding";
+import { initPathfinding } from "./ui/pathfinding";
 import {
 	activeEntry,
 	setupClickHandler,
 	replayAll,
 	stopAndSpawnNext,
 	setOnNewActivePlayer,
-} from "./entities/playerManager";
+} from "./entities/Player/playerManager";
 import {
 	spawnRocksAt,
 	spawnCollectablesAt,
@@ -41,7 +38,7 @@ import {
 import { initBarriers, spawnBarriers } from "./entities/barriers";
 import { spawnMovingBlocksAt } from "./entities/movingBlocks";
 import { spawnMonstersAt, setOnPlayerKilled } from "./entities/monsters";
-import { sfxDeath, sfxLevelComplete } from "./sounds";
+import { sfxDeath, sfxLevelComplete } from "./audio/sounds";
 import { spawnDeathExplosion } from "./entities/lightTrail";
 import { getFenceSprite } from "./tiles/fenceSprites";
 import {
@@ -89,7 +86,8 @@ continueButton.addEventListener("click", () => {
 	// Show the transition overlay immediately (before reload)
 	transitionSubtitle.textContent = `Level ${nextLevel + 1} of ${model.totalLevels}`;
 	transitionTitle.textContent = nextLevelName;
-	transitionLives.textContent = "\u2665".repeat(model.lives) + "\u2661".repeat(3 - model.lives);
+	transitionLives.textContent =
+		"\u2665".repeat(model.lives) + "\u2661".repeat(3 - model.lives);
 	levelTransition.style.display = "flex";
 
 	// Hide buttons and start screen so nothing peeks through
@@ -100,12 +98,15 @@ continueButton.addEventListener("click", () => {
 	localStorage.setItem("customProject", model.projectJson);
 	localStorage.setItem("customProjectLevel", String(nextLevel));
 	localStorage.setItem("projectLives", String(model.lives));
-	localStorage.setItem("levelTransition", JSON.stringify({
-		level: nextLevel + 1,
-		total: model.totalLevels,
-		name: nextLevelName,
-		lives: model.lives,
-	}));
+	localStorage.setItem(
+		"levelTransition",
+		JSON.stringify({
+			level: nextLevel + 1,
+			total: model.totalLevels,
+			name: nextLevelName,
+			lives: model.lives,
+		}),
+	);
 	location.reload();
 });
 
@@ -117,13 +118,16 @@ if (savedTransition) {
 		const t = JSON.parse(savedTransition);
 		transitionSubtitle.textContent = `Level ${t.level} of ${t.total}`;
 		transitionTitle.textContent = t.name;
-		transitionLives.textContent = "\u2665".repeat(t.lives) + "\u2661".repeat(3 - t.lives);
+		transitionLives.textContent =
+			"\u2665".repeat(t.lives) + "\u2661".repeat(3 - t.lives);
 		levelTransition.style.display = "flex";
 		startScreen.style.display = "none";
-	} catch { /* ignore parse errors */ }
+	} catch {
+		/* ignore parse errors */
+	}
 }
 
-function startGame(customMapData: MapData) {
+function startGame(customMapData: IMapData) {
 	loadWorld(customMapData);
 	if (customMapData.timeLimit > 0) {
 		model.timeLimit = customMapData.timeLimit;
@@ -138,7 +142,10 @@ function startGame(customMapData: MapData) {
 	if (localStorage.getItem("levelTransition")) {
 		localStorage.removeItem("levelTransition");
 		levelTransition.style.opacity = "0";
-		setTimeout(() => { levelTransition.style.display = "none"; levelTransition.style.opacity = "1"; }, 400);
+		setTimeout(() => {
+			levelTransition.style.display = "none";
+			levelTransition.style.opacity = "1";
+		}, 400);
 	}
 
 	// Show "Back to Editor" button

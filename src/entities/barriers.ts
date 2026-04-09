@@ -8,18 +8,13 @@ import {
 	TILE_SIZE,
 } from "../tiles/tiledata";
 import { game } from "../game";
-import { zFromY, Z_LAYER_TREE, Z_LAYER_PICKUP } from "../zIndex";
-import { rebuildPathfinding } from "../pathfinding";
+import { zFromY, Z_LAYER_TREE, Z_LAYER_PICKUP } from "../ui/zIndex";
+import { rebuildPathfinding } from "../ui/pathfinding";
 import { spawnLight } from "./lightTrail";
-import { sfxSwitch } from "../sounds";
+import { sfxSwitch } from "../audio/sounds";
+import { IBarrierEntry } from "../interfaces/IBarrierEntry";
 
-interface BarrierEntry {
-	actor: Actor;
-	tileIndex: number;
-	groupId: number;
-}
-
-const barrierActors: BarrierEntry[] = [];
+const barrierActors: IBarrierEntry[] = [];
 const switchActors = new Map<number, Actor>(); // tileIndex → Actor
 let tileMapRef: TileMap;
 

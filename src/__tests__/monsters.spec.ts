@@ -56,13 +56,14 @@ import {
   updateMonsters,
   setOnPlayerKilled,
 } from "../entities/monsters";
-import { generateWorld, TILE_SIZE, GRID_COLS } from "../tiles/tiledata";
+import { TILE_SIZE, GRID_COLS } from "../tiles/tiledata";
+import { setupTestWorld } from "./testWorld";
 
 describe("monsters", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockEntries.length = 0;
-    generateWorld(42);
+    setupTestWorld();
   });
 
   describe("spawnMonstersAt", () => {

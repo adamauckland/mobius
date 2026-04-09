@@ -1,18 +1,11 @@
 // Records and replays tile click events
 
 import { game } from "../game";
-
-export interface ClickEvent {
-	timestamp: number; // ms since recording started
-	targetTileIndex: number;
-}
-
-export interface GameRecording {
-	events: ClickEvent[];
-}
+import { IClickEvent } from "./IClickEvent";
+import { IGameRecording } from "./IGameRecording";
 
 export class GameRecorder {
-	private events: ClickEvent[] = [];
+	private events: IClickEvent[] = [];
 	private startTime = 0;
 	private _isRecording = false;
 	private _isReplaying = false;
@@ -40,17 +33,17 @@ export class GameRecorder {
 		});
 	}
 
-	stopRecording(): GameRecording {
+	stopRecording(): IGameRecording {
 		this._isRecording = false;
 		return { events: [...this.events] };
 	}
 
-	getRecording(): GameRecording {
+	getRecording(): IGameRecording {
 		return { events: [...this.events] };
 	}
 
 	startReplay(
-		recording: GameRecording,
+		recording: IGameRecording,
 		onClickTile: (tileIndex: number) => void,
 	) {
 		this.stopReplay();

@@ -1,14 +1,14 @@
 import tilesImgUrl from "../assets/tiles.png";
 import roguelikeImgUrl from "../assets/roguelike.png";
 import {
-	type MapData,
-	type ProjectData,
 	codeToTile,
 	tileToCode,
 	createEmptyMap,
 	serializeProject,
 	deserializeProject,
 } from "./mapData";
+import { type IProjectData } from "./IProjectData";
+import { type IMapData } from "./IMapData";
 import { GRID_COLS, GRID_ROWS, TILE_SIZE } from "../tiles/tiledata";
 import { publishPack } from "./levelPacks";
 
@@ -194,9 +194,9 @@ interface PatrolPlacement {
 	startTile: number;
 }
 
-let project: ProjectData = { levels: [createEmptyMap(GRID_COLS, GRID_ROWS)] };
+let project: IProjectData = { levels: [createEmptyMap(GRID_COLS, GRID_ROWS)] };
 let currentLevelIndex = 0;
-let mapData: MapData = project.levels[0];
+let mapData: IMapData = project.levels[0];
 let levelIndicator: HTMLSpanElement;
 let selectedTool: ToolId = "grass";
 let groupId = 0;

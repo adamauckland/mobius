@@ -1,18 +1,10 @@
 import { Actor, Vector } from "excalibur";
 import { rlSS } from "../resources";
-import {
-	TILE_SIZE,
-	GRID_COLS,
-	GRID_ROWS,
-	Grass,
-	tiles,
-	seededRandom,
-	START_TILE_INDEX,
-} from "../tiles/tiledata";
+import { TILE_SIZE, GRID_COLS, GRID_ROWS, tiles } from "../tiles/tiledata";
 import { game } from "../game";
-import { zFromY, Z_LAYER_PICKUP } from "../zIndex";
-import type { PlayerActor } from "./PlayerActor";
-import { sfxPlatformStart, sfxPlatformStop } from "../sounds";
+import { zFromY, Z_PLAYER_BACKGROUND_MOVER } from "../ui/zIndex";
+import type { PlayerActor } from "./Player/PlayerActor";
+import { sfxPlatformStart, sfxPlatformStop } from "../audio/sounds";
 
 /** Accumulated elapsed time — advances only via delta, so pauses are excluded. */
 let blockElapsed = 0;
@@ -89,63 +81,6 @@ export function dismountBlock(player: PlayerActor): boolean {
 	return true;
 }
 
-/** Spawn moving blocks at random positions with random paths. */
-export function spawnMovingBlocks(count: number) {
-	blockElapsed = 0;
-	for (let n = 0; n < count; n++) {
-		const validIndices = tiles
-			.map((t, i) => (t instanceof Grass && i !== START_TILE_INDEX ? i : -1))
-			.filter((i) => i !== -1);
-
-		if (validIndices.length === 0) break;
-
-		const startIdx =
-			validIndices[Math.floor(seededRandom() * validIndices.length)];
-		const startX = startIdx % GRID_COLS;
-		const startY = Math.floor(startIdx / GRID_COLS);
-
-		const horizontal = seededRandom() < 0.5;
-		const distance = 5 + Math.floor(seededRandom() * 8); // 5–12 tiles
-
-		const endX = Math.min(
-			horizontal ? startX + distance : startX,
-			GRID_COLS - 2,
-		);
-		const endY = Math.min(
-			horizontal ? startY : startY + distance,
-			GRID_ROWS - 2,
-		);
-
-		const startPos = new Vector(
-			startX * TILE_SIZE + TILE_SIZE / 2,
-			startY * TILE_SIZE + TILE_SIZE / 2,
-		);
-		const endPos = new Vector(
-			endX * TILE_SIZE + TILE_SIZE / 2,
-			endY * TILE_SIZE + TILE_SIZE / 2,
-		);
-
-		const actor = new Actor({
-			pos: startPos.clone(),
-			width: TILE_SIZE,
-			height: TILE_SIZE,
-			z: zFromY(startY * TILE_SIZE + TILE_SIZE / 2, Z_LAYER_PICKUP),
-		});
-		actor.graphics.use(rlSS.getSprite(4, 0)); // stone platform sprite
-
-		const block: MovingBlock = {
-			actor,
-			startPos,
-			endPos,
-			phase: seededRandom() * 2,
-			speed: 0.0003 + seededRandom() * 0.0002, // ~3–5 s per traverse
-			riders: [],
-		};
-		movingBlocks.push(block);
-		game.add(actor);
-	}
-}
-
 /** Spawn moving blocks at specific positions (for custom maps). */
 export function spawnMovingBlocksAt(entries: { start: number; end: number }[]) {
 	blockElapsed = 0;
@@ -168,7 +103,7 @@ export function spawnMovingBlocksAt(entries: { start: number; end: number }[]) {
 			pos: startPos.clone(),
 			width: TILE_SIZE,
 			height: TILE_SIZE,
-			z: zFromY(startY * TILE_SIZE + TILE_SIZE / 2, Z_LAYER_PICKUP),
+			z: zFromY(startY * TILE_SIZE + TILE_SIZE / 2, Z_PLAYER_BACKGROUND_MOVER),
 		});
 		actor.graphics.use(rlSS.getSprite(4, 0));
 
@@ -215,6 +150,6 @@ export function updateMovingBlocks(delta: number) {
 
 		block.actor.pos.x = newX;
 		block.actor.pos.y = newY;
-		block.actor.z = zFromY(block.actor.pos.y, Z_LAYER_PICKUP);
+		block.actor.z = zFromY(block.actor.pos.y, Z_PLAYER_BACKGROUND_MOVER);
 	}
 }
