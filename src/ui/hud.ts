@@ -119,11 +119,31 @@ export function createHUD(): HUDRefs {
 	});
 	game.add(pauseButton);
 
-	// Lives display (top-left, below pause)
+	// Lives display (top-left, below pause). Two layered Text elements:
+	// a black "♥♥♥" backdrop, with a red "♥".repeat(lives) overlay drawn on top.
+	// (Excalibur Text only supports one colour per element, and the empty-heart
+	// glyph ♡ U+2661 is rendered as an emoji on macOS/Windows and ignores the
+	// requested colour, so we always use the solid ♥ U+2665 in two passes.)
+	const livesBackdropText = new Text({
+		text: "\u2665".repeat(3),
+		font: new Font({
+			size: 32,
+			unit: FontUnit.Px,
+			family: '"Sixtyfour", monospace',
+			color: Color.Black,
+			textAlign: TextAlign.Left,
+			shadow: { blur: 2, offset: vec(1, 1), color: Color.Black },
+		}),
+	});
+	const livesBackdropLabel = new ScreenElement({
+		pos: vec(10, 45),
+		z: Z_HUD,
+	});
+	livesBackdropLabel.graphics.use(livesBackdropText);
+	game.add(livesBackdropLabel);
+
 	const livesText = new Text({
-		text:
-			"\u2665".repeat(model.lives) +
-			"\u2661".repeat(Math.max(0, 3 - model.lives)),
+		text: "\u2665".repeat(model.lives),
 		font: new Font({
 			size: 32,
 			unit: FontUnit.Px,
@@ -165,7 +185,7 @@ export function createHUD(): HUDRefs {
 	const gameOverText = new Text({
 		text: "GAME OVER",
 		font: new Font({
-			size: 200,
+			size: 100,
 			unit: FontUnit.Px,
 			family: '"Sixtyfour", monospace',
 			color: Color.Red,
@@ -213,10 +233,11 @@ export function createHUD(): HUDRefs {
 
 	// Level complete overlay
 	const levelCompleteText = new Text({
-		text: "LEVEL COMPLETE",
+		text: "LEVEL\nCOMPLETE",
 		font: new Font({
 			size: 100,
 			unit: FontUnit.Px,
+			lineHeight: 120,
 			family: '"Sixtyfour", monospace',
 			color: Color.fromHex("#00e676"),
 			textAlign: TextAlign.Center,

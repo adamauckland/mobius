@@ -86,13 +86,13 @@ export function spawnScoreLight(worldPos: Vector, count = 3) {
  * and converge at `to` — a time-rewind visual effect.
  * Returns the total duration in ms so callers can schedule follow-up actions.
  */
-export const REWIND_EFFECT_DURATION = 1400;
+export const REWIND_EFFECT_DURATION = 3000;
 
 /**
  * Spawn pixels that explode outward from a position and fade out — a death/game-over effect.
  */
 export function spawnDeathExplosion(pos: Vector) {
-	const PARTICLE_COUNT = 36;
+	const PARTICLE_COUNT = 360;
 	const EXPLODE_MS = 800;
 	const FADE_MS = 600;
 
@@ -103,8 +103,7 @@ export function spawnDeathExplosion(pos: Vector) {
 		});
 
 		const size = 1.5 + Math.random() * 2;
-		const color =
-			DEATH_COLORS[Math.floor(Math.random() * DEATH_COLORS.length)];
+		const color = DEATH_COLORS[Math.floor(Math.random() * DEATH_COLORS.length)];
 		pixel.graphics.use(
 			new Rectangle({ width: size, height: size, color: Color.fromHex(color) }),
 		);
@@ -134,10 +133,10 @@ export function spawnDeathExplosion(pos: Vector) {
 }
 
 export function spawnRewindPixels(from: Vector, to: Vector) {
-	const PARTICLE_COUNT = 28;
-	const EXPLODE_MS = 300;
-	const TRAVEL_MS = 800;
-	const CONVERGE_MS = 300;
+	const PARTICLE_COUNT = 280;
+	const EXPLODE_MS = 500;
+	const TRAVEL_MS = 500;
+	const CONVERGE_MS = 1000;
 
 	for (let i = 0; i < PARTICLE_COUNT; i++) {
 		const pixel = new Actor({
@@ -165,7 +164,7 @@ export function spawnRewindPixels(from: Vector, to: Vector) {
 		// Phase 1: explode outward in a ring
 		const angle =
 			(Math.PI * 2 * i) / PARTICLE_COUNT + (Math.random() - 0.5) * 0.4;
-		const radius = 10 + Math.random() * 12;
+		const radius = 10 + Math.random() * 120;
 		const explodeTarget = new Vector(
 			from.x + Math.cos(angle) * radius,
 			from.y + Math.sin(angle) * radius,

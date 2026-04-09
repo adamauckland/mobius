@@ -283,8 +283,7 @@ function startGame(customMapData: MapData) {
 		if (model.gameOver) return;
 
 		model.lives--;
-		hud.livesText.text =
-			"\u2665".repeat(model.lives) + "\u2661".repeat(3 - model.lives);
+		hud.livesText.text = "\u2665".repeat(model.lives);
 		sfxDeath();
 		killedPlayer.graphics.isVisible = false;
 		spawnDeathExplosion(killedPlayer.pos.clone());
@@ -292,6 +291,7 @@ function startGame(customMapData: MapData) {
 		if (model.lives <= 0) {
 			game.clock.schedule(() => {
 				model.gameOver = true;
+				hud.dimOverlay.graphics.isVisible = true;
 				hud.gameOverLabel.graphics.isVisible = true;
 				hud.gameOverLabel.scale.x = 0.3;
 				hud.gameOverLabel.scale.y = 0.3;

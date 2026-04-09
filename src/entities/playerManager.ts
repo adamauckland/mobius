@@ -57,6 +57,7 @@ let arrowActor: Actor | null = null;
 
 export function spawnArrowIndicator() {
 	if (arrowActor) return;
+
 	arrowActor = new Actor({ z: 0 });
 	const triangle = new Polygon({
 		points: [new Vector(-5, 0), new Vector(5, 0), new Vector(0, 5)],
@@ -65,6 +66,11 @@ export function spawnArrowIndicator() {
 	arrowActor.graphics.use(triangle);
 	arrowActor.on("postupdate", () => {
 		const active = activeEntry();
+
+		if (arrowActor) {
+			arrowActor.graphics.isVisible = active.player.graphics.isVisible;
+		}
+
 		arrowActor!.pos.x = active.player.pos.x;
 		arrowActor!.pos.y =
 			active.player.pos.y - TILE_SIZE + Math.sin(game.clock.now() * 0.005) * 2;

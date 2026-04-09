@@ -21,7 +21,7 @@ export function initPackBrowser(
     `;
 
 		const title = document.createElement("h2");
-		title.textContent = "LEVEL PACKS";
+		title.textContent = "Select world";
 		title.style.cssText = "margin-bottom: 16px; font-size: 32px;";
 		overlay.appendChild(title);
 
