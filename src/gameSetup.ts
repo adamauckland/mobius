@@ -35,6 +35,7 @@ import {
 	spawnRocksAt,
 	spawnCollectablesAt,
 	spawnParcelsAt,
+	initWorldObjectsTileMap,
 } from "./entities/worldObjects";
 import { initBarriers, spawnBarriers } from "./entities/barriers";
 import { spawnMovingBlocksAt } from "./entities/movingBlocks";
@@ -188,6 +189,7 @@ function startGame(customMapData: MapData) {
 			tile.addGraphic(TileSheet.getSprite(0, 0)); // ground under gate
 		} else if (tiles[tileIndex] instanceof DropZone) {
 			tile.addGraphic(TileSheet.getSprite(0, 0)); // ground under drop zone
+			tile.solid = true;
 		} else if (tiles[tileIndex] instanceof ExitDoor) {
 			tile.addGraphic(TileSheet.getSprite(0, 0)); // ground under exit door
 		} else {
@@ -207,6 +209,7 @@ function startGame(customMapData: MapData) {
 
 	// Initialize pathfinding
 	initPathfinding(tilemap);
+	initWorldObjectsTileMap(tilemap);
 
 	// Move player to custom start if set
 	if (customStartTile !== null) {

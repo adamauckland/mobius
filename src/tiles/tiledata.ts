@@ -93,7 +93,7 @@ export class OneWayGate {
 
 export class DropZone {
 	sprite = [0, 0]; // grass base, overlay added as separate Actor
-	collider: boolean = false;
+	collider: boolean = true; // impassable until correct parcel placed
 	id: number; // which parcel belongs here
 	fulfilled: boolean = false;
 	constructor(id: number) {

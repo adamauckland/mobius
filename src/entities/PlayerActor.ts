@@ -14,6 +14,7 @@ import {
 	Tree,
 	Fence,
 	Barrier,
+	DropZone,
 } from "../tiles/tiledata";
 import { playerWalkAnimation, playerImage } from "../resources";
 import type { Rock, Parcel } from "./worldObjects";
@@ -56,6 +57,7 @@ export class PlayerActor extends Actor {
 	carriedParcel: Parcel | null = null;
 	onArriveAtTile: (() => void) | null = null; // called when path completes
 	ridingBlock: MovingBlock | null = null;
+	isTileBlocked: ((tileIndex: number) => boolean) | null = null;
 	private idleGraphic: Graphic;
 	private walkGraphic: Graphic;
 
@@ -111,6 +113,10 @@ export class PlayerActor extends Actor {
 			this.playerActionBuffer.length > 0 &&
 			!this.actions.getQueue().hasNext()
 		) {
+			// Wait if a ghost player is occupying the next tile
+			if (this.isTileBlocked && this.isTileBlocked(this.playerActionBuffer[0])) {
+				return;
+			}
 			// get next tile off action buffer and moveTo
 			const nextTile = this.playerActionBuffer.shift();
 			this.previousTileIndex = this.currentMoveTileIndex;
@@ -162,6 +168,22 @@ export class PlayerActor extends Actor {
 			model.movesRemaining--;
 			// Check for collectables on this tile
 			tryCollectAtTile(node);
+			// Auto-drop parcel when adjacent to its matching drop zone
+			if (this.carriedParcel) {
+				const px = node % GRID_COLS;
+				const py = Math.floor(node / GRID_COLS);
+				for (const [dx, dy] of [[0, -1], [0, 1], [-1, 0], [1, 0]]) {
+					const nx = px + dx;
+					const ny = py + dy;
+					if (nx < 0 || nx >= GRID_COLS || ny < 0 || ny >= GRID_ROWS) continue;
+					const adjIdx = nx + ny * GRID_COLS;
+					const adjTile = tiles[adjIdx];
+					if (adjTile instanceof DropZone && adjTile.id === this.carriedParcel.id && !adjTile.fulfilled) {
+						dropParcelAtTile(this, adjIdx);
+						break;
+					}
+				}
+			}
 			// Activate any switch on this tile
 			tryActivateSwitch(node);
 			// If path is complete, fire arrival callback

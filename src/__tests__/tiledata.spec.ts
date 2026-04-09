@@ -135,8 +135,8 @@ describe("tile classes", () => {
   });
 
   describe("DropZone", () => {
-    it("has collider = false", () => {
-      expect(new DropZone(0).collider).toBe(false);
+    it("has collider = true (impassable until parcel placed)", () => {
+      expect(new DropZone(0).collider).toBe(true);
     });
 
     it("stores id", () => {

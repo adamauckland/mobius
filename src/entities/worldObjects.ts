@@ -1,4 +1,4 @@
-import { Actor, Vector } from "excalibur";
+import { Actor, Vector, TileMap } from "excalibur";
 import { rlSS } from "../resources";
 import {
 	TILE_SIZE,
@@ -22,6 +22,13 @@ import {
 	sfxParcelPlaced,
 } from "../sounds";
 import { PlayerActor } from "./PlayerActor";
+import { rebuildPathfinding } from "../pathfinding";
+
+let tileMapRef: TileMap;
+
+export function initWorldObjectsTileMap(tilemap: TileMap) {
+	tileMapRef = tilemap;
+}
 
 export interface Rock {
 	actor: Actor;
@@ -343,6 +350,11 @@ export function dropParcelAtTile(player: PlayerActor, tileIndex: number) {
 	if (tile instanceof DropZone && tile.id === parcel.id && !tile.fulfilled) {
 		parcel.placed = true;
 		tile.fulfilled = true;
+		tile.collider = false;
+		if (tileMapRef) {
+			tileMapRef.tiles[tileIndex].solid = false;
+		}
+		rebuildPathfinding();
 		score += 500;
 		sfxParcelPlaced();
 		spawnScoreLight(parcel.actor.pos.clone(), 5);
@@ -366,13 +378,18 @@ export function resetParcels() {
 		parcel.actor.pos.x = x * TILE_SIZE + TILE_SIZE / 2;
 		parcel.actor.pos.y = y * TILE_SIZE + TILE_SIZE / 2;
 	}
-	// Reset drop zone fulfilled state
+	// Reset drop zone fulfilled state and re-block tiles
 	for (const idx of dropZoneTileIndices) {
 		const tile = tiles[idx];
 		if (tile instanceof DropZone) {
 			tile.fulfilled = false;
+			tile.collider = true;
+			if (tileMapRef) {
+				tileMapRef.tiles[idx].solid = true;
+			}
 		}
 	}
+	rebuildPathfinding();
 }
 
 export function spawnParcels() {
