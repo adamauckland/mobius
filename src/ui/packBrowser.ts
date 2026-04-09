@@ -17,7 +17,7 @@ export function initPackBrowser(
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
       background: rgba(0,0,0,0.85); z-index: 5000;
       display: flex; flex-direction: column; align-items: center; padding-top: 60px;
-      font-family: monospace; color: #d0e3e9;
+      font-family: "Sixtyfour", monospace; color: #d0e3e9;
     `;
 
 		const title = document.createElement("h2");
@@ -29,7 +29,7 @@ export function initPackBrowser(
 		closeBtn.textContent = "CLOSE";
 		closeBtn.style.cssText = `
       position: absolute; top: 16px; right: 24px;
-      font-family: monospace; font-size: 16px; padding: 8px 20px;
+      font-family: "Sixtyfour", monospace; font-size: 16px; padding: 8px 20px;
       background: #5e676b; color: #d0e3e9; border: none; cursor: pointer;
     `;
 		closeBtn.addEventListener("click", () => overlay.remove());

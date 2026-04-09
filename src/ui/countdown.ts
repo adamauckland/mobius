@@ -16,7 +16,7 @@ export function runCountdown(onGo: () => void) {
 	const countdownFont = new Font({
 		size: 200,
 		unit: FontUnit.Px,
-		family: "monospace",
+		family: '"Sixtyfour", monospace',
 		color: Color.White,
 		textAlign: TextAlign.Center,
 		baseAlign: BaseAlign.Middle,

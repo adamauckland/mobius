@@ -175,6 +175,15 @@ const DROPZONE_SPRITES: [number, number][] = [
 ];
 
 const DIRECTIONS = ["up", "down", "left", "right"] as const;
+type Direction = (typeof DIRECTIONS)[number];
+
+declare global {
+	interface Window {
+		_edSetGroup: (g: number) => void;
+		_edSetDir: (d: string) => void;
+		_edSetId: (id: number) => void;
+	}
+}
 
 // ---------------------------------------------------------------------------
 // Editor state
@@ -191,7 +200,7 @@ let mapData: MapData = project.levels[0];
 let levelIndicator: HTMLSpanElement;
 let selectedTool: ToolId = "grass";
 let groupId = 0;
-let direction: (typeof DIRECTIONS)[number] = "right";
+let direction: Direction = "right";
 let entityId = 0;
 let patrolPlacement: PatrolPlacement | null = null;
 
@@ -885,16 +894,21 @@ function updateStatus(msg: string) {
 	if (statusBar) statusBar.textContent = msg;
 }
 
+function isDirection(d: string): d is Direction {
+	return (DIRECTIONS as readonly string[]).includes(d);
+}
+
 // Global callbacks for inline onclick handlers
-(window as any)._edSetGroup = (g: number) => {
+window._edSetGroup = (g: number) => {
 	groupId = g;
 	updatePropertyUI();
 };
-(window as any)._edSetDir = (d: string) => {
-	direction = d as any;
+window._edSetDir = (d: string) => {
+	if (!isDirection(d)) return;
+	direction = d;
 	updatePropertyUI();
 };
-(window as any)._edSetId = (id: number) => {
+window._edSetId = (id: number) => {
 	entityId = id;
 	updatePropertyUI();
 };

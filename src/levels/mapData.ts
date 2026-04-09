@@ -115,7 +115,7 @@ export function serializeProject(project: ProjectData): string {
 export function deserializeProject(json: string): ProjectData {
 	const data = JSON.parse(json);
 	const levels: MapData[] = Array.isArray(data.levels)
-		? data.levels.map((l: any) => deserializeMap(JSON.stringify(l)))
+		? data.levels.map((l: unknown) => deserializeMap(JSON.stringify(l)))
 		: [];
 	if (levels.length === 0) {
 		// Legacy single-map file — wrap it as a one-level project

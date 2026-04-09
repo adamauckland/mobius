@@ -191,38 +191,82 @@ The core time-loop mechanic uses `GameRecorder` (`recorder.ts`):
 
 ## Module Map
 
-| Module                       | Purpose                                               |
-| ---------------------------- | ----------------------------------------------------- |
-| `main.ts`                    | Entry point, resource loading, launch decision, pause |
-| `game.ts`                    | Excalibur Engine singleton                            |
-| `model.ts`                   | Global game state (lives, timer, flags)               |
-| `resources.ts`               | Sprites, spritesheets, animations                     |
-| `gameSetup.ts`               | Level setup, event wiring, start screen               |
-| `gameLoop.ts`                | Post-update loop — timer, score, time-up handling     |
-| `pathfinding.ts`             | A\*/Dijkstra routing, click-to-move                   |
-| `sounds.ts`                  | Web Audio API synthesized sound effects               |
-| `zIndex.ts`                  | Depth-sorting layers                                  |
-| `firebase.ts`                | Firestore initialization                              |
-| **entities/**                |                                                       |
-| `entities/chap.ts`           | Player class — movement, tile arrival, inventory      |
-| `entities/player.ts`         | Base Player actor (template)                          |
-| `entities/playerManager.ts`  | Multi-player entries, portal/rewind, input lock       |
-| `entities/recorder.ts`       | Click recording and scheduled replay                  |
-| `entities/worldObjects.ts`   | Rocks, parcels, collectables, score tracking          |
-| `entities/barriers.ts`       | Barrier gates and switch toggles                      |
-| `entities/movingBlocks.ts`   | Oscillating platforms, rider management               |
-| `entities/monsters.ts`       | Enemy patrols and collision detection                 |
-| `entities/lightTrail.ts`     | Particle effects for pickups                          |
-| **tiles/**                   |                                                       |
-| `tiles/tiledata.ts`          | Tile types, world generation, grid constants          |
-| `tiles/tileOverlays.ts`      | Tree, gate, drop zone, exit door overlays             |
-| `tiles/fenceSprites.ts`      | Auto-tiled fence sprite selection                     |
-| **levels/**                  |                                                       |
-| `levels/mapData.ts`          | Map/project serialization and deserialization          |
-| `levels/levelPacks.ts`       | Firebase level pack publishing and browsing           |
-| `levels/editor.ts`           | Level editor UI and tools                             |
-| `levels/level.ts`            | Scene subclass for level lifecycle                    |
-| **ui/**                      |                                                       |
-| `ui/hud.ts`                  | HUD creation (timer, score, lives, overlays)          |
-| `ui/countdown.ts`            | 3-2-1-GO countdown sequence                           |
-| `ui/packBrowser.ts`          | Firebase pack browsing UI                             |
+| Module                      | Purpose                                               |
+| --------------------------- | ----------------------------------------------------- |
+| `main.ts`                   | Entry point, resource loading, launch decision, pause |
+| `game.ts`                   | Excalibur Engine singleton                            |
+| `model.ts`                  | Global game state (lives, timer, flags)               |
+| `resources.ts`              | Sprites, spritesheets, animations                     |
+| `gameSetup.ts`              | Level setup, event wiring, start screen               |
+| `gameLoop.ts`               | Post-update loop — timer, score, time-up handling     |
+| `pathfinding.ts`            | A\*/Dijkstra routing, click-to-move                   |
+| `sounds.ts`                 | Web Audio API synthesized sound effects               |
+| `zIndex.ts`                 | Depth-sorting layers                                  |
+| `firebase.ts`               | Firestore initialization                              |
+| **entities/**               |                                                       |
+| `entities/chap.ts`          | Player class — movement, tile arrival, inventory      |
+| `entities/player.ts`        | Base Player actor (template)                          |
+| `entities/playerManager.ts` | Multi-player entries, portal/rewind, input lock       |
+| `entities/recorder.ts`      | Click recording and scheduled replay                  |
+| `entities/worldObjects.ts`  | Rocks, parcels, collectables, score tracking          |
+| `entities/barriers.ts`      | Barrier gates and switch toggles                      |
+| `entities/movingBlocks.ts`  | Oscillating platforms, rider management               |
+| `entities/monsters.ts`      | Enemy patrols and collision detection                 |
+| `entities/lightTrail.ts`    | Particle effects for pickups                          |
+| **tiles/**                  |                                                       |
+| `tiles/tiledata.ts`         | Tile types, world generation, grid constants          |
+| `tiles/tileOverlays.ts`     | Tree, gate, drop zone, exit door overlays             |
+| `tiles/fenceSprites.ts`     | Auto-tiled fence sprite selection                     |
+| **levels/**                 |                                                       |
+| `levels/mapData.ts`         | Map/project serialization and deserialization         |
+| `levels/levelPacks.ts`      | Firebase level pack publishing and browsing           |
+| `levels/editor.ts`          | Level editor UI and tools                             |
+| `levels/level.ts`           | Scene subclass for level lifecycle                    |
+| **ui/**                     |                                                       |
+| `ui/hud.ts`                 | HUD creation (timer, score, lives, overlays)          |
+| `ui/countdown.ts`           | 3-2-1-GO countdown sequence                           |
+| `ui/packBrowser.ts`         | Firebase pack browsing UI                             |
+
+## Deleting a Level Pack
+
+Level packs are stored in Firestore and the app has no in-game delete UI. The
+security rules in [firestore.rules](firestore.rules) also block client-side
+deletes (`allow update, delete: if false`), so packs must be removed manually
+from the Firebase console by a project owner.
+
+1. Find the pack ID. It's the 8-character code in the share URL
+   (`?pack=ID`) or visible in the pack browser.
+2. Open the [Firebase console](https://console.firebase.google.com/) and
+   select the Mobius project.
+3. In the left sidebar choose **Build → Firestore Database**.
+4. Open the `levelPacks` collection.
+5. Locate the document whose ID matches the pack ID from step 1. The
+   `name` and `author` fields can help confirm you have the right one.
+6. Click the document, then use the three-dot (⋮) menu at the top of the
+   document panel and choose **Delete document**.
+7. Confirm the deletion. The pack is gone immediately — anyone still
+   holding the share link will get a "not found" response from
+   `loadPack()` in [src/levels/levelPacks.ts:62](src/levels/levelPacks.ts#L62).
+
+Note: the Firestore rules deny deletes from client SDKs, but the Firebase
+console acts with admin privileges and bypasses them. You must be signed
+in to the console with an account that has access to the project.
+
+Tests:
+
+Pick up rock
+Pick up parcel
+Drop parcel on dropzone
+Parcel attracts to dropzone
+
+Moving platform catches player
+Moving platform pushes player
+
+Player picks up gold
+
+Portal time travels
+
+Switch opens gate
+Gate blocks player
+
+Exit door finishes level

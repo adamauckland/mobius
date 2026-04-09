@@ -8,6 +8,7 @@ import {
 	TextAlign,
 	BaseAlign,
 	Circle,
+	Rectangle,
 	GraphicsGroup,
 	BoundingBox,
 } from "excalibur";
@@ -23,18 +24,39 @@ export interface HUDRefs {
 	gameOverLabel: ScreenElement;
 	timesUpLabel: ScreenElement;
 	levelCompleteLabel: ScreenElement;
+	dimOverlay: ScreenElement;
 	rewindButton: ScreenElement;
 	displayedScore: { value: number };
 }
 
 export function createHUD(): HUDRefs {
+	// Dim overlay — sits between the game world and the HUD layer so that
+	// HUD, buttons, and the Level Complete / Game Over labels stay visible.
+	const dimRect = new Rectangle({
+		width: game.screen.resolution.width,
+		height: game.screen.resolution.height,
+		color: Color.fromRGB(0, 0, 0, 0.6),
+	});
+	const dimOverlay = new ScreenElement({
+		pos: vec(0, 0),
+		z: Z_HUD - 1,
+		anchor: vec(0, 0),
+	});
+	dimOverlay.graphics.use(dimRect);
+	dimOverlay.graphics.visible = false;
+	dimOverlay.on("preupdate", () => {
+		dimRect.width = game.screen.resolution.width;
+		dimRect.height = game.screen.resolution.height;
+	});
+	game.add(dimOverlay);
+
 	// Game timer
 	const timerText = new Text({
 		text: "0:00.0",
 		font: new Font({
 			size: 48,
 			unit: FontUnit.Px,
-			family: "monospace",
+			family: '"Sixtyfour", monospace',
 			color: Color.White,
 			textAlign: TextAlign.Center,
 			shadow: { blur: 2, offset: vec(1, 1), color: Color.Black },
@@ -56,7 +78,7 @@ export function createHUD(): HUDRefs {
 		font: new Font({
 			size: 32,
 			unit: FontUnit.Px,
-			family: "monospace",
+			family: '"Sixtyfour", monospace',
 			color: Color.White,
 			textAlign: TextAlign.Right,
 			shadow: { blur: 2, offset: vec(1, 1), color: Color.Black },
@@ -78,7 +100,7 @@ export function createHUD(): HUDRefs {
 		font: new Font({
 			size: 32,
 			unit: FontUnit.Px,
-			family: "monospace",
+			family: '"Sixtyfour", monospace',
 			color: Color.White,
 			textAlign: TextAlign.Left,
 			shadow: { blur: 2, offset: vec(1, 1), color: Color.Black },
@@ -105,7 +127,7 @@ export function createHUD(): HUDRefs {
 		font: new Font({
 			size: 32,
 			unit: FontUnit.Px,
-			family: "monospace",
+			family: '"Sixtyfour", monospace',
 			color: Color.Red,
 			textAlign: TextAlign.Left,
 			shadow: { blur: 2, offset: vec(1, 1), color: Color.Black },
@@ -125,7 +147,7 @@ export function createHUD(): HUDRefs {
 			font: new Font({
 				size: 24,
 				unit: FontUnit.Px,
-				family: "monospace",
+				family: '"Sixtyfour", monospace',
 				color: Color.White,
 				textAlign: TextAlign.Left,
 				shadow: { blur: 2, offset: vec(1, 1), color: Color.Black },
@@ -145,7 +167,7 @@ export function createHUD(): HUDRefs {
 		font: new Font({
 			size: 200,
 			unit: FontUnit.Px,
-			family: "monospace",
+			family: '"Sixtyfour", monospace',
 			color: Color.Red,
 			textAlign: TextAlign.Center,
 			baseAlign: BaseAlign.Middle,
@@ -170,7 +192,7 @@ export function createHUD(): HUDRefs {
 		font: new Font({
 			size: 200,
 			unit: FontUnit.Px,
-			family: "monospace",
+			family: '"Sixtyfour", monospace',
 			color: Color.fromHex("#ff6600"),
 			textAlign: TextAlign.Center,
 			baseAlign: BaseAlign.Middle,
@@ -193,13 +215,13 @@ export function createHUD(): HUDRefs {
 	const levelCompleteText = new Text({
 		text: "LEVEL COMPLETE",
 		font: new Font({
-			size: 200,
+			size: 100,
 			unit: FontUnit.Px,
-			family: "monospace",
+			family: '"Sixtyfour", monospace',
 			color: Color.fromHex("#00e676"),
 			textAlign: TextAlign.Center,
 			baseAlign: BaseAlign.Middle,
-			shadow: { blur: 4, offset: vec(2, 2), color: Color.Black },
+			shadow: { blur: 16, offset: vec(6, 6), color: Color.Black },
 		}),
 	});
 	const levelCompleteLabel = new ScreenElement({
@@ -230,7 +252,7 @@ export function createHUD(): HUDRefs {
 		font: new Font({
 			size: 44,
 			unit: FontUnit.Px,
-			family: "monospace",
+			family: '"Sixtyfour", monospace',
 			color: Color.White,
 			textAlign: TextAlign.Center,
 			baseAlign: BaseAlign.Middle,

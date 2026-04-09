@@ -11,7 +11,24 @@ import { showEditor } from "./levels/editor";
 const loader = new Loader();
 loader.suppressPlayButton = true;
 for (const resource of Object.values(Resources)) loader.addResource(resource);
-game
+
+// Ensure the Sixtyfour webfont is loaded before Excalibur rasterises any Text.
+// Canvas text doesn't honour @font-face / font-display, so we explicitly register
+// the FontFace via JS and await it before starting the game.
+const sixtyfourFace = new FontFace(
+	"Sixtyfour",
+	'url("/fonts/Sixtyfour-Regular-VariableFont_BLED,SCAN.ttf") format("truetype")',
+);
+const fontReady = sixtyfourFace
+	.load()
+	.then((loaded) => {
+		(document.fonts as unknown as { add(face: FontFace): void }).add(loaded);
+	})
+	.catch((err) => {
+		console.warn("Failed to load Sixtyfour font:", err);
+	});
+
+fontReady.then(() => game
 	.start(loader)
 	.then(() => {
 		// Check if we should auto-start a project level (from editor "Test" or "Continue" button)
@@ -72,7 +89,7 @@ game
 			return;
 		}
 	})
-	.catch(console.error);
+	.catch(console.error));
 model.showHUD = true;
 
 // Pause state and toggle — shared between Escape key and HUD button

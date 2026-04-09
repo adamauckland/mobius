@@ -47,19 +47,6 @@ export const entries: PlayerEntry[] = [
 	{ player, recorder: new GameRecorder(), recording: null },
 ];
 
-function isGhostOnTile(tileIndex: number, excludePlayer: PlayerActor): boolean {
-	for (const entry of entries) {
-		if (entry.player === excludePlayer) continue;
-		if (!entry.player.graphics.visible) continue;
-		const gx = Math.floor(entry.player.pos.x / TILE_SIZE);
-		const gy = Math.floor(entry.player.pos.y / TILE_SIZE);
-		if (gx + gy * GRID_COLS === tileIndex) return true;
-	}
-	return false;
-}
-
-player.isTileBlocked = (tileIndex) => isGhostOnTile(tileIndex, player);
-
 // The active entry is always the last one in the array
 export function activeEntry() {
 	return entries[entries.length - 1];
@@ -234,7 +221,6 @@ export function stopAndSpawnNext() {
 		}
 		return false;
 	};
-	newPlayer.isTileBlocked = (tileIndex) => isGhostOnTile(tileIndex, newPlayer);
 	game.add(newPlayer);
 
 	const newEntry: PlayerEntry = {

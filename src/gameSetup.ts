@@ -146,7 +146,7 @@ function startGame(customMapData: MapData) {
 	backBtn.textContent = "EDITOR";
 	backBtn.style.cssText = `
     position: fixed; left: 10px; bottom: 10px;
-    font-family: monospace; font-size: 14px; padding: 8px 16px;
+    font-family: "Sixtyfour", monospace; font-size: 14px; padding: 8px 16px;
     background: #34393c; color: #d0e3e9; border: 1px solid #5e676b;
     cursor: pointer; z-index: 300000; opacity: 0.7;
   `;
