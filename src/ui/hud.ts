@@ -315,6 +315,7 @@ export function createHUD(): HUDRefs {
 		gameOverLabel,
 		timesUpLabel,
 		levelCompleteLabel,
+		dimOverlay,
 		rewindButton,
 		displayedScore: { value: 0 },
 	};

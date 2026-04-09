@@ -260,6 +260,7 @@ function startGame(customMapData: MapData) {
 			if (model.gameOver) return;
 			model.gameOver = true;
 			sfxLevelComplete();
+			hud.dimOverlay.graphics.isVisible = true;
 			hud.levelCompleteLabel.graphics.isVisible = true;
 			hud.levelCompleteLabel.scale.x = 0.3;
 			hud.levelCompleteLabel.scale.y = 0.3;
