@@ -1,5 +1,4 @@
-import type { IMapData } from "../levels/IMapData";
-import { codeToTile } from "../levels/mapData";
+import type { IMapData } from "../interfaces/IMapData";
 
 // for tilemap creation, create tiles with a sprite info and
 // a collider setting for Graph parsing
@@ -130,8 +129,7 @@ export function loadWorld(map: IMapData) {
 	const dzIndices: number[] = [];
 
 	for (let i = 0; i < total; i++) {
-		const code = map.tiles[i] || "g";
-		const info = codeToTile(code);
+		const info = map.tiles[i] ?? { type: "grass" };
 		switch (info.type) {
 			case "grass":
 				result.push(new Grass());

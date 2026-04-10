@@ -24,7 +24,7 @@ import {
 	DropZone,
 } from "../../tiles/tiledata";
 import type { Direction } from "../../tiles/tiledata";
-import { playerWalkAnimation, playerImage } from "../../resources";
+import { playerWalkAnimation, playerImage } from "../../resources/resources";
 import type { Parcel } from "../worldObjects";
 import {
 	dropRockAtTile,

@@ -1,6 +1,6 @@
 import "./style.css";
 import { Loader } from "excalibur";
-import { Resources } from "./resources";
+import { Resources } from "./resources/resources";
 import { game } from "./game";
 import { model } from "./model";
 import "./gameSetup";
@@ -65,7 +65,7 @@ fontReady.then(() =>
 			if (packId) {
 				// Clear the URL param so reloads don't re-fetch
 				window.history.replaceState({}, "", window.location.pathname);
-				import("./levels/levelPacks").then(
+				import("./levelPacks/levelPacks").then(
 					async ({ loadPack, getPackProject }) => {
 						try {
 							const pack = await loadPack(packId);

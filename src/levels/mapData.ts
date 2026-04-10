@@ -1,44 +1,14 @@
-import { IMapData } from "./IMapData";
-import { IProjectData } from "./IProjectData";
-import { TileInfo } from "./TileInfo";
+import { IMapData } from "../interfaces/IMapData";
+import { IProjectData } from "../interfaces/IProjectData";
+import { TileInfoType } from "./TileInfoType";
 
-export function tileToCode(info: TileInfo): string {
-	switch (info.type) {
-		case "grass":
-			return "g";
-		case "tree":
-			return "T";
-		case "void":
-			return "V";
-		case "portal":
-			return "P";
-		case "barrier":
-			return "B" + info.groupId;
-		case "switch":
-			return "S" + info.groupId;
-		case "fence":
-			return "F";
-		case "oneWayGate":
-			switch (info.direction) {
-				case "right":
-					return ">";
-				case "left":
-					return "<";
-				case "up":
-					return "^";
-				case "down":
-					return "v";
-			}
-			break;
-		case "dropZone":
-			return "D" + info.id;
-		case "exitDoor":
-			return "E";
-	}
-	return "g";
-}
-
-export function codeToTile(code: string): TileInfo {
+/**
+ * Decode a legacy compact tile code into a TileInfo. Maps used to store tiles
+ * as short strings ("g", "T", "B0", ">", ...). New maps store TileInfo objects
+ * directly, but `deserializeMap` still runs legacy entries through this so old
+ * saved data continues to load.
+ */
+export function codeToTile(code: string): TileInfoType {
 	if (code === "g") return { type: "grass" };
 	if (code === "T") return { type: "tree" };
 	if (code === "V") return { type: "void" };
@@ -59,9 +29,9 @@ export function codeToTile(code: string): TileInfo {
 }
 
 export function createEmptyMap(cols: number, rows: number): IMapData {
-	const tiles: string[] = [];
+	const tiles: TileInfoType[] = [];
 	for (let i = 0; i < cols * rows; i++) {
-		tiles.push("g");
+		tiles.push({ type: "grass" });
 	}
 	return {
 		name: "Untitled",
@@ -99,6 +69,14 @@ export function serializeMap(map: IMapData): string {
 	return JSON.stringify(map);
 }
 
+function normalizeTile(entry: unknown): TileInfoType {
+	if (typeof entry === "string") return codeToTile(entry);
+	if (entry && typeof entry === "object" && "type" in entry) {
+		return entry as TileInfoType;
+	}
+	return { type: "grass" };
+}
+
 export function deserializeMap(json: string): IMapData {
 	const data = JSON.parse(json);
 	return {
@@ -106,7 +84,7 @@ export function deserializeMap(json: string): IMapData {
 		cols: data.cols ?? 0,
 		rows: data.rows ?? 0,
 		startTile: data.startTile ?? 0,
-		tiles: Array.isArray(data.tiles) ? data.tiles : [],
+		tiles: Array.isArray(data.tiles) ? data.tiles.map(normalizeTile) : [],
 		rocks: Array.isArray(data.rocks) ? data.rocks : [],
 		collectables: Array.isArray(data.collectables) ? data.collectables : [],
 		parcels: Array.isArray(data.parcels) ? data.parcels : [],

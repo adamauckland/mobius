@@ -1,6 +1,5 @@
 import { describe, it, expect } from "vitest";
 import {
-	tileToCode,
 	codeToTile,
 	createEmptyMap,
 	serializeMap,
@@ -8,47 +7,7 @@ import {
 } from "../levels/mapData";
 import { type IMapData } from "../levels/IMapData";
 
-describe("tileToCode", () => {
-	it("encodes grass as 'g'", () => {
-		expect(tileToCode({ type: "grass" })).toBe("g");
-	});
-
-	it("encodes tree as 'T'", () => {
-		expect(tileToCode({ type: "tree" })).toBe("T");
-	});
-
-	it("encodes portal as 'P'", () => {
-		expect(tileToCode({ type: "portal" })).toBe("P");
-	});
-
-	it("encodes barrier with groupId", () => {
-		expect(tileToCode({ type: "barrier", groupId: 0 })).toBe("B0");
-		expect(tileToCode({ type: "barrier", groupId: 3 })).toBe("B3");
-	});
-
-	it("encodes switch with groupId", () => {
-		expect(tileToCode({ type: "switch", groupId: 1 })).toBe("S1");
-		expect(tileToCode({ type: "switch", groupId: 5 })).toBe("S5");
-	});
-
-	it("encodes fence as 'F'", () => {
-		expect(tileToCode({ type: "fence" })).toBe("F");
-	});
-
-	it("encodes oneWayGate directions", () => {
-		expect(tileToCode({ type: "oneWayGate", direction: "right" })).toBe(">");
-		expect(tileToCode({ type: "oneWayGate", direction: "left" })).toBe("<");
-		expect(tileToCode({ type: "oneWayGate", direction: "up" })).toBe("^");
-		expect(tileToCode({ type: "oneWayGate", direction: "down" })).toBe("v");
-	});
-
-	it("encodes dropZone with id", () => {
-		expect(tileToCode({ type: "dropZone", id: 0 })).toBe("D0");
-		expect(tileToCode({ type: "dropZone", id: 2 })).toBe("D2");
-	});
-});
-
-describe("codeToTile", () => {
+describe("codeToTile (legacy decode)", () => {
 	it("decodes 'g' as grass", () => {
 		expect(codeToTile("g")).toEqual({ type: "grass" });
 	});
@@ -103,28 +62,6 @@ describe("codeToTile", () => {
 	});
 });
 
-describe("tileToCode / codeToTile round-trip", () => {
-	const allTiles = [
-		{ type: "grass" as const },
-		{ type: "tree" as const },
-		{ type: "portal" as const },
-		{ type: "barrier" as const, groupId: 0 },
-		{ type: "barrier" as const, groupId: 2 },
-		{ type: "switch" as const, groupId: 1 },
-		{ type: "fence" as const },
-		{ type: "oneWayGate" as const, direction: "right" as const },
-		{ type: "oneWayGate" as const, direction: "left" as const },
-		{ type: "oneWayGate" as const, direction: "up" as const },
-		{ type: "oneWayGate" as const, direction: "down" as const },
-		{ type: "dropZone" as const, id: 0 },
-		{ type: "dropZone" as const, id: 1 },
-	];
-
-	it.each(allTiles)("round-trips $type tile", (tile) => {
-		expect(codeToTile(tileToCode(tile))).toEqual(tile);
-	});
-});
-
 describe("createEmptyMap", () => {
 	it("creates a map with correct dimensions", () => {
 		const map = createEmptyMap(10, 8);
@@ -135,7 +72,7 @@ describe("createEmptyMap", () => {
 
 	it("fills all tiles with grass", () => {
 		const map = createEmptyMap(5, 5);
-		expect(map.tiles.every((t) => t === "g")).toBe(true);
+		expect(map.tiles.every((t) => t.type === "grass")).toBe(true);
 	});
 
 	it("sets startTile to center of map", () => {
@@ -167,31 +104,31 @@ describe("serializeMap / deserializeMap", () => {
 			rows: 5,
 			startTile: 12,
 			tiles: [
-				"g",
-				"T",
-				"P",
-				"B0",
-				"S1",
-				"F",
-				">",
-				"<",
-				"^",
-				"v",
-				"D0",
-				"g",
-				"g",
-				"g",
-				"g",
-				"g",
-				"g",
-				"g",
-				"g",
-				"g",
-				"g",
-				"g",
-				"g",
-				"g",
-				"g",
+				{ type: "grass" },
+				{ type: "tree" },
+				{ type: "portal" },
+				{ type: "barrier", groupId: 0 },
+				{ type: "switch", groupId: 1 },
+				{ type: "fence" },
+				{ type: "oneWayGate", direction: "right" },
+				{ type: "oneWayGate", direction: "left" },
+				{ type: "oneWayGate", direction: "up" },
+				{ type: "oneWayGate", direction: "down" },
+				{ type: "dropZone", id: 0 },
+				{ type: "grass" },
+				{ type: "grass" },
+				{ type: "grass" },
+				{ type: "grass" },
+				{ type: "grass" },
+				{ type: "grass" },
+				{ type: "grass" },
+				{ type: "grass" },
+				{ type: "grass" },
+				{ type: "grass" },
+				{ type: "grass" },
+				{ type: "grass" },
+				{ type: "grass" },
+				{ type: "grass" },
 			],
 			rocks: [3, 7],
 			collectables: [1, 4],
@@ -203,6 +140,28 @@ describe("serializeMap / deserializeMap", () => {
 		const json = serializeMap(map);
 		const restored = deserializeMap(json);
 		expect(restored).toEqual(map);
+	});
+
+	it("decodes legacy string-coded tiles on load", () => {
+		const json = JSON.stringify({
+			name: "Legacy",
+			cols: 3,
+			rows: 1,
+			startTile: 0,
+			tiles: ["g", "T", "B2"],
+			rocks: [],
+			collectables: [],
+			parcels: [],
+			monsters: [],
+			movingBlocks: [],
+			timeLimit: 60000,
+		});
+		const restored = deserializeMap(json);
+		expect(restored.tiles).toEqual([
+			{ type: "grass" },
+			{ type: "tree" },
+			{ type: "barrier", groupId: 2 },
+		]);
 	});
 
 	it("handles missing fields with defaults", () => {

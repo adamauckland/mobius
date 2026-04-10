@@ -1,5 +1,6 @@
 import { GRID_COLS, GRID_ROWS, loadWorld } from "../tiles/tiledata";
-import type { IMapData } from "../levels/IMapData";
+import type { IMapData } from "../interfaces/IMapData";
+import type { TileInfoType } from "../levels/TileInfoType";
 
 /**
  * Build and load a 50x50 grass map for tests, with a few non-grass tiles
@@ -13,11 +14,13 @@ import type { IMapData } from "../levels/IMapData";
  *   everything else → Grass
  */
 export function setupTestWorld() {
-	const tiles: string[] = new Array(GRID_COLS * GRID_ROWS).fill("g");
-	tiles[0] = "T";
-	tiles[1] = "F";
-	tiles[2] = "B0";
-	tiles[3] = "S0";
+	const tiles: TileInfoType[] = new Array(GRID_COLS * GRID_ROWS)
+		.fill(null)
+		.map(() => ({ type: "grass" }));
+	tiles[0] = { type: "tree" };
+	tiles[1] = { type: "fence" };
+	tiles[2] = { type: "barrier", groupId: 0 };
+	tiles[3] = { type: "switch", groupId: 0 };
 
 	const map: IMapData = {
 		name: "Test",

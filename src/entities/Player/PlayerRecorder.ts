@@ -1,10 +1,10 @@
 // Records and replays tile click events
 
-import { game } from "../game";
-import { IClickEvent } from "./IClickEvent";
-import { IGameRecording } from "./IGameRecording";
+import { game } from "../../game";
+import { IClickEvent } from "../../interfaces/IClickEvent";
+import { IGameRecording } from "../../interfaces/IGameRecording";
 
-export class GameRecorder {
+export class PlayerRecorder {
 	private events: IClickEvent[] = [];
 	private startTime = 0;
 	private _isRecording = false;

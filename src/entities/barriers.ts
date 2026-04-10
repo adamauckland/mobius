@@ -1,5 +1,5 @@
 import { Actor, Vector, vec, TileMap } from "excalibur";
-import { rlSS } from "../resources";
+import { rlSS } from "../resources/resources";
 import {
 	tiles,
 	Barrier,

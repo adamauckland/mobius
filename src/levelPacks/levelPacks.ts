@@ -8,21 +8,11 @@ import {
 	orderBy,
 	limit,
 	serverTimestamp,
-	Timestamp,
 } from "firebase/firestore";
-import { db } from "../firebase";
-import type { IProjectData } from "./IProjectData";
-import { serializeProject, deserializeProject } from "./mapData";
-
-export interface LevelPack {
-	id: string;
-	name: string;
-	author: string;
-	description: string;
-	levelCount: number;
-	createdAt: Timestamp | null;
-	projectJson: string;
-}
+import { db } from "./firebase";
+import type { IProjectData } from "../interfaces/IProjectData";
+import { serializeProject, deserializeProject } from "../levels/mapData";
+import { ILevelPack } from "../interfaces/ILevelPack";
 
 const PACKS_COLLECTION = "levelPacks";
 
@@ -59,7 +49,7 @@ export async function publishPack(
 }
 
 /** Load a level pack by its ID. Returns null if not found. */
-export async function loadPack(id: string): Promise<LevelPack | null> {
+export async function loadPack(id: string): Promise<ILevelPack | null> {
 	const snap = await getDoc(doc(db, PACKS_COLLECTION, id));
 	if (!snap.exists()) return null;
 	const data = snap.data();
@@ -75,12 +65,12 @@ export async function loadPack(id: string): Promise<LevelPack | null> {
 }
 
 /** Get the project data from a pack. */
-export function getPackProject(pack: LevelPack): IProjectData {
+export function getPackProject(pack: ILevelPack): IProjectData {
 	return deserializeProject(pack.projectJson);
 }
 
 /** Browse recent level packs. */
-export async function browsePacks(maxResults = 20): Promise<LevelPack[]> {
+export async function browsePacks(maxResults = 20): Promise<ILevelPack[]> {
 	const q = query(
 		collection(db, PACKS_COLLECTION),
 		orderBy("createdAt", "desc"),

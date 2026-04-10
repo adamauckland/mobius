@@ -1,9 +1,9 @@
 import { ImageSource, Loader } from "excalibur";
 import { Animation, AnimationStrategy, SpriteSheet } from "excalibur";
 
-import dude from "./assets/dude.png";
-import tiles from "./assets/tiles.png";
-import roguelikess from "./assets/roguelike.png";
+import dude from "../assets/dude.png";
+import tiles from "../assets/tiles.png";
+import roguelikess from "../assets/roguelike.png";
 
 const dudeSpritesheet = new ImageSource(dude);
 const PlayerSheet = SpriteSheet.fromImageSource({

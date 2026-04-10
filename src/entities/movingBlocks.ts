@@ -1,5 +1,5 @@
 import { Actor, Vector } from "excalibur";
-import { rlSS } from "../resources";
+import { rlSS } from "../resources/resources";
 import { TILE_SIZE, GRID_COLS, GRID_ROWS, tiles } from "../tiles/tiledata";
 import { game } from "../game";
 import { zFromY, Z_PLAYER_BACKGROUND_MOVER } from "../ui/zIndex";

@@ -71,7 +71,7 @@ vi.mock("excalibur", () => {
 	};
 });
 
-vi.mock("../resources", () => ({
+vi.mock("../resources/resources", () => ({
 	playerWalkAnimation: { kind: "walk" },
 	playerImage: { kind: "idle" },
 }));
@@ -90,7 +90,7 @@ vi.mock("../zIndex", () => ({
 	Z_LAYER_PLAYER: 5,
 }));
 
-vi.mock("../sounds", () => ({
+vi.mock("../audio/sounds", () => ({
 	sfxOneWayGate: vi.fn(),
 	sfxPortal: vi.fn(),
 }));

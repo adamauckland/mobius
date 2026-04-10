@@ -1,9 +1,9 @@
 import { PlayerActor } from "../entities/Player/PlayerActor";
-import { GameRecorder } from "../interfaces/GameRecorder";
+import { PlayerRecorder } from "../entities/Player/PlayerRecorder";
 import type { IGameRecording } from "../interfaces/IGameRecording";
 
 export interface IPlayerEntry {
 	player: PlayerActor;
-	recorder: GameRecorder;
+	recorder: PlayerRecorder;
 	recording: IGameRecording | null;
 }

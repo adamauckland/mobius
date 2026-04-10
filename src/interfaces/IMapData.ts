@@ -1,9 +1,11 @@
+import type { TileInfo } from "./TileInfo";
+
 export interface IMapData {
 	name: string;
 	cols: number;
 	rows: number;
 	startTile: number;
-	tiles: string[]; // compact tile codes: "g","T","P","B0","S1","F",">","<","^","v","D0", etc.
+	tiles: TileInfo[];
 	rocks: number[];
 	collectables: number[];
 	parcels: { id: number; tile: number }[];

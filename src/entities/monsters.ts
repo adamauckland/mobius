@@ -1,5 +1,5 @@
 import { Actor, Vector } from "excalibur";
-import { rlSS } from "../resources";
+import { rlSS } from "../resources/resources";
 import { TILE_SIZE, GRID_COLS } from "../tiles/tiledata";
 import { game } from "../game";
 import { zFromY, Z_LAYER_PLAYER } from "../ui/zIndex";
@@ -88,7 +88,7 @@ export function updateMonsters(delta: number) {
 	for (const monster of monsters) {
 		for (const entry of playerEntries) {
 			const p = entry.player;
-			if (!p.graphics.visible) continue;
+			if (!p.graphics.isVisible) continue;
 			const dx = monster.actor.pos.x - p.pos.x;
 			const dy = monster.actor.pos.y - p.pos.y;
 			if (dx * dx + dy * dy <= KILL_RADIUS_SQ) {

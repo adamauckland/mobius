@@ -1,16 +1,14 @@
 import tilesImgUrl from "../assets/tiles.png";
 import roguelikeImgUrl from "../assets/roguelike.png";
 import {
-	codeToTile,
-	tileToCode,
 	createEmptyMap,
 	serializeProject,
 	deserializeProject,
 } from "./mapData";
-import { type IProjectData } from "./IProjectData";
-import { type IMapData } from "./IMapData";
+import { type IProjectData } from "../interfaces/IProjectData";
+import { type IMapData } from "../interfaces/IMapData";
 import { GRID_COLS, GRID_ROWS, TILE_SIZE } from "../tiles/tiledata";
-import { publishPack } from "./levelPacks";
+import { publishPack } from "../levelPacks/levelPacks";
 
 // ---------------------------------------------------------------------------
 // Sprite helpers – draw directly from loaded PNGs
@@ -288,7 +286,7 @@ function render() {
 		const ty = tileY(i);
 		const dx = tx * ts;
 		const dy = ty * ts;
-		const info = codeToTile(mapData.tiles[i]);
+		const info = mapData.tiles[i];
 
 		// Void tiles render as the editor background (no grass base, no overlay)
 		if (info.type === "void") {
@@ -498,7 +496,7 @@ function drawFenceSprite(
 		const ny = y + ddy;
 		if (nx < 0 || nx >= mapData.cols || ny < 0 || ny >= mapData.rows)
 			return false;
-		return codeToTile(mapData.tiles[nx + ny * mapData.cols]).type === "fence";
+		return mapData.tiles[nx + ny * mapData.cols].type === "fence";
 	};
 	const up = isFence(0, -1);
 	const down = isFence(0, 1);
@@ -605,34 +603,34 @@ function applyTool(tileIdx: number) {
 
 	switch (selectedTool) {
 		case "grass":
-			mapData.tiles[tileIdx] = tileToCode({ type: "grass" });
+			mapData.tiles[tileIdx] = { type: "grass" };
 			break;
 		case "tree":
-			mapData.tiles[tileIdx] = tileToCode({ type: "tree" });
+			mapData.tiles[tileIdx] = { type: "tree" };
 			break;
 		case "void":
-			mapData.tiles[tileIdx] = tileToCode({ type: "void" });
+			mapData.tiles[tileIdx] = { type: "void" };
 			break;
 		case "portal":
-			mapData.tiles[tileIdx] = tileToCode({ type: "portal" });
+			mapData.tiles[tileIdx] = { type: "portal" };
 			break;
 		case "barrier":
-			mapData.tiles[tileIdx] = tileToCode({ type: "barrier", groupId });
+			mapData.tiles[tileIdx] = { type: "barrier", groupId };
 			break;
 		case "switch":
-			mapData.tiles[tileIdx] = tileToCode({ type: "switch", groupId });
+			mapData.tiles[tileIdx] = { type: "switch", groupId };
 			break;
 		case "fence":
-			mapData.tiles[tileIdx] = tileToCode({ type: "fence" });
+			mapData.tiles[tileIdx] = { type: "fence" };
 			break;
 		case "gate":
-			mapData.tiles[tileIdx] = tileToCode({ type: "oneWayGate", direction });
+			mapData.tiles[tileIdx] = { type: "oneWayGate", direction };
 			break;
 		case "dropZone":
-			mapData.tiles[tileIdx] = tileToCode({ type: "dropZone", id: entityId });
+			mapData.tiles[tileIdx] = { type: "dropZone", id: entityId };
 			break;
 		case "exitDoor":
-			mapData.tiles[tileIdx] = tileToCode({ type: "exitDoor" });
+			mapData.tiles[tileIdx] = { type: "exitDoor" };
 			break;
 		case "start":
 			mapData.startTile = tileIdx;
@@ -693,7 +691,7 @@ function eraseAt(tileIdx: number) {
 			mb.start !== tileIdx && mb.end !== tileIdx,
 	);
 	// Set tile to grass
-	mapData.tiles[tileIdx] = "g";
+	mapData.tiles[tileIdx] = { type: "grass" };
 }
 
 function onMouseDown(e: MouseEvent) {
@@ -760,7 +758,7 @@ function onMouseMove(e: MouseEvent) {
 
 	// Update status with tile info
 	if (hoveredTile >= 0) {
-		const info = codeToTile(mapData.tiles[hoveredTile]);
+		const info = mapData.tiles[hoveredTile];
 		const tx = tileX(hoveredTile);
 		const ty = tileY(hoveredTile);
 		const entities: string[] = [];
@@ -1004,7 +1002,8 @@ function loadProject() {
 				// Validate/pad each level
 				for (const level of loaded.levels) {
 					const expected = level.cols * level.rows;
-					while (level.tiles.length < expected) level.tiles.push("g");
+					while (level.tiles.length < expected)
+						level.tiles.push({ type: "grass" });
 					if (level.tiles.length > expected) level.tiles.length = expected;
 				}
 				project = loaded;

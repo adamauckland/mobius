@@ -1,7 +1,7 @@
 import { Vector, Actor, Circle, Color, Polygon } from "excalibur";
 import { PlayerActor, player } from "./PlayerActor";
-import { playerWalkAnimation, playerImage } from "../../resources";
-import { GameRecorder } from "../../interfaces/GameRecorder";
+import { playerWalkAnimation, playerImage } from "../../resources/resources";
+import { PlayerRecorder } from "./PlayerRecorder";
 import {
 	TILE_SIZE,
 	GRID_COLS,
@@ -39,7 +39,7 @@ player.onReachedPortal = () => {
 };
 
 export const playerEntries: IPlayerEntry[] = [
-	{ player, recorder: new GameRecorder(), recording: null },
+	{ player, recorder: new PlayerRecorder(), recording: null },
 ];
 
 // The active entry is always the last one in the array
@@ -179,7 +179,7 @@ export function timeRewind() {
 	playerEntries.length = 0;
 	playerEntries.push({
 		player: keeper,
-		recorder: new GameRecorder(),
+		recorder: new PlayerRecorder(),
 		recording: null,
 	});
 
@@ -226,7 +226,7 @@ export function stopAndSpawnNext() {
 
 	const newEntry: IPlayerEntry = {
 		player: newPlayer,
-		recorder: new GameRecorder(),
+		recorder: new PlayerRecorder(),
 		recording: null,
 	};
 	playerEntries.push(newEntry);

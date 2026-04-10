@@ -28,8 +28,10 @@ vi.mock("excalibur", () => {
   return { Actor: MockActor, Vector: MockVector };
 });
 
-vi.mock("../resources", () => ({
+vi.mock("../resources/resources", () => ({
   rlSS: { getSprite: vi.fn() },
+  playerWalkAnimation: { kind: "walk" },
+  playerImage: { kind: "idle" },
 }));
 
 const { mockGame, mockEntries } = vi.hoisted(() => ({
@@ -46,8 +48,8 @@ vi.mock("../zIndex", () => ({
   Z_LAYER_PLAYER: 3,
 }));
 
-vi.mock("../entities/playerManager", () => ({
-  entries: mockEntries,
+vi.mock("../entities/Player/playerManager", () => ({
+  playerEntries: mockEntries,
 }));
 
 import {
@@ -118,7 +120,7 @@ describe("monsters", () => {
       // Place a player at the monster's actual position after update
       const mockPlayer = {
         pos: { x: actor.pos.x, y: actor.pos.y },
-        graphics: { visible: true },
+        graphics: { isVisible: true },
       };
       mockEntries.push({ player: mockPlayer });
 
@@ -135,7 +137,7 @@ describe("monsters", () => {
 
       const mockPlayer = {
         pos: { x: actor.pos.x, y: actor.pos.y },
-        graphics: { visible: false },
+        graphics: { isVisible: false },
       };
       mockEntries.push({ player: mockPlayer });
 

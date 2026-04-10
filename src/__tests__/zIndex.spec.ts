@@ -21,13 +21,15 @@ describe("zFromY", () => {
 	it("orders layers correctly within the same y", () => {
 		const y = 50;
 		const tree = zFromY(y, Z_LAYER_TREE);
-		const pickup = zFromY(y, Z_LAYER_PICKUP);
 		const player = zFromY(y, Z_LAYER_PLAYER);
+		const pickup = zFromY(y, Z_LAYER_PICKUP);
 		const rock = zFromY(y, Z_LAYER_ROCK);
 
-		expect(tree).toBeLessThan(pickup);
-		expect(pickup).toBeLessThan(player);
-		expect(player).toBeLessThan(rock);
+		// Tree behind player; pickups and rocks render in front of the player
+		// so the player walks underneath collectables visually.
+		expect(tree).toBeLessThan(player);
+		expect(player).toBeLessThan(pickup);
+		expect(pickup).toBeLessThan(rock);
 	});
 
 	it("orders objects at higher y in front of lower y", () => {
@@ -41,9 +43,9 @@ describe("zFromY", () => {
 describe("z-index constants", () => {
 	it("has correct layer values", () => {
 		expect(Z_LAYER_TREE).toBe(1);
-		expect(Z_LAYER_PICKUP).toBe(2);
 		expect(Z_LAYER_PLAYER).toBe(3);
-		expect(Z_LAYER_ROCK).toBe(4);
+		expect(Z_LAYER_PICKUP).toBe(4);
+		expect(Z_LAYER_ROCK).toBe(5);
 	});
 
 	it("has UI layers far above game layers", () => {

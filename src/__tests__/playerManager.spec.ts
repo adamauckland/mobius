@@ -19,7 +19,7 @@ vi.mock("excalibur", () => {
 		scale = { x: 1, y: 1 };
 		graphics = {
 			use: vi.fn(),
-			visible: true,
+			isVisible: true,
 			onPreDraw: null,
 			offset: { x: 0, y: 0 },
 		};
@@ -30,6 +30,8 @@ vi.mock("excalibur", () => {
 			scaleTo: vi.fn().mockReturnThis(),
 			callMethod: vi.fn().mockReturnThis(),
 		};
+		on = vi.fn();
+		off = vi.fn();
 		constructor(options?: any) {
 			this.pos = options?.pos
 				? new MockVector(options.pos.x, options.pos.y)
@@ -41,6 +43,7 @@ vi.mock("excalibur", () => {
 		height = 0;
 	}
 	class MockCircle {}
+	class MockPolygon {}
 	class MockColor {
 		static fromHex() {
 			return new MockColor();
@@ -51,6 +54,7 @@ vi.mock("excalibur", () => {
 		Actor: MockActor,
 		Vector: MockVector,
 		Circle: MockCircle,
+		Polygon: MockPolygon,
 		Color: MockColor,
 		Engine: MockEngine,
 		EasingFunctions: { Linear: "linear" },
@@ -76,10 +80,10 @@ vi.mock("../game", () => ({
 	},
 }));
 
-vi.mock("../resources", () => ({
+vi.mock("../resources/resources", () => ({
 	rlSS: { getSprite: vi.fn() },
-	plrWalk: {},
-	plrImage: {},
+	playerWalkAnimation: { kind: "walk" },
+	playerImage: { kind: "idle" },
 }));
 
 vi.mock("../sounds", () => ({
@@ -215,9 +219,9 @@ describe("playerManager", () => {
 		});
 
 		it("makes all players visible", () => {
-			playerEntries[0].player.graphics.visible = false;
+			playerEntries[0].player.graphics.isVisible = false;
 			replayAll();
-			expect(playerEntries[0].player.graphics.visible).toBe(true);
+			expect(playerEntries[0].player.graphics.isVisible).toBe(true);
 		});
 	});
 

@@ -1,5 +1,5 @@
 import { TileMap, vec } from "excalibur";
-import { TileSheet, rlSS } from "./resources";
+import { TileSheet, rlSS } from "./resources/resources";
 import {
 	Tree,
 	Void,
@@ -17,7 +17,7 @@ import {
 	customStartTile,
 } from "./tiles/tiledata";
 import { deserializeMap, deserializeProject } from "./levels/mapData";
-import { type IMapData } from "./levels/IMapData";
+import { type IMapData } from "./interfaces/IMapData";
 import { player } from "./entities/Player/PlayerActor";
 import { game } from "./game";
 import { model } from "./model";

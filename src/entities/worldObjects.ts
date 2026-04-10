@@ -1,5 +1,5 @@
 import { Actor, Vector, TileMap } from "excalibur";
-import { rlSS } from "../resources";
+import { rlSS } from "../resources/resources";
 import {
 	TILE_SIZE,
 	GRID_COLS,

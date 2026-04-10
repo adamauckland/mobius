@@ -2,7 +2,7 @@ import type { Direction } from "../tiles/tiledata";
 
 // Tile code encoding/decoding
 
-export type TileInfo =
+export type TileInfoType =
 	| { type: "grass" }
 	| { type: "tree" }
 	| { type: "void" }

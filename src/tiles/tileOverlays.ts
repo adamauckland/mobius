@@ -1,5 +1,5 @@
 import { Actor, vec, BoundingBox } from "excalibur";
-import { TileSheet, rlSS } from "../resources";
+import { TileSheet, rlSS } from "../resources/resources";
 import {
 	tiles,
 	Tree,

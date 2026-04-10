@@ -32,7 +32,7 @@ vi.mock("excalibur", () => {
 	return { Actor: MockActor, Vector: MockVector, vec, TileMap: class {} };
 });
 
-vi.mock("../resources", () => ({
+vi.mock("../resources/resources", () => ({
 	rlSS: { getSprite: vi.fn() },
 }));
 
@@ -46,7 +46,7 @@ vi.mock("../zIndex", () => ({
 	Z_LAYER_PICKUP: 2,
 }));
 
-vi.mock("../pathfinding", () => ({
+vi.mock("../ui/pathfinding", () => ({
 	rebuildPathfinding: vi.fn(),
 }));
 
@@ -54,7 +54,7 @@ vi.mock("../entities/lightTrail", () => ({
 	spawnLight: vi.fn(),
 }));
 
-vi.mock("../sounds", () => ({
+vi.mock("../audio/sounds", () => ({
 	sfxSwitch: vi.fn(),
 }));
 

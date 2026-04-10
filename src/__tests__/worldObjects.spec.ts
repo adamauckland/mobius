@@ -34,7 +34,7 @@ vi.mock("excalibur", () => {
   return { Actor: MockActor, Vector: MockVector };
 });
 
-vi.mock("../resources", () => ({
+vi.mock("../resources/resources", () => ({
   rlSS: { getSprite: vi.fn() },
 }));
 
