@@ -194,21 +194,40 @@ export function timeRewind() {
 }
 
 // Stop recording the active player, spawn a new one, replay all, and start recording the new one
-export function stopAndSpawnNext() {
+/**
+ * Stop recording and spawn a new player.
+ * @param targetTileIndex — if provided, the new player spawns at that tile;
+ *                          if omitted, the new player stays where the old one was.
+ */
+export function stopAndSpawnNext(targetTileIndex?: number) {
 	const active = activeEntry();
 	if (!active.recorder.isRecording) return;
 
 	// Capture position before rewind for the pixel effect
 	const oldPos = active.player.pos.clone();
 
+	// Resolve spawn position: specific tile or current position
+	let spawnPos: Vector;
+	let spawnTile: number;
+	if (targetTileIndex !== undefined) {
+		const tx = (targetTileIndex % GRID_COLS) * TILE_SIZE + TILE_SIZE / 2;
+		const ty =
+			Math.floor(targetTileIndex / GRID_COLS) * TILE_SIZE + TILE_SIZE / 2;
+		spawnPos = new Vector(tx, ty);
+		spawnTile = targetTileIndex;
+	} else {
+		spawnPos = oldPos.clone();
+		spawnTile = active.player.logicalTileIndex;
+	}
+
 	// Stop recording the active player and save its recording
 	active.recording = active.recorder.stopRecording();
 	model.isRecording = false;
 
-	// Create a new player with the same sprites
+	// Create a new player at the spawn position
 	const newPlayer = new PlayerActor(
 		{
-			pos: new Vector(startPosX(), startPosY()),
+			pos: spawnPos.clone(),
 			width: TILE_SIZE,
 			height: TILE_SIZE,
 		},
@@ -238,13 +257,20 @@ export function stopAndSpawnNext() {
 
 	// Replay all previous players, start recording the new one
 	replayAll();
+
+	// Restore the new player to the spawn position (replayAll resets everyone to start)
+	newPlayer.pos.x = spawnPos.x;
+	newPlayer.pos.y = spawnPos.y;
+	newPlayer.logicalTileIndex = spawnTile;
+	newPlayer.currentMoveTileIndex = spawnTile;
+	newPlayer.previousTileIndex = spawnTile;
+
 	newEntry.recorder.startRecording();
 	model.isRecording = true;
 
-	// Rewind pixel effect: explode at old position, rebuild at start
-	const startPos = new Vector(startPosX(), startPosY());
+	// Rewind pixel effect: explode at old position, rebuild at spawn
 	newPlayer.graphics.isVisible = false;
-	spawnRewindPixels(oldPos, startPos);
+	spawnRewindPixels(oldPos, spawnPos);
 	game.clock.schedule(() => {
 		newPlayer.graphics.isVisible = true;
 		newPlayer.scale.x = 0.2;
