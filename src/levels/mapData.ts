@@ -44,6 +44,7 @@ export function createEmptyMap(cols: number, rows: number): IMapData {
 		parcels: [],
 		monsters: [],
 		movingBlocks: [],
+		critters: [],
 		timeLimit: 60000,
 	};
 }
@@ -90,6 +91,7 @@ export function deserializeMap(json: string): IMapData {
 		parcels: Array.isArray(data.parcels) ? data.parcels : [],
 		monsters: Array.isArray(data.monsters) ? data.monsters : [],
 		movingBlocks: Array.isArray(data.movingBlocks) ? data.movingBlocks : [],
+		critters: Array.isArray(data.critters) ? data.critters : [],
 		timeLimit: typeof data.timeLimit === "number" ? data.timeLimit : 60000,
 	};
 }

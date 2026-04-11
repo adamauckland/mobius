@@ -34,6 +34,7 @@ export function setupTestWorld() {
 		parcels: [],
 		monsters: [],
 		movingBlocks: [],
+		critters: [],
 		timeLimit: 0,
 	};
 	loadWorld(map);

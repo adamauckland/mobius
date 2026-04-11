@@ -37,6 +37,7 @@ import {
 } from "./entities/worldObjects";
 import { initBarriers, spawnBarriers } from "./entities/barriers";
 import { spawnMovingBlocksAt } from "./entities/movingBlocks";
+import { spawnCritterGroupsAt } from "./entities/critters";
 import { spawnMonstersAt, setOnPlayerKilled } from "./entities/monsters";
 import { sfxDeath, sfxLevelComplete } from "./audio/sounds";
 import { spawnDeathExplosion } from "./entities/lightTrail";
@@ -255,6 +256,7 @@ function startGame(customMapData: IMapData) {
 	spawnRocksAt(customMapData.rocks);
 	spawnParcelsAt(customMapData.parcels);
 	spawnCollectablesAt(customMapData.collectables);
+	spawnCritterGroupsAt(customMapData.critters);
 	spawnMovingBlocksAt(customMapData.movingBlocks);
 	spawnMonstersAt(customMapData.monsters);
 

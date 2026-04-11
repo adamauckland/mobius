@@ -62,6 +62,7 @@ type ToolId =
 	| "parcel"
 	| "monster"
 	| "movingBlock"
+	| "critter"
 	| "eraser";
 
 interface ToolDef {
@@ -148,6 +149,13 @@ const TOOLS: ToolDef[] = [
 		color: "#1abc9c",
 		category: "entity",
 		key: "y",
+	},
+	{
+		id: "critter",
+		label: "Critter",
+		color: "#44eeff",
+		category: "entity",
+		key: "u",
 	},
 	{
 		id: "eraser",
@@ -387,6 +395,23 @@ function render() {
 		ctx.strokeStyle = "#e67e22";
 		ctx.lineWidth = 1;
 		ctx.strokeRect(dx + 0.5, dy + 0.5, ts - 1, ts - 1);
+	}
+
+	// Critter groups — draw 5 small circles per group
+	for (const idx of mapData.critters) {
+		const dx = tileX(idx) * ts;
+		const dy = tileY(idx) * ts;
+		const cx = dx + ts / 2;
+		const cy = dy + ts / 2;
+		const r = ts * 0.12;
+		ctx.fillStyle = "#44eeff";
+		for (let i = 0; i < 5; i++) {
+			const angle = (i / 5) * Math.PI * 2;
+			const spread = ts * 0.25;
+			ctx.beginPath();
+			ctx.arc(cx + Math.cos(angle) * spread, cy + Math.sin(angle) * spread, r, 0, Math.PI * 2);
+			ctx.fill();
+		}
 	}
 
 	// Monsters - draw patrol path line + sprite at start
@@ -647,6 +672,10 @@ function applyTool(tileIdx: number) {
 				mapData.parcels.push({ id: entityId, tile: tileIdx });
 			}
 			break;
+		case "critter":
+			if (!mapData.critters.includes(tileIdx))
+				mapData.critters.push(tileIdx);
+			break;
 		case "eraser":
 			eraseAt(tileIdx);
 			break;
@@ -690,6 +719,7 @@ function eraseAt(tileIdx: number) {
 		(mb: { start: number; end: number }) =>
 			mb.start !== tileIdx && mb.end !== tileIdx,
 	);
+	mapData.critters = mapData.critters.filter((c: number) => c !== tileIdx);
 	// Set tile to grass
 	mapData.tiles[tileIdx] = { type: "grass" };
 }
@@ -776,6 +806,7 @@ function onMouseMove(e: MouseEvent) {
 			)
 		)
 			entities.push("Platform");
+		if (mapData.critters.includes(hoveredTile)) entities.push("Critter");
 		if (hoveredTile === mapData.startTile) entities.push("Start");
 		const entStr = entities.length ? ` | ${entities.join(", ")}` : "";
 		updateStatus(`(${tx}, ${ty}) ${info.type}${entStr}`);

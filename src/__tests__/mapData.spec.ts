@@ -5,7 +5,7 @@ import {
 	serializeMap,
 	deserializeMap,
 } from "../levels/mapData";
-import { type IMapData } from "../levels/IMapData";
+import { type IMapData } from "../interfaces/IMapData";
 
 describe("codeToTile (legacy decode)", () => {
 	it("decodes 'g' as grass", () => {
@@ -88,6 +88,7 @@ describe("createEmptyMap", () => {
 		expect(map.parcels).toEqual([]);
 		expect(map.monsters).toEqual([]);
 		expect(map.movingBlocks).toEqual([]);
+		expect(map.critters).toEqual([]);
 	});
 
 	it("has default name 'Untitled'", () => {
@@ -135,6 +136,7 @@ describe("serializeMap / deserializeMap", () => {
 			parcels: [{ id: 0, tile: 5 }],
 			monsters: [{ start: 10, end: 20 }],
 			movingBlocks: [{ start: 15, end: 25 }],
+			critters: [6],
 			timeLimit: 60000,
 		};
 		const json = serializeMap(map);
@@ -154,6 +156,7 @@ describe("serializeMap / deserializeMap", () => {
 			parcels: [],
 			monsters: [],
 			movingBlocks: [],
+			critters: [],
 			timeLimit: 60000,
 		});
 		const restored = deserializeMap(json);
@@ -176,6 +179,7 @@ describe("serializeMap / deserializeMap", () => {
 		expect(restored.parcels).toEqual([]);
 		expect(restored.monsters).toEqual([]);
 		expect(restored.movingBlocks).toEqual([]);
+		expect(restored.critters).toEqual([]);
 	});
 
 	it("handles non-array fields gracefully", () => {
