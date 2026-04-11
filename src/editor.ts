@@ -4,11 +4,11 @@ import {
 	createEmptyMap,
 	serializeProject,
 	deserializeProject,
-} from "./mapData";
-import { type IProjectData } from "../interfaces/IProjectData";
-import { type IMapData } from "../interfaces/IMapData";
-import { GRID_COLS, GRID_ROWS, TILE_SIZE } from "../tiles/tiledata";
-import { publishPack } from "../levelPacks/levelPacks";
+} from "./levels/mapData";
+import { type IProjectData } from "./interfaces/IProjectData";
+import { type IMapData } from "./interfaces/IMapData";
+import { GRID_COLS, GRID_ROWS, TILE_SIZE } from "./tiles/tiledata";
+import { publishPack } from "./levelPacks/levelPacks";
 
 // ---------------------------------------------------------------------------
 // Sprite helpers – draw directly from loaded PNGs
@@ -409,7 +409,13 @@ function render() {
 			const angle = (i / 5) * Math.PI * 2;
 			const spread = ts * 0.25;
 			ctx.beginPath();
-			ctx.arc(cx + Math.cos(angle) * spread, cy + Math.sin(angle) * spread, r, 0, Math.PI * 2);
+			ctx.arc(
+				cx + Math.cos(angle) * spread,
+				cy + Math.sin(angle) * spread,
+				r,
+				0,
+				Math.PI * 2,
+			);
 			ctx.fill();
 		}
 	}
@@ -673,8 +679,7 @@ function applyTool(tileIdx: number) {
 			}
 			break;
 		case "critter":
-			if (!mapData.critters.includes(tileIdx))
-				mapData.critters.push(tileIdx);
+			if (!mapData.critters.includes(tileIdx)) mapData.critters.push(tileIdx);
 			break;
 		case "eraser":
 			eraseAt(tileIdx);

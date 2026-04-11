@@ -5,7 +5,7 @@ import { game } from "./game";
 import { model } from "./model";
 import "./gameSetup";
 import { startCustomMap, startProjectLevel } from "./gameSetup";
-import { showEditor } from "./levels/editor";
+import { showEditor } from "./editor";
 
 // Load resources, then handle custom map / editor mode / project play
 const loader = new Loader();
