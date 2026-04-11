@@ -151,6 +151,7 @@ describe("critters", () => {
 		// Reset playerEntries to a single mock player
 		playerEntries.length = 0;
 		playerEntries.push({
+			spawnTileIndex: 0,
 			player: {
 				pos: { x: 0, y: 0 },
 				graphics: { isVisible: true },
