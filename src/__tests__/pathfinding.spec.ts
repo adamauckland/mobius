@@ -122,9 +122,7 @@ vi.mock("../entities/worldObjects", () => ({
 	tryCollectAtTile: vi.fn(),
 }));
 
-vi.mock("../entities/barriers", () => ({
-	tryActivateSwitch: vi.fn(),
-}));
+vi.mock("../entities/barriers", () => ({}));
 
 import {
 	initPathfinding,

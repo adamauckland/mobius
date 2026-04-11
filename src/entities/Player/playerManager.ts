@@ -21,8 +21,9 @@ import { resetBarriers } from "../barriers";
 import { resetGameTimer } from "../../gameLoop";
 import { resetMovingBlocks } from "../movingBlocks";
 import { zFromY, Z_LAYER_PLAYER, Z_RIPPLE } from "../../ui/zIndex";
-import { spawnRewindPixels, REWIND_EFFECT_DURATION } from "../lightTrail";
+import { spawnRewindPixels } from "../lightTrail";
 import { IPlayerEntry } from "../../interfaces/IPlayerEntry";
+import { gameEventBus } from "../../events/GameEventBus";
 
 let inputLockedUntil = 0;
 
@@ -40,7 +41,7 @@ player.onReachedPortal = () => {
 };
 
 export const playerEntries: IPlayerEntry[] = [
-	{ player, recorder: new PlayerRecorder(), recording: null },
+	{ player, recorder: new PlayerRecorder(), recording: null, spawnTileIndex: startTileIdx() },
 ];
 
 // The active entry is always the last one in the array
@@ -108,18 +109,24 @@ export function replayAll() {
 	resetMonsters();
 	resetCritters();
 	resetGameTimer();
+	gameEventBus.stopReplay();
 	for (const entry of playerEntries) {
 		// Stop any in-progress replay
 		entry.recorder.stopReplay();
 		// Clear pending actions and movement
 		entry.player.playerActionBuffer = [];
 		entry.player.actions.clearActions();
-		// Reset to start position
-		entry.player.pos.x = startPosX();
-		entry.player.pos.y = startPosY();
-		entry.player.logicalTileIndex = startTileIdx();
-		entry.player.currentMoveTileIndex = startTileIdx();
-		entry.player.previousTileIndex = startTileIdx();
+		// Reset to this player's own spawn position (only the first player
+		// starts at the level start; subsequent players return to the tile
+		// where they were created via portal/rewind).
+		const spawnIdx = entry.spawnTileIndex;
+		const sx = (spawnIdx % GRID_COLS) * TILE_SIZE + TILE_SIZE / 2;
+		const sy = Math.floor(spawnIdx / GRID_COLS) * TILE_SIZE + TILE_SIZE / 2;
+		entry.player.pos.x = sx;
+		entry.player.pos.y = sy;
+		entry.player.logicalTileIndex = spawnIdx;
+		entry.player.currentMoveTileIndex = spawnIdx;
+		entry.player.previousTileIndex = spawnIdx;
 		entry.player.scale.x = 1;
 		entry.player.scale.y = 1;
 		entry.player.graphics.isVisible = true;
@@ -127,10 +134,14 @@ export function replayAll() {
 		entry.player.carriedParcel = null;
 		entry.player.ridingBlock = null;
 		entry.player.onArriveAtTile = null;
+		// Entries with saved recordings are ghosts — they replay visually
+		// but their game events come from the recorded timeline.
+		entry.player.isGhost = !!entry.recording;
 		if (entry.recording) {
-			entry.recorder.startReplay(entry.recording, (tileIndex) => {
+			entry.recorder.startReplay(entry.recording.events, (tileIndex) => {
 				handleTileClick(tileIndex, entry.player);
 			});
+			gameEventBus.replayEvents(entry.recording.gameEvents);
 		}
 	}
 }
@@ -147,6 +158,7 @@ export function timeRewind() {
 	resetMonsters();
 	resetCritters();
 	resetGameTimer();
+	gameEventBus.reset();
 
 	// Stop any in-progress recording/replay for the active player
 	const active = activeEntry();
@@ -184,6 +196,7 @@ export function timeRewind() {
 		player: keeper,
 		recorder: new PlayerRecorder(),
 		recording: null,
+		spawnTileIndex: startTileIdx(),
 	});
 
 	// Re-follow the surviving player
@@ -223,8 +236,11 @@ export function stopAndSpawnNext(targetTileIndex?: number) {
 		spawnTile = active.player.logicalTileIndex;
 	}
 
-	// Stop recording the active player and save its recording
-	active.recording = active.recorder.stopRecording();
+	// Stop recording the active player and save its recording (clicks + game events)
+	active.recording = {
+		events: active.recorder.stopRecording(),
+		gameEvents: gameEventBus.stopRecording(),
+	};
 	model.isRecording = false;
 
 	// Create a new player at the spawn position
@@ -250,6 +266,7 @@ export function stopAndSpawnNext(targetTileIndex?: number) {
 		player: newPlayer,
 		recorder: new PlayerRecorder(),
 		recording: null,
+		spawnTileIndex: spawnTile,
 	};
 	playerEntries.push(newEntry);
 
@@ -258,28 +275,19 @@ export function stopAndSpawnNext(targetTileIndex?: number) {
 		entry.player.z = zFromY(entry.player.pos.y, Z_LAYER_PLAYER);
 	}
 
-	// Replay all previous players, start recording the new one
+	// Replay all previous players, start recording the new one.
+	// Each player resets to their own spawnTileIndex (set above for the new entry).
 	replayAll();
 
-	// Restore the new player to the spawn position (replayAll resets everyone to start)
-	newPlayer.pos.x = spawnPos.x;
-	newPlayer.pos.y = spawnPos.y;
-	newPlayer.logicalTileIndex = spawnTile;
-	newPlayer.currentMoveTileIndex = spawnTile;
-	newPlayer.previousTileIndex = spawnTile;
-
 	newEntry.recorder.startRecording();
+	gameEventBus.startRecording();
 	model.isRecording = true;
 
 	// Rewind pixel effect: explode at old position, rebuild at spawn
-	newPlayer.graphics.isVisible = false;
 	spawnRewindPixels(oldPos, spawnPos);
-	game.clock.schedule(() => {
-		newPlayer.graphics.isVisible = true;
-		newPlayer.scale.x = 0.2;
-		newPlayer.scale.y = 0.2;
-		newPlayer.actions.scaleTo(new Vector(1, 1), new Vector(4, 4));
-	}, REWIND_EFFECT_DURATION);
+	newPlayer.scale.x = 0.2;
+	newPlayer.scale.y = 0.2;
+	newPlayer.actions.scaleTo(new Vector(1, 1), new Vector(4, 4));
 
 	// Follow the new player
 	const cameraRadius =

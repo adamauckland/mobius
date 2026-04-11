@@ -22,7 +22,7 @@ vi.mock("../game", () => ({
 }));
 
 import { PlayerRecorder } from "../entities/Player/PlayerRecorder";
-import { type IGameRecording } from "../interfaces/IGameRecording";
+import type { IClickEvent } from "../interfaces/IClickEvent";
 
 describe("GameRecorder", () => {
 	let recorder: PlayerRecorder;
@@ -55,13 +55,13 @@ describe("GameRecorder", () => {
 			clockTime = 350;
 			recorder.recordClick(10);
 
-			const recording = recorder.stopRecording();
-			expect(recording.events).toHaveLength(2);
-			expect(recording.events[0]).toEqual({
+			const events = recorder.stopRecording();
+			expect(events).toHaveLength(2);
+			expect(events[0]).toEqual({
 				timestamp: 100,
 				targetTileIndex: 5,
 			});
-			expect(recording.events[1]).toEqual({
+			expect(events[1]).toEqual({
 				timestamp: 250,
 				targetTileIndex: 10,
 			});
@@ -70,8 +70,8 @@ describe("GameRecorder", () => {
 		it("ignores clicks when not recording", () => {
 			recorder.recordClick(5);
 			recorder.startRecording();
-			const recording = recorder.stopRecording();
-			expect(recording.events).toHaveLength(0);
+			const events = recorder.stopRecording();
+			expect(events).toHaveLength(0);
 		});
 
 		it("sets isRecording to false when stopped", () => {
@@ -84,12 +84,12 @@ describe("GameRecorder", () => {
 			recorder.startRecording();
 			clockTime = 10;
 			recorder.recordClick(1);
-			const recording = recorder.stopRecording();
+			const events = recorder.stopRecording();
 			// Recording another click after stopping shouldn't affect the returned recording
 			recorder.startRecording();
 			clockTime = 20;
 			recorder.recordClick(2);
-			expect(recording.events).toHaveLength(1);
+			expect(events).toHaveLength(1);
 		});
 
 		it("getRecording returns events without stopping", () => {
@@ -97,22 +97,20 @@ describe("GameRecorder", () => {
 			recorder.startRecording();
 			clockTime = 5;
 			recorder.recordClick(3);
-			const recording = recorder.getRecording();
-			expect(recording.events).toHaveLength(1);
+			const events = recorder.getRecording();
+			expect(events).toHaveLength(1);
 			expect(recorder.isRecording).toBe(true);
 		});
 	});
 
 	describe("replay", () => {
 		it("schedules events via game.clock", () => {
-			const recording: IGameRecording = {
-				events: [
-					{ timestamp: 100, targetTileIndex: 5 },
-					{ timestamp: 200, targetTileIndex: 10 },
-				],
-			};
+			const events: IClickEvent[] = [
+				{ timestamp: 100, targetTileIndex: 5 },
+				{ timestamp: 200, targetTileIndex: 10 },
+			];
 			const onClick = vi.fn();
-			recorder.startReplay(recording, onClick);
+			recorder.startReplay(events, onClick);
 
 			expect(recorder.isReplaying).toBe(true);
 			// 2 event callbacks + 1 end-of-replay callback
@@ -120,14 +118,12 @@ describe("GameRecorder", () => {
 		});
 
 		it("calls onClick for each replayed event", () => {
-			const recording: IGameRecording = {
-				events: [
-					{ timestamp: 0, targetTileIndex: 7 },
-					{ timestamp: 100, targetTileIndex: 14 },
-				],
-			};
+			const events: IClickEvent[] = [
+				{ timestamp: 0, targetTileIndex: 7 },
+				{ timestamp: 100, targetTileIndex: 14 },
+			];
 			const onClick = vi.fn();
-			recorder.startReplay(recording, onClick);
+			recorder.startReplay(events, onClick);
 
 			// Execute the scheduled callbacks
 			scheduledCallbacks[0].cb();
@@ -137,10 +133,8 @@ describe("GameRecorder", () => {
 		});
 
 		it("sets isReplaying to false after last event + buffer", () => {
-			const recording: IGameRecording = {
-				events: [{ timestamp: 100, targetTileIndex: 5 }],
-			};
-			recorder.startReplay(recording, vi.fn());
+			const events: IClickEvent[] = [{ timestamp: 100, targetTileIndex: 5 }];
+			recorder.startReplay(events, vi.fn());
 			expect(recorder.isReplaying).toBe(true);
 
 			// The end callback is the last scheduled callback
@@ -150,13 +144,11 @@ describe("GameRecorder", () => {
 		});
 
 		it("stopReplay clears all scheduled events", () => {
-			const recording: IGameRecording = {
-				events: [
-					{ timestamp: 100, targetTileIndex: 5 },
-					{ timestamp: 200, targetTileIndex: 10 },
-				],
-			};
-			recorder.startReplay(recording, vi.fn());
+			const events: IClickEvent[] = [
+				{ timestamp: 100, targetTileIndex: 5 },
+				{ timestamp: 200, targetTileIndex: 10 },
+			];
+			recorder.startReplay(events, vi.fn());
 			expect(scheduledCallbacks.length).toBeGreaterThan(0);
 
 			recorder.stopReplay();
@@ -164,18 +156,15 @@ describe("GameRecorder", () => {
 		});
 
 		it("starting a new replay stops the previous one", () => {
-			const recording: IGameRecording = {
-				events: [{ timestamp: 100, targetTileIndex: 5 }],
-			};
-			recorder.startReplay(recording, vi.fn());
+			const events: IClickEvent[] = [{ timestamp: 100, targetTileIndex: 5 }];
+			recorder.startReplay(events, vi.fn());
 			// Second replay should clear previous schedules
-			recorder.startReplay(recording, vi.fn());
+			recorder.startReplay(events, vi.fn());
 			expect(recorder.isReplaying).toBe(true);
 		});
 
 		it("handles empty recordings", () => {
-			const recording: IGameRecording = { events: [] };
-			recorder.startReplay(recording, vi.fn());
+			recorder.startReplay([], vi.fn());
 			expect(recorder.isReplaying).toBe(true);
 			// Only the end callback should be scheduled
 			expect(scheduledCallbacks).toHaveLength(1);
