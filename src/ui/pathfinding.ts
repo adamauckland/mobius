@@ -92,14 +92,45 @@ function getPlayerTileIndex(player: PlayerActor): number {
 	return tx + ty * GRID_COLS;
 }
 
-/** Returns a warning message if the tile is impassable, or null if walkable. */
-function getBlockedTileWarning(tileIndex: number): string | null {
-	if (tiles[tileIndex] instanceof Tree)
-		return "CLICKING A TREE WILL BE IGNORED";
-	if (tiles[tileIndex] instanceof Fence) return "CAN'T WALK THROUGH A FENCE";
+/** Returns true if the tile is impassable. */
+function isTileBlocked(tileIndex: number): boolean {
+	if (tiles[tileIndex] instanceof Tree) return true;
+	if (tiles[tileIndex] instanceof Fence) return true;
 	const tile = tiles[tileIndex];
-	if (tile instanceof Barrier && tile.collider)
-		return "BARRIER IS LOCKED — FIND THE SWITCH";
+	if (tile instanceof Barrier && tile.collider) return true;
+	return false;
+}
+
+/**
+ * BFS outward from `startIndex` to find the nearest passable tile.
+ * Returns the tile index, or null if none found.
+ */
+export function findNearestPassableTile(startIndex: number): number | null {
+	const visited = new Set<number>();
+	const queue: number[] = [startIndex];
+	visited.add(startIndex);
+
+	while (queue.length > 0) {
+		const idx = queue.shift()!;
+		if (idx !== startIndex && !isTileBlocked(idx)) return idx;
+
+		const x = idx % GRID_COLS;
+		const y = Math.floor(idx / GRID_COLS);
+		for (const [dx, dy] of [
+			[0, -1],
+			[0, 1],
+			[-1, 0],
+			[1, 0],
+		] as const) {
+			const nx = x + dx;
+			const ny = y + dy;
+			if (nx < 0 || nx >= GRID_COLS || ny < 0 || ny >= GRID_ROWS) continue;
+			const nIdx = nx + ny * GRID_COLS;
+			if (visited.has(nIdx)) continue;
+			visited.add(nIdx);
+			queue.push(nIdx);
+		}
+	}
 	return null;
 }
 
@@ -223,13 +254,14 @@ export function handleTileClick(
 		targetPlayer.carriedParcel != null &&
 		targetTile.id === targetPlayer.carriedParcel.id;
 
-	if (!isMatchingDropZone) {
-		const blockedWarning = getBlockedTileWarning(targetTileIndex);
-		if (blockedWarning) {
-			model.warningText = blockedWarning;
+	if (!isMatchingDropZone && isTileBlocked(targetTileIndex)) {
+		const nearest = findNearestPassableTile(targetTileIndex);
+		if (nearest === null) {
+			model.warningText = "UNREACHABLE TILE";
 			showWarning();
 			return;
 		}
+		targetTileIndex = nearest;
 	}
 
 	if (tryDropCarriedItem(targetTileIndex, targetPlayer)) return;

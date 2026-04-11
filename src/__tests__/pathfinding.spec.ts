@@ -205,36 +205,40 @@ describe("pathfinding", () => {
 			} as any;
 		}
 
-		it("shows warning when clicking a tree tile", () => {
+		it("redirects to nearest passable tile when clicking a tree tile", () => {
 			const treeIdx = tiles.findIndex((t) => t instanceof Tree);
 			if (treeIdx === -1) return;
 
 			const player = createMockPlayer(START_TILE_INDEX);
+			mockAstarPath.length = 0;
+			mockAstarPath.push({ id: START_TILE_INDEX + 1 });
 			handleTileClick(treeIdx, player);
-			expect(model.showWarning).toBe(true);
-			expect(model.warningText).toBe("CLICKING A TREE WILL BE IGNORED");
+			// Should not show a warning — it pathfinds to the nearest passable tile
+			expect(model.showWarning).toBe(false);
 		});
 
-		it("shows warning when clicking a fence tile", () => {
+		it("redirects to nearest passable tile when clicking a fence tile", () => {
 			const fenceIdx = tiles.findIndex((t) => t instanceof Fence);
 			if (fenceIdx === -1) return;
 
 			const player = createMockPlayer(START_TILE_INDEX);
+			mockAstarPath.length = 0;
+			mockAstarPath.push({ id: START_TILE_INDEX + 1 });
 			handleTileClick(fenceIdx, player);
-			expect(model.showWarning).toBe(true);
-			expect(model.warningText).toBe("CAN'T WALK THROUGH A FENCE");
+			expect(model.showWarning).toBe(false);
 		});
 
-		it("shows warning when clicking a locked barrier", () => {
+		it("redirects to nearest passable tile when clicking a locked barrier", () => {
 			const barrierIdx = tiles.findIndex(
 				(t) => t instanceof Barrier && t.collider,
 			);
 			if (barrierIdx === -1) return;
 
 			const player = createMockPlayer(START_TILE_INDEX);
+			mockAstarPath.length = 0;
+			mockAstarPath.push({ id: START_TILE_INDEX + 1 });
 			handleTileClick(barrierIdx, player);
-			expect(model.showWarning).toBe(true);
-			expect(model.warningText).toBe("BARRIER IS LOCKED — FIND THE SWITCH");
+			expect(model.showWarning).toBe(false);
 		});
 
 		it("drops carried rock when clicking own tile", () => {

@@ -835,8 +835,15 @@ function onMouseUp(e: MouseEvent) {
 
 function onWheel(e: WheelEvent) {
 	e.preventDefault();
-	const factor = e.deltaY > 0 ? 0.9 : 1.1;
-	zoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoom * factor));
+	if (e.ctrlKey || e.metaKey) {
+		// Pinch-to-zoom or Ctrl+scroll: zoom
+		const factor = e.deltaY > 0 ? 0.9 : 1.1;
+		zoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoom * factor));
+	} else {
+		// Normal scroll: pan
+		camX += e.deltaX / zoom;
+		camY += e.deltaY / zoom;
+	}
 }
 
 function onKeyDown(e: KeyboardEvent) {

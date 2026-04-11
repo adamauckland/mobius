@@ -26,6 +26,9 @@ vi.mock("excalibur", () => {
 		static fromHex(_hex: string) {
 			return {};
 		}
+		static fromRGB(_r: number, _g: number, _b: number, _a?: number) {
+			return {};
+		}
 	}
 
 	class MockActor {
@@ -33,6 +36,7 @@ vi.mock("excalibur", () => {
 		width = 0;
 		height = 0;
 		z = 0;
+		scale = { x: 1, y: 1 };
 		private _killed = false;
 		graphics = {
 			use: vi.fn(),
@@ -53,11 +57,24 @@ vi.mock("excalibur", () => {
 			return this._killed;
 		}
 	}
+	class MockGraphicsGroup {
+		members: any[];
+		constructor(options?: any) {
+			this.members = options?.members ?? [];
+		}
+	}
+
+	function mockVec(x: number, y: number) {
+		return new MockVector(x, y);
+	}
+
 	return {
 		Actor: MockActor,
 		Vector: MockVector,
 		Circle: MockCircle,
 		Color: MockColor,
+		GraphicsGroup: MockGraphicsGroup,
+		vec: mockVec,
 	};
 });
 
@@ -78,6 +95,7 @@ vi.mock("../game", () => ({
 
 vi.mock("../ui/zIndex", () => ({
 	zFromY: (y: number, layer: number) => y * 10 + layer,
+	Z_LAYER_SHADOW: 0,
 	Z_LAYER_PICKUP: 4,
 	Z_LAYER_ROCK: 5,
 }));
@@ -113,16 +131,16 @@ import {
 	updateCritters,
 	tryCollectCritters,
 	resetCritters,
+	clearCritters,
 } from "../entities/critters";
 import { playerEntries } from "../entities/Player/playerManager";
-import { TILE_SIZE, GRID_COLS } from "../tiles/tiledata";
+import { TILE_SIZE, GRID_COLS, tiles, Fence } from "../tiles/tiledata";
 import { setupTestWorld } from "./testWorld";
 
 describe("critters", () => {
 	beforeEach(() => {
 		setupTestWorld();
-		// Clear any existing groups from prior tests
-		getCritterGroups().length = 0;
+		clearCritters();
 		// Reset playerEntries to a single mock player
 		playerEntries.length = 0;
 		playerEntries.push({
@@ -196,6 +214,33 @@ describe("critters", () => {
 			}
 			// Critter should have moved away
 			expect(critter.pos.x).not.toBeCloseTo(origX, 0);
+		});
+
+		it("does not move critters through a fence tile", () => {
+			// Tile index 1 is a Fence in the test world
+			expect(tiles[1]).toBeInstanceOf(Fence);
+			// Spawn critters at tile 2 (just right of the fence at index 1)
+			spawnCritterGroupsAt([2]);
+			const groups = getCritterGroups();
+			const group = groups[groups.length - 1];
+			const critter = group.critters[0];
+
+			// Place player to the right to push critter left toward the fence
+			playerEntries[0].player.pos.x = critter.pos.x + TILE_SIZE;
+			playerEntries[0].player.pos.y = critter.pos.y;
+
+			const fenceLeftEdge = (1 % GRID_COLS) * TILE_SIZE;
+			const fenceRightEdge = fenceLeftEdge + TILE_SIZE;
+
+			for (let i = 0; i < 100; i++) {
+				updateCritters(16);
+			}
+
+			// Critter should not have entered the fence tile
+			for (const c of group.critters) {
+				// Critter center should stay to the right of the fence tile
+				expect(c.pos.x).toBeGreaterThanOrEqual(fenceRightEdge - 1);
+			}
 		});
 
 		it("keeps critters within world bounds", () => {
