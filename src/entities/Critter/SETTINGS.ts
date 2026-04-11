@@ -35,6 +35,9 @@ export const BOUNCE_AMPLITUDE = 1.5; // px
 export const BOUNCE_FREQ_FLEE = 0.016; // radians per ms
 export const BOUNCE_FREQ_IDLE = 0.008; // radians per ms
 
+/** Velocity multiplier when bouncing off walls (idle critters) */
+export const WALL_RESTITUTION = 0.5;
+
 /** Speed at which a one-way gate pushes a critter (px/s) */
 export const GATE_PUSH_SPEED = 400;
 export const GATE_DIRECTION_VECTORS: Record<string, [number, number]> = {

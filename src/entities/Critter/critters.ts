@@ -23,6 +23,7 @@ import {
 	MAX_SPEED,
 	GATE_DIRECTION_VECTORS,
 	GATE_PUSH_SPEED,
+	WALL_RESTITUTION,
 } from "./SETTINGS";
 import { sfxCritterFlee } from "../../audio/sounds";
 import { critterGroups } from "./state";
@@ -189,6 +190,15 @@ function clampToWorldBounds(critter: ICritter) {
 	}
 }
 
+function resolveBlockedAxis(critter: ICritter, blocked: boolean, axis: "x" | "y") {
+	if (!blocked) return;
+	if (critter.fleeing) {
+		critter.velocity[axis] = 0;
+	} else {
+		critter.velocity[axis] = -critter.velocity[axis] * WALL_RESTITUTION;
+	}
+}
+
 function handleTileCollisions(critter: ICritter, prevX: number, prevY: number) {
 	const tileIdx =
 		Math.floor(critter.position.x / TILE_SIZE) +
@@ -200,11 +210,11 @@ function handleTileCollisions(critter: ICritter, prevX: number, prevY: number) {
 	if (!onGate && isTileBlocked(critter.position.x, critter.position.y)) {
 		const blockedX = isTileBlocked(critter.position.x, prevY);
 		const blockedY = isTileBlocked(prevX, critter.position.y);
-		if (blockedX) critter.velocity.x = -critter.velocity.x;
-		if (blockedY) critter.velocity.y = -critter.velocity.y;
+		resolveBlockedAxis(critter, blockedX, "x");
+		resolveBlockedAxis(critter, blockedY, "y");
 		if (!blockedX && !blockedY) {
-			critter.velocity.x = -critter.velocity.x;
-			critter.velocity.y = -critter.velocity.y;
+			resolveBlockedAxis(critter, true, "x");
+			resolveBlockedAxis(critter, true, "y");
 		}
 		critter.position.x = prevX;
 		critter.position.y = prevY;

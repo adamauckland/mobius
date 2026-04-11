@@ -113,6 +113,7 @@ vi.mock("../audio/sounds", () => ({
 vi.mock("../entities/lightTrail", () => ({
 	spawnLight: vi.fn(),
 	spawnScoreLight: vi.fn(),
+	spawnCollectBurst: vi.fn(),
 }));
 
 vi.mock("../entities/Player/PlayerActor", () => ({
@@ -126,8 +127,13 @@ vi.mock("../ui/pathfinding", () => ({
 }));
 
 import { sfxCritterFlee } from "../audio/sounds";
+import { spawnCollectBurst } from "../entities/lightTrail";
 import { updateCritters, resetCritters } from "../entities/Critter/critters";
-import { tryCollectCritters } from "../entities/Critter/collection";
+import {
+	tryCollectCritters,
+	setOnAllCrittersCollected,
+	resetAllCrittersCollectedFlag,
+} from "../entities/Critter/collection";
 import { spawnCritterGroupsAt } from "../entities/Critter/spawn";
 import {
 	getCritterGroups,
@@ -244,6 +250,37 @@ describe("critters", () => {
 			}
 		});
 
+		it("does not get stuck oscillating when fleeing into a wall", () => {
+			// Tile index 1 is a Fence in the test world
+			expect(tiles[1]).toBeInstanceOf(Fence);
+			// Spawn critters at tile 2 (just right of the fence)
+			spawnCritterGroupsAt([2]);
+			const groups = getCritterGroups();
+			const group = groups[groups.length - 1];
+			const critter = group.critters[0];
+
+			// Place player to the right so critter flees left into the fence
+			playerEntries[0].player.pos.x = critter.position.x + TILE_SIZE;
+			playerEntries[0].player.pos.y = critter.position.y;
+
+			// Run many frames to let the situation stabilise
+			for (let i = 0; i < 200; i++) {
+				updateCritters(16);
+			}
+
+			// Sample position over several frames — it should not be oscillating
+			const samples: number[] = [];
+			for (let i = 0; i < 10; i++) {
+				updateCritters(16);
+				samples.push(critter.position.x);
+			}
+
+			const minX = Math.min(...samples);
+			const maxX = Math.max(...samples);
+			// Position should be stable (not bouncing back and forth)
+			expect(maxX - minX).toBeLessThan(2);
+		});
+
 		it("plays flee sound when critter starts fleeing", () => {
 			spawnCritterGroupsAt([100]);
 			const groups = getCritterGroups();
@@ -325,6 +362,19 @@ describe("critters", () => {
 			expect(collected).toBe(0);
 		});
 
+		it("spawns collect burst effect toward player on collection", () => {
+			spawnCritterGroupsAt([100]);
+			const groups = getCritterGroups();
+			const group = groups[groups.length - 1];
+			const critter = group.critters[0];
+
+			playerEntries[0].player.pos.x = critter.position.x;
+			playerEntries[0].player.pos.y = critter.position.y;
+
+			tryCollectCritters();
+			expect(spawnCollectBurst).toHaveBeenCalled();
+		});
+
 		it("does not collect already-collected critters", () => {
 			spawnCritterGroupsAt([100]);
 			const groups = getCritterGroups();
@@ -339,6 +389,101 @@ describe("critters", () => {
 			// Try again — should not count again
 			tryCollectCritters();
 			expect(critter.collected).toBe(true);
+		});
+	});
+
+	describe("setOnAllCrittersCollected", () => {
+		it("fires callback when all critters are collected", () => {
+			spawnCritterGroupsAt([100]);
+			const groups = getCritterGroups();
+			const group = groups[groups.length - 1];
+
+			const callback = vi.fn();
+			setOnAllCrittersCollected(callback);
+
+			// Place player on each critter and collect them all
+			for (const critter of group.critters) {
+				playerEntries[0].player.pos.x = critter.position.x;
+				playerEntries[0].player.pos.y = critter.position.y;
+				tryCollectCritters();
+			}
+
+			expect(callback).toHaveBeenCalledTimes(1);
+		});
+
+		it("does not fire callback when only some critters are collected", () => {
+			// Two groups — collecting one group leaves the other uncollected
+			spawnCritterGroupsAt([100, 200]);
+
+			const callback = vi.fn();
+			setOnAllCrittersCollected(callback);
+
+			// Collect only the first group
+			const groups = getCritterGroups();
+			const firstGroup = groups[groups.length - 2];
+			for (const critter of firstGroup.critters) {
+				playerEntries[0].player.pos.x = critter.position.x;
+				playerEntries[0].player.pos.y = critter.position.y;
+				tryCollectCritters();
+			}
+
+			expect(callback).not.toHaveBeenCalled();
+		});
+
+		it("does not fire callback twice without reset", () => {
+			spawnCritterGroupsAt([100]);
+			const groups = getCritterGroups();
+			const group = groups[groups.length - 1];
+
+			const callback = vi.fn();
+			setOnAllCrittersCollected(callback);
+
+			// Collect all
+			for (const critter of group.critters) {
+				playerEntries[0].player.pos.x = critter.position.x;
+				playerEntries[0].player.pos.y = critter.position.y;
+				tryCollectCritters();
+			}
+
+			expect(callback).toHaveBeenCalledTimes(1);
+
+			// Call again — should not fire again
+			tryCollectCritters();
+			expect(callback).toHaveBeenCalledTimes(1);
+		});
+
+		it("fires again after resetAllCrittersCollectedFlag", () => {
+			spawnCritterGroupsAt([100]);
+			const groups = getCritterGroups();
+			const group = groups[groups.length - 1];
+
+			const callback = vi.fn();
+			setOnAllCrittersCollected(callback);
+
+			// Collect all
+			for (const critter of group.critters) {
+				playerEntries[0].player.pos.x = critter.position.x;
+				playerEntries[0].player.pos.y = critter.position.y;
+				tryCollectCritters();
+			}
+			expect(callback).toHaveBeenCalledTimes(1);
+
+			// Reset flag and re-collect (simulate rewind then re-collect)
+			resetAllCrittersCollectedFlag();
+			// Mark all as collected again directly (simulating re-collection)
+			for (const critter of group.critters) {
+				critter.collected = true;
+			}
+			// Spawn a fresh group so tryCollectCritters can collect something new
+			spawnCritterGroupsAt([100]);
+			const newGroup = getCritterGroups()[getCritterGroups().length - 1];
+			for (const critter of newGroup.critters) {
+				playerEntries[0].player.pos.x = critter.position.x;
+				playerEntries[0].player.pos.y = critter.position.y;
+				tryCollectCritters();
+			}
+
+			expect(callback).toHaveBeenCalledTimes(2);
 		});
 	});
 

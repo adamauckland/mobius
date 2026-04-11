@@ -55,7 +55,7 @@ vi.mock("../zIndex", () => ({
   Z_LAYER_ROCK: 4,
 }));
 
-vi.mock("../sounds", () => ({
+vi.mock("../audio/sounds", () => ({
   sfxCollect: vi.fn(),
   sfxPickUpRock: vi.fn(),
   sfxDropRock: vi.fn(),

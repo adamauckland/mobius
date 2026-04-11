@@ -35,18 +35,46 @@ function createMockGain() {
 	};
 }
 
+function createMockBiquadFilter() {
+	return {
+		type: "lowpass",
+		frequency: { value: 350 },
+		Q: { value: 1 },
+		connect: vi.fn(),
+	};
+}
+
+function createMockBuffer(channels: number, length: number) {
+	const data = new Float32Array(length);
+	return { getChannelData: (_ch: number) => data, numberOfChannels: channels };
+}
+
+function createMockBufferSource() {
+	return {
+		buffer: null as any,
+		connect: vi.fn(),
+		start: vi.fn(),
+		stop: vi.fn(),
+	};
+}
+
 const mockDestination = {};
 let mockOscillators: ReturnType<typeof createMockOscillator>[];
 let mockGains: ReturnType<typeof createMockGain>[];
+let mockBufferSources: ReturnType<typeof createMockBufferSource>[];
+let mockFilters: ReturnType<typeof createMockBiquadFilter>[];
 
 beforeEach(() => {
 	mockOscillators = [];
 	mockGains = [];
+	mockBufferSources = [];
+	mockFilters = [];
 	vi.useFakeTimers();
 
 	// Use a proper class so `new AudioContext()` works
 	(globalThis as any).AudioContext = class MockAudioContext {
 		currentTime = 0;
+		sampleRate = 44100;
 		destination = mockDestination;
 		createOscillator() {
 			const osc = createMockOscillator();
@@ -58,6 +86,19 @@ beforeEach(() => {
 			mockGains.push(gain);
 			return gain;
 		}
+		createBuffer(channels: number, length: number, _sampleRate: number) {
+			return createMockBuffer(channels, length);
+		}
+		createBufferSource() {
+			const src = createMockBufferSource();
+			mockBufferSources.push(src);
+			return src;
+		}
+		createBiquadFilter() {
+			const f = createMockBiquadFilter();
+			mockFilters.push(f);
+			return f;
+		}
 	};
 });
 
@@ -68,15 +109,13 @@ afterEach(() => {
 });
 
 describe("sound effects", () => {
-	it("sfxCollect creates oscillators for an arpeggio", async () => {
+	it("sfxCollect creates a white-noise burst with filter", async () => {
 		const { sfxCollect } = await import("../audio/sounds");
 		sfxCollect();
-		// playArpeggio uses game.clock.schedule even for the first note (delay 0)
-		vi.advanceTimersByTime(0);
-		expect(mockOscillators.length).toBeGreaterThanOrEqual(1);
-		expect(mockOscillators[0].start).toHaveBeenCalled();
-		vi.advanceTimersByTime(200);
-		expect(mockOscillators).toHaveLength(3);
+		expect(mockBufferSources).toHaveLength(1);
+		expect(mockBufferSources[0].start).toHaveBeenCalled();
+		expect(mockFilters).toHaveLength(1);
+		expect(mockFilters[0].type).toBe("bandpass");
 	});
 
 	it("sfxPickUpRock creates a single tone", async () => {

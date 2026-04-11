@@ -47,7 +47,33 @@ function playArpeggio(
 // --- Public sound effects ---
 
 export function sfxCollect() {
-	playArpeggio([880, 1100, 1320], 0.08, "square", 0.1);
+	const ac = getCtx();
+	const duration = 1;
+	const bufferSize = Math.ceil(ac.sampleRate * duration);
+	const buffer = ac.createBuffer(1, bufferSize, ac.sampleRate);
+	const data = buffer.getChannelData(0);
+	for (let i = 0; i < bufferSize; i++) {
+		data[i] = Math.random() * 2 - 1;
+	}
+	const source = ac.createBufferSource();
+	source.buffer = buffer;
+
+	// Band-pass filter to soften the noise
+	const filter = ac.createBiquadFilter();
+	filter.type = "bandpass";
+	filter.frequency.value = Math.random() * 200 + 200;
+	filter.Q.value = 0.8;
+
+	// Quick fade-out envelope for a soft pop
+	const gain = ac.createGain();
+	gain.gain.setValueAtTime(0.18, ac.currentTime);
+	gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + duration);
+
+	source.connect(filter);
+	filter.connect(gain);
+	gain.connect(ac.destination);
+	source.start();
+	source.stop(ac.currentTime + duration);
 }
 
 export function sfxPickUpRock() {
@@ -138,7 +164,13 @@ export function sfxCountdownGo() {
 }
 
 export function sfxCritterFlee() {
-	playArpeggio([900, 700], 0.06, "triangle", 0.08);
+	const start = Math.random() * 600 + 300;
+	const end = start - 100;
+	playArpeggio([start, end], 0.06, "triangle", 0.08);
+}
+
+export function sfxExitDoorOpen() {
+	playArpeggio([330, 440, 554, 659, 880], 0.12, "sine", 0.18);
 }
 
 // --- Looping platform hum ---
