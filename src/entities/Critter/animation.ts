@@ -15,24 +15,94 @@ import {
 	BOUNCE_AMPLITUDE,
 } from "./SETTINGS";
 import { createCritterGraphics } from "./graphics";
+import type { ICritterGraphics } from "./types/ICritterGraphics";
 import { ICritter } from "./types/ICritter";
 
-/** Attach blink/bounce/eye-shift animation to a critter's actor. */
+interface BlinkState {
+	nextBlink: number;
+	blinkStart: number;
+}
 
+interface IdleLookState {
+	shift: number;
+	target: number;
+	nextLook: number;
+}
+
+function randomIdleLookDelay(now: number): number {
+	return now + IDLE_LOOK_MIN_MS + Math.random() * (IDLE_LOOK_MAX_MS - IDLE_LOOK_MIN_MS);
+}
+
+function getBlinkEyeState(blink: BlinkState, now: number): "open" | "half" | "closed" {
+	if (blink.blinkStart === 0) {
+		if (now >= blink.nextBlink) {
+			blink.blinkStart = now;
+		}
+		return "open";
+	}
+	const elapsed = now - blink.blinkStart;
+	if (elapsed < BLINK_HALF_DURATION) return "half";
+	if (elapsed < BLINK_HALF_DURATION + BLINK_CLOSED_DURATION) return "closed";
+	if (elapsed < BLINK_TOTAL_DURATION) return "half";
+	// Blink finished
+	blink.blinkStart = 0;
+	blink.nextBlink = now + 1000 + Math.random() * 3000;
+	return "open";
+}
+
+function applyEyeGraphic(actor: Actor, gfx: ICritterGraphics, eyeState: "open" | "half" | "closed") {
+	if (eyeState === "closed") {
+		actor.graphics.use(gfx.closed);
+	} else if (eyeState === "half") {
+		actor.graphics.use(gfx.halfOpen);
+	} else {
+		actor.graphics.use(gfx.open);
+	}
+}
+
+function computeEyeShift(critter: ICritter, speed: number, idle: IdleLookState, now: number): number {
+	if (speed > 1) {
+		idle.nextLook = randomIdleLookDelay(now);
+		idle.shift = 0;
+		idle.target = 0;
+		return (critter.velocity.x / speed) * EYE_SHIFT_MAX;
+	}
+	if (now >= idle.nextLook) {
+		idle.target = IDLE_LOOK_DIRECTIONS[Math.floor(Math.random() * IDLE_LOOK_DIRECTIONS.length)];
+		idle.nextLook = randomIdleLookDelay(now);
+	}
+	idle.shift += (idle.target - idle.shift) * 0.08;
+	return idle.shift;
+}
+
+function applyEyeShift(gfx: ICritterGraphics, shift: number) {
+	gfx.leftEyeOffset.x = EYE_BASE_LEFT_X + shift;
+	gfx.rightEyeOffset.x = EYE_BASE_RIGHT_X + shift;
+	gfx.leftEyeHalfOffset.x = EYE_BASE_LEFT_X + shift;
+	gfx.rightEyeHalfOffset.x = EYE_BASE_RIGHT_X + shift;
+}
+
+function computeBounceOffset(critter: ICritter, speed: number, now: number, phase: number): number {
+	if (critter.onGate) return 0;
+	if (speed <= 1) return 0;
+	const bounceFreq = critter.fleeing ? BOUNCE_FREQ_FLEE : BOUNCE_FREQ_IDLE;
+	return -Math.abs(Math.sin(now * bounceFreq + phase)) * BOUNCE_AMPLITUDE;
+}
+
+/** Attach blink/bounce/eye-shift animation to a critter's actor. */
 export function attachCritterAnimation(actor: Actor, critter: ICritter) {
 	const gfx = createCritterGraphics();
 	actor.graphics.use(gfx.open);
 	const phase = Math.random() * Math.PI * 2;
-	let nextBlink = game.clock.now() + 1000 + Math.random() * 3000;
-	let blinkStart = 0; // 0 = not blinking
-
-	// Idle look-around state
-	let idleLookShift = 0;
-	let idleLookTarget = 0;
-	let nextIdleLook =
-		game.clock.now() +
-		IDLE_LOOK_MIN_MS +
-		Math.random() * (IDLE_LOOK_MAX_MS - IDLE_LOOK_MIN_MS);
+	const blink: BlinkState = {
+		nextBlink: game.clock.now() + 1000 + Math.random() * 3000,
+		blinkStart: 0,
+	};
+	const idle: IdleLookState = {
+		shift: 0,
+		target: 0,
+		nextLook: randomIdleLookDelay(game.clock.now()),
+	};
 
 	actor.graphics.onPreDraw = () => {
 		const now = game.clock.now();
@@ -41,74 +111,14 @@ export function attachCritterAnimation(actor: Actor, critter: ICritter) {
 				critter.velocity.y * critter.velocity.y,
 		);
 		const facingAway = speed > 1 && critter.velocity.y < 0;
-		// Start a new blink
-		if (blinkStart === 0 && now >= nextBlink) {
-			blinkStart = now;
-		}
-		// Determine blink phase: half-open -> closed -> half-open -> open
-		let eyeState: "open" | "half" | "closed" = "open";
-		if (blinkStart > 0) {
-			const elapsed = now - blinkStart;
-			if (elapsed < BLINK_HALF_DURATION) {
-				eyeState = "half";
-			} else if (elapsed < BLINK_HALF_DURATION + BLINK_CLOSED_DURATION) {
-				eyeState = "closed";
-			} else if (elapsed < BLINK_TOTAL_DURATION) {
-				eyeState = "half";
-			} else {
-				// Blink finished
-				blinkStart = 0;
-				nextBlink = now + 1000 + Math.random() * 3000;
-				eyeState = "open";
-			}
-		}
+
+		let eyeState = getBlinkEyeState(blink, now);
 		if (facingAway) eyeState = "closed";
-		if (eyeState === "closed") {
-			actor.graphics.use(gfx.closed);
-		} else if (eyeState === "half") {
-			actor.graphics.use(gfx.halfOpen);
-		} else {
-			actor.graphics.use(gfx.open);
-		}
-		// Eye shift: follow movement when moving, look around when idle
-		let shift: number;
-		if (speed > 1) {
-			shift = (critter.velocity.x / speed) * EYE_SHIFT_MAX;
-			// Reset idle timer while moving
-			nextIdleLook =
-				now +
-				IDLE_LOOK_MIN_MS +
-				Math.random() * (IDLE_LOOK_MAX_MS - IDLE_LOOK_MIN_MS);
-			idleLookShift = 0;
-			idleLookTarget = 0;
-		} else {
-			// Pick a new random look direction on timer
-			if (now >= nextIdleLook) {
-				idleLookTarget =
-					IDLE_LOOK_DIRECTIONS[
-						Math.floor(Math.random() * IDLE_LOOK_DIRECTIONS.length)
-					];
-				nextIdleLook =
-					now +
-					IDLE_LOOK_MIN_MS +
-					Math.random() * (IDLE_LOOK_MAX_MS - IDLE_LOOK_MIN_MS);
-			}
-			// Smoothly lerp toward the target
-			idleLookShift += (idleLookTarget - idleLookShift) * 0.08;
-			shift = idleLookShift;
-		}
-		gfx.leftEyeOffset.x = EYE_BASE_LEFT_X + shift;
-		gfx.rightEyeOffset.x = EYE_BASE_RIGHT_X + shift;
-		gfx.leftEyeHalfOffset.x = EYE_BASE_LEFT_X + shift;
-		gfx.rightEyeHalfOffset.x = EYE_BASE_RIGHT_X + shift;
-		if (critter.onGate) {
-			actor.graphics.offset.y = 0;
-		} else if (speed > 1) {
-			const bounceFreq = critter.fleeing ? BOUNCE_FREQ_FLEE : BOUNCE_FREQ_IDLE;
-			actor.graphics.offset.y =
-				-Math.abs(Math.sin(now * bounceFreq + phase)) * BOUNCE_AMPLITUDE;
-		} else {
-			actor.graphics.offset.y = 0;
-		}
+		applyEyeGraphic(actor, gfx, eyeState);
+
+		const shift = computeEyeShift(critter, speed, idle, now);
+		applyEyeShift(gfx, shift);
+
+		actor.graphics.offset.y = computeBounceOffset(critter, speed, now, phase);
 	};
 }

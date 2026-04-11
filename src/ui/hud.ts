@@ -29,9 +29,31 @@ export interface HUDRefs {
 	displayedScore: { value: number };
 }
 
-export function createHUD(): HUDRefs {
-	// Dim overlay — sits between the game world and the HUD layer so that
-	// HUD, buttons, and the Level Complete / Game Over labels stay visible.
+function createHUDFont(size: number, textAlign: TextAlign, color: Color = Color.White): Font {
+	return new Font({
+		size,
+		unit: FontUnit.Px,
+		family: '"Sixtyfour", monospace',
+		color,
+		textAlign,
+		shadow: { blur: 2, offset: vec(1, 1), color: Color.Black },
+	});
+}
+
+function createOverlayFont(size: number, color: Color, lineHeight?: number, shadowBlur = 4): Font {
+	return new Font({
+		size,
+		unit: FontUnit.Px,
+		lineHeight: lineHeight,
+		family: '"Sixtyfour", monospace',
+		color,
+		textAlign: TextAlign.Center,
+		baseAlign: BaseAlign.Middle,
+		shadow: { blur: shadowBlur, offset: vec(2, 2), color: Color.Black },
+	});
+}
+
+function createDimOverlay(): ScreenElement {
 	const dimRect = new Rectangle({
 		width: game.screen.resolution.width,
 		height: game.screen.resolution.height,
@@ -49,8 +71,10 @@ export function createHUD(): HUDRefs {
 		dimRect.height = game.screen.resolution.height;
 	});
 	game.add(dimOverlay);
+	return dimOverlay;
+}
 
-	// Game timer
+function createTimerDisplay(): Text {
 	const timerText = new Text({
 		text: "0:00.0",
 		font: new Font({
@@ -71,18 +95,13 @@ export function createHUD(): HUDRefs {
 		timerLabel.pos.x = game.screen.resolution.width / 2;
 	});
 	game.add(timerLabel);
+	return timerText;
+}
 
-	// Score display
+function createScoreDisplay(): Text {
 	const scoreText = new Text({
 		text: "0",
-		font: new Font({
-			size: 32,
-			unit: FontUnit.Px,
-			family: '"Sixtyfour", monospace',
-			color: Color.White,
-			textAlign: TextAlign.Right,
-			shadow: { blur: 2, offset: vec(1, 1), color: Color.Black },
-		}),
+		font: createHUDFont(32, TextAlign.Right),
 	});
 	const scoreLabel = new ScreenElement({
 		pos: vec(0, 10),
@@ -93,18 +112,13 @@ export function createHUD(): HUDRefs {
 		scoreLabel.pos.x = game.screen.resolution.width - 10;
 	});
 	game.add(scoreLabel);
+	return scoreText;
+}
 
-	// Pause button (top-left)
+function createPauseButton() {
 	const pauseText = new Text({
 		text: "II",
-		font: new Font({
-			size: 32,
-			unit: FontUnit.Px,
-			family: '"Sixtyfour", monospace',
-			color: Color.White,
-			textAlign: TextAlign.Left,
-			shadow: { blur: 2, offset: vec(1, 1), color: Color.Black },
-		}),
+		font: createHUDFont(32, TextAlign.Left),
 	});
 	const pauseButton = new ScreenElement({
 		pos: vec(10, 10),
@@ -118,22 +132,13 @@ export function createHUD(): HUDRefs {
 		pauseText.text = isPaused ? ">" : "II";
 	});
 	game.add(pauseButton);
+}
 
-	// Lives display (top-left, below pause). Two layered Text elements:
-	// a black "♥♥♥" backdrop, with a red "♥".repeat(lives) overlay drawn on top.
-	// (Excalibur Text only supports one colour per element, and the empty-heart
-	// glyph ♡ U+2661 is rendered as an emoji on macOS/Windows and ignores the
-	// requested colour, so we always use the solid ♥ U+2665 in two passes.)
+function createLivesDisplay(): Text {
+	// Black "♥♥♥" backdrop
 	const livesBackdropText = new Text({
 		text: "\u2665".repeat(3),
-		font: new Font({
-			size: 32,
-			unit: FontUnit.Px,
-			family: '"Sixtyfour", monospace',
-			color: Color.Black,
-			textAlign: TextAlign.Left,
-			shadow: { blur: 2, offset: vec(1, 1), color: Color.Black },
-		}),
+		font: createHUDFont(32, TextAlign.Left, Color.Black),
 	});
 	const livesBackdropLabel = new ScreenElement({
 		pos: vec(10, 45),
@@ -142,16 +147,10 @@ export function createHUD(): HUDRefs {
 	livesBackdropLabel.graphics.use(livesBackdropText);
 	game.add(livesBackdropLabel);
 
+	// Red overlay showing current lives
 	const livesText = new Text({
 		text: "\u2665".repeat(model.lives),
-		font: new Font({
-			size: 32,
-			unit: FontUnit.Px,
-			family: '"Sixtyfour", monospace',
-			color: Color.Red,
-			textAlign: TextAlign.Left,
-			shadow: { blur: 2, offset: vec(1, 1), color: Color.Black },
-		}),
+		font: createHUDFont(32, TextAlign.Left, Color.Red),
 	});
 	const livesLabel = new ScreenElement({
 		pos: vec(10, 45),
@@ -159,105 +158,43 @@ export function createHUD(): HUDRefs {
 	});
 	livesLabel.graphics.use(livesText);
 	game.add(livesLabel);
+	return livesText;
+}
 
-	// Level indicator (top-left, below lives) — only shown for multi-level projects
-	if (model.totalLevels > 1) {
-		const levelText = new Text({
-			text: `Level ${model.currentLevel + 1}/${model.totalLevels}`,
-			font: new Font({
-				size: 24,
-				unit: FontUnit.Px,
-				family: '"Sixtyfour", monospace',
-				color: Color.White,
-				textAlign: TextAlign.Left,
-				shadow: { blur: 2, offset: vec(1, 1), color: Color.Black },
-			}),
-		});
-		const levelLabel = new ScreenElement({
-			pos: vec(10, 78),
-			z: Z_HUD,
-		});
-		levelLabel.graphics.use(levelText);
-		game.add(levelLabel);
-	}
-
-	// Game over overlay
-	const gameOverText = new Text({
-		text: "GAME OVER",
-		font: new Font({
-			size: 100,
-			unit: FontUnit.Px,
-			family: '"Sixtyfour", monospace',
-			color: Color.Red,
-			textAlign: TextAlign.Center,
-			baseAlign: BaseAlign.Middle,
-			shadow: { blur: 4, offset: vec(2, 2), color: Color.Black },
-		}),
+function createLevelIndicator() {
+	if (model.totalLevels <= 1) return;
+	const levelText = new Text({
+		text: `Level ${model.currentLevel + 1}/${model.totalLevels}`,
+		font: createHUDFont(24, TextAlign.Left),
 	});
-	const gameOverLabel = new ScreenElement({
+	const levelLabel = new ScreenElement({
+		pos: vec(10, 78),
+		z: Z_HUD,
+	});
+	levelLabel.graphics.use(levelText);
+	game.add(levelLabel);
+}
+
+function createCenteredOverlay(text: string, color: Color, fontSize: number, lineHeight?: number, shadowBlur = 4): ScreenElement {
+	const textGfx = new Text({
+		text,
+		font: createOverlayFont(fontSize, color, lineHeight, shadowBlur),
+	});
+	const label = new ScreenElement({
 		pos: vec(0, 0),
 		z: Z_COUNTDOWN,
 	});
-	gameOverLabel.graphics.use(gameOverText);
-	gameOverLabel.graphics.visible = false;
-	gameOverLabel.on("preupdate", () => {
-		gameOverLabel.pos.x = game.screen.resolution.width / 2;
-		gameOverLabel.pos.y = game.screen.resolution.height / 2;
+	label.graphics.use(textGfx);
+	label.graphics.visible = false;
+	label.on("preupdate", () => {
+		label.pos.x = game.screen.resolution.width / 2;
+		label.pos.y = game.screen.resolution.height / 2;
 	});
-	game.add(gameOverLabel);
+	game.add(label);
+	return label;
+}
 
-	// Time's up penalty overlay
-	const timesUpText = new Text({
-		text: "TIME'S UP",
-		font: new Font({
-			size: 200,
-			unit: FontUnit.Px,
-			family: '"Sixtyfour", monospace',
-			color: Color.fromHex("#ff6600"),
-			textAlign: TextAlign.Center,
-			baseAlign: BaseAlign.Middle,
-			shadow: { blur: 4, offset: vec(2, 2), color: Color.Black },
-		}),
-	});
-	const timesUpLabel = new ScreenElement({
-		pos: vec(0, 0),
-		z: Z_COUNTDOWN,
-	});
-	timesUpLabel.graphics.use(timesUpText);
-	timesUpLabel.graphics.visible = false;
-	timesUpLabel.on("preupdate", () => {
-		timesUpLabel.pos.x = game.screen.resolution.width / 2;
-		timesUpLabel.pos.y = game.screen.resolution.height / 2;
-	});
-	game.add(timesUpLabel);
-
-	// Level complete overlay
-	const levelCompleteText = new Text({
-		text: "LEVEL\nCOMPLETE",
-		font: new Font({
-			size: 100,
-			unit: FontUnit.Px,
-			lineHeight: 120,
-			family: '"Sixtyfour", monospace',
-			color: Color.fromHex("#00e676"),
-			textAlign: TextAlign.Center,
-			baseAlign: BaseAlign.Middle,
-			shadow: { blur: 16, offset: vec(6, 6), color: Color.Black },
-		}),
-	});
-	const levelCompleteLabel = new ScreenElement({
-		pos: vec(0, 0),
-		z: Z_COUNTDOWN,
-	});
-	levelCompleteLabel.graphics.use(levelCompleteText);
-	levelCompleteLabel.graphics.visible = false;
-	levelCompleteLabel.on("preupdate", () => {
-		levelCompleteLabel.pos.x = game.screen.resolution.width / 2;
-		levelCompleteLabel.pos.y = game.screen.resolution.height / 2;
-	});
-	game.add(levelCompleteLabel);
-
-	// Rewind button (bottom-right, circular)
+function createRewindButton(): ScreenElement {
 	const REWIND_RADIUS = 36;
 	const REWIND_MARGIN = 20;
 	const rewindBgNormal = new Circle({
@@ -328,6 +265,20 @@ export function createHUD(): HUDRefs {
 		rewindButton.scale.y = 1;
 	});
 	game.add(rewindButton);
+	return rewindButton;
+}
+
+export function createHUD(): HUDRefs {
+	const dimOverlay = createDimOverlay();
+	const timerText = createTimerDisplay();
+	const scoreText = createScoreDisplay();
+	createPauseButton();
+	const livesText = createLivesDisplay();
+	createLevelIndicator();
+	const gameOverLabel = createCenteredOverlay("GAME OVER", Color.Red, 100);
+	const timesUpLabel = createCenteredOverlay("TIME'S UP", Color.fromHex("#ff6600"), 200);
+	const levelCompleteLabel = createCenteredOverlay("LEVEL\nCOMPLETE", Color.fromHex("#00e676"), 100, 120, 16);
+	const rewindButton = createRewindButton();
 
 	return {
 		timerText,

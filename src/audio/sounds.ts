@@ -44,11 +44,9 @@ function playArpeggio(
 	});
 }
 
-// --- Public sound effects ---
+// --- Helpers ---
 
-export function sfxCollect() {
-	const ac = getCtx();
-	const duration = 1;
+function createNoiseSource(ac: AudioContext, duration: number): AudioBufferSourceNode {
 	const bufferSize = Math.ceil(ac.sampleRate * duration);
 	const buffer = ac.createBuffer(1, bufferSize, ac.sampleRate);
 	const data = buffer.getChannelData(0);
@@ -57,18 +55,32 @@ export function sfxCollect() {
 	}
 	const source = ac.createBufferSource();
 	source.buffer = buffer;
+	return source;
+}
 
-	// Band-pass filter to soften the noise
+function createBandpassFilter(ac: AudioContext, frequency: number, q: number): BiquadFilterNode {
 	const filter = ac.createBiquadFilter();
 	filter.type = "bandpass";
-	filter.frequency.value = Math.random() * 200 + 200;
-	filter.Q.value = 0.8;
+	filter.frequency.value = frequency;
+	filter.Q.value = q;
+	return filter;
+}
 
-	// Quick fade-out envelope for a soft pop
+function createFadeOutGain(ac: AudioContext, volume: number, duration: number): GainNode {
 	const gain = ac.createGain();
-	gain.gain.setValueAtTime(0.18, ac.currentTime);
+	gain.gain.setValueAtTime(volume, ac.currentTime);
 	gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + duration);
+	return gain;
+}
 
+// --- Public sound effects ---
+
+export function sfxCollect() {
+	const ac = getCtx();
+	const duration = 1;
+	const source = createNoiseSource(ac, duration);
+	const filter = createBandpassFilter(ac, Math.random() * 200 + 200, 0.8);
+	const gain = createFadeOutGain(ac, 0.18, duration);
 	source.connect(filter);
 	filter.connect(gain);
 	gain.connect(ac.destination);
@@ -128,31 +140,24 @@ export function sfxPortal() {
 	osc.stop(ac.currentTime + duration);
 }
 
+function playBeat(ac: AudioContext, freq: number, volume: number, startTime: number, duration: number) {
+	const osc = ac.createOscillator();
+	const gain = ac.createGain();
+	osc.type = "sine";
+	osc.frequency.value = freq;
+	gain.gain.setValueAtTime(volume, startTime);
+	gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+	osc.connect(gain);
+	gain.connect(ac.destination);
+	osc.start(startTime);
+	osc.stop(startTime + duration);
+}
+
 export function sfxHeartbeat() {
 	const ac = getCtx();
 	const t = ac.currentTime;
-	// lub
-	const osc1 = ac.createOscillator();
-	const gain1 = ac.createGain();
-	osc1.type = "sine";
-	osc1.frequency.value = 55;
-	gain1.gain.setValueAtTime(0.25, t);
-	gain1.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
-	osc1.connect(gain1);
-	gain1.connect(ac.destination);
-	osc1.start(t);
-	osc1.stop(t + 0.15);
-	// dub
-	const osc2 = ac.createOscillator();
-	const gain2 = ac.createGain();
-	osc2.type = "sine";
-	osc2.frequency.value = 45;
-	gain2.gain.setValueAtTime(0.18, t + 0.15);
-	gain2.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
-	osc2.connect(gain2);
-	gain2.connect(ac.destination);
-	osc2.start(t + 0.15);
-	osc2.stop(t + 0.3);
+	playBeat(ac, 55, 0.25, t, 0.15);
+	playBeat(ac, 45, 0.18, t + 0.15, 0.15);
 }
 
 export function sfxCountdownTick() {

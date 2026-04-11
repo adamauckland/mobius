@@ -234,4 +234,41 @@ describe("sound effects", () => {
 		expect(mockOscillators[0].connect).toHaveBeenCalledWith(mockGains[0]);
 		expect(mockGains[0].connect).toHaveBeenCalledWith(mockDestination);
 	});
+
+	it("sfxLevelComplete plays a 4-note arpeggio", async () => {
+		const { sfxLevelComplete } = await import("../audio/sounds");
+		sfxLevelComplete();
+		vi.advanceTimersByTime(500);
+		expect(mockOscillators).toHaveLength(4);
+	});
+
+	it("sfxHeartbeat creates two beats (lub and dub)", async () => {
+		const { sfxHeartbeat } = await import("../audio/sounds");
+		sfxHeartbeat();
+		expect(mockOscillators).toHaveLength(2);
+		expect(mockOscillators[0].frequency.value).toBe(55);
+		expect(mockOscillators[1].frequency.value).toBe(45);
+	});
+
+	it("sfxCountdownTick plays a single tone", async () => {
+		const { sfxCountdownTick } = await import("../audio/sounds");
+		sfxCountdownTick();
+		expect(mockOscillators).toHaveLength(1);
+		expect(mockOscillators[0].frequency.value).toBe(220);
+		expect(mockOscillators[0].type).toBe("square");
+	});
+
+	it("sfxCountdownGo plays a 3-note arpeggio", async () => {
+		const { sfxCountdownGo } = await import("../audio/sounds");
+		sfxCountdownGo();
+		vi.advanceTimersByTime(300);
+		expect(mockOscillators).toHaveLength(3);
+	});
+
+	it("sfxExitDoorOpen plays a 5-note arpeggio", async () => {
+		const { sfxExitDoorOpen } = await import("../audio/sounds");
+		sfxExitDoorOpen();
+		vi.advanceTimersByTime(500);
+		expect(mockOscillators).toHaveLength(5);
+	});
 });

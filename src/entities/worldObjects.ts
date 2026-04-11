@@ -235,6 +235,35 @@ export function pickUpParcel(parcel: Parcel, player: PlayerActor) {
 	}
 }
 
+function clearParcelLightInterval(parcel: Parcel) {
+	if (!parcel.lightInterval) return;
+	game.clock.clearSchedule(parcel.lightInterval!);
+	parcel.lightInterval = null;
+}
+
+function positionActorAtTile(actor: Actor, tileIndex: number) {
+	const x = tileIndex % GRID_COLS;
+	const y = Math.floor(tileIndex / GRID_COLS);
+	actor.pos.x = x * TILE_SIZE + TILE_SIZE / 2;
+	actor.pos.y = y * TILE_SIZE + TILE_SIZE / 2;
+}
+
+function fulfillDropZone(parcel: Parcel, tileIndex: number) {
+	const tile = tiles[tileIndex];
+	if (!(tile instanceof DropZone) || tile.id !== parcel.id || tile.fulfilled) return false;
+	parcel.placed = true;
+	tile.fulfilled = true;
+	tile.collider = false;
+	if (tileMapRef) {
+		tileMapRef.tiles[tileIndex].solid = false;
+	}
+	rebuildPathfinding();
+	score += 500;
+	sfxParcelPlaced();
+	spawnScoreLight(parcel.actor.pos.clone(), 5);
+	return true;
+}
+
 export function dropParcel(player: PlayerActor) {
 	dropParcelAtTile(player, player.logicalTileIndex);
 }
@@ -242,50 +271,25 @@ export function dropParcel(player: PlayerActor) {
 export function dropParcelAtTile(player: PlayerActor, tileIndex: number) {
 	const parcel = player.carriedParcel;
 	if (!parcel) return;
-	if (parcel.lightInterval) {
-		game.clock.clearSchedule(parcel.lightInterval!);
-		parcel.lightInterval = null;
-	}
+	clearParcelLightInterval(parcel);
 	parcel.carriedBy = null;
 	parcel.tileIndex = tileIndex;
 	player.carriedParcel = null;
-	const x = tileIndex % GRID_COLS;
-	const y = Math.floor(tileIndex / GRID_COLS);
-	parcel.actor.pos.x = x * TILE_SIZE + TILE_SIZE / 2;
-	parcel.actor.pos.y = y * TILE_SIZE + TILE_SIZE / 2;
+	positionActorAtTile(parcel.actor, tileIndex);
 
-	// Check if placed on matching drop zone
-	const tile = tiles[tileIndex];
-	if (tile instanceof DropZone && tile.id === parcel.id && !tile.fulfilled) {
-		parcel.placed = true;
-		tile.fulfilled = true;
-		tile.collider = false;
-		if (tileMapRef) {
-			tileMapRef.tiles[tileIndex].solid = false;
-		}
-		rebuildPathfinding();
-		score += 500;
-		sfxParcelPlaced();
-		spawnScoreLight(parcel.actor.pos.clone(), 5);
-	} else {
+	if (!fulfillDropZone(parcel, tileIndex)) {
 		sfxDropParcel();
 	}
 }
 
 export function resetParcels() {
 	for (const parcel of parcels) {
-		if (parcel.lightInterval) {
-			game.clock.clearSchedule(parcel.lightInterval!);
-			parcel.lightInterval = null;
-		}
+		clearParcelLightInterval(parcel);
 		parcel.tileIndex = parcel.originTileIndex;
 		parcel.carriedBy = null;
 		parcel.placed = false;
 		parcel.actor.graphics.visible = true;
-		const x = parcel.originTileIndex % GRID_COLS;
-		const y = Math.floor(parcel.originTileIndex / GRID_COLS);
-		parcel.actor.pos.x = x * TILE_SIZE + TILE_SIZE / 2;
-		parcel.actor.pos.y = y * TILE_SIZE + TILE_SIZE / 2;
+		positionActorAtTile(parcel.actor, parcel.originTileIndex);
 	}
 	// Reset drop zone fulfilled state and re-block tiles
 	for (const idx of dropZoneTileIndices) {

@@ -229,6 +229,57 @@ function queuePath(
 	}
 }
 
+function isMatchingDropZoneForPlayer(tileIndex: number, player: PlayerActor): boolean {
+	const tile = tiles[tileIndex];
+	return (
+		tile instanceof DropZone &&
+		!tile.fulfilled &&
+		player.carriedParcel != null &&
+		tile.id === player.carriedParcel.id
+	);
+}
+
+function resolveBlockedTarget(targetTileIndex: number): number | null {
+	const nearest = findNearestPassableTile(targetTileIndex);
+	if (nearest === null) {
+		model.warningText = "UNREACHABLE TILE";
+		showWarning();
+		return null;
+	}
+	return nearest;
+}
+
+/** Temporarily mark a drop zone as walkable, run a callback, then restore. */
+function withDropZoneWalkable(tileIndex: number, callback: () => void) {
+	const targetTile = tiles[tileIndex];
+	if (!(targetTile instanceof DropZone)) return callback();
+	const tilemapTile = storedTilemap.tiles[tileIndex];
+	const prevSolid = tilemapTile.solid;
+	const prevCollider = targetTile.collider;
+	tilemapTile.solid = false;
+	targetTile.collider = false;
+	rebuildPathfinding();
+	callback();
+	tilemapTile.solid = prevSolid;
+	targetTile.collider = prevCollider;
+	rebuildPathfinding();
+}
+
+function tryDismount(player: PlayerActor): boolean {
+	if (!player.ridingBlock) return true;
+	if (!dismountBlock(player)) {
+		model.warningText = "CAN'T DISMOUNT HERE — WAIT FOR OPEN GROUND";
+		showWarning();
+		return false;
+	}
+	return true;
+}
+
+function isValidTileIndex(index: number): boolean {
+	const totalTiles = GRID_COLS * GRID_ROWS;
+	return index >= 0 && index < totalTiles;
+}
+
 // Process a click on a target tile index: run pathfinding and queue movement
 export function handleTileClick(
 	targetTileIndex: number,
@@ -236,32 +287,14 @@ export function handleTileClick(
 ) {
 	model.targetTileIndex = targetTileIndex;
 
-	// If riding a moving block, dismount first
-	if (targetPlayer.ridingBlock) {
-		if (!dismountBlock(targetPlayer)) {
-			model.warningText = "CAN'T DISMOUNT HERE — WAIT FOR OPEN GROUND";
-			showWarning();
-			return;
-		}
-	}
+	if (!tryDismount(targetPlayer)) return;
 
-	// Carrying the matching parcel? Allow routing onto the (otherwise blocked)
-	// drop zone for this single pathfinding call.
-	const targetTile = tiles[targetTileIndex];
-	const isMatchingDropZone =
-		targetTile instanceof DropZone &&
-		!targetTile.fulfilled &&
-		targetPlayer.carriedParcel != null &&
-		targetTile.id === targetPlayer.carriedParcel.id;
+	const isMatchingDZ = isMatchingDropZoneForPlayer(targetTileIndex, targetPlayer);
 
-	if (!isMatchingDropZone && isTileBlocked(targetTileIndex)) {
-		const nearest = findNearestPassableTile(targetTileIndex);
-		if (nearest === null) {
-			model.warningText = "UNREACHABLE TILE";
-			showWarning();
-			return;
-		}
-		targetTileIndex = nearest;
+	if (!isMatchingDZ && isTileBlocked(targetTileIndex)) {
+		const resolved = resolveBlockedTarget(targetTileIndex);
+		if (resolved === null) return;
+		targetTileIndex = resolved;
 	}
 
 	if (tryDropCarriedItem(targetTileIndex, targetPlayer)) return;
@@ -269,35 +302,20 @@ export function handleTileClick(
 	setArrivalPickup(targetTileIndex, targetPlayer);
 
 	targetPlayer.playerActionBuffer = [];
-
-	// Derive start tile from pixel position when idle (not logicalTileIndex) because
-	// logicalTileIndex may not match the player's physical position between frames.
 	const playerTileIndex = getPlayerTileIndex(targetPlayer);
 
-	const totalTiles = GRID_COLS * GRID_ROWS;
-	if (playerTileIndex < 0 || playerTileIndex >= totalTiles) return;
-	if (targetTileIndex < 0 || targetTileIndex >= totalTiles) return;
+	if (!isValidTileIndex(playerTileIndex)) return;
+	if (!isValidTileIndex(targetTileIndex)) return;
 	if (playerTileIndex === targetTileIndex) return;
 
-	// Temporarily mark the matching drop zone as walkable for pathfinding,
-	// then restore so the world stays consistent for other actors.
-	let restoreDropZone: (() => void) | null = null;
-	if (isMatchingDropZone && targetTile instanceof DropZone) {
-		const tilemapTile = storedTilemap.tiles[targetTileIndex];
-		const prevSolid = tilemapTile.solid;
-		const prevCollider = targetTile.collider;
-		tilemapTile.solid = false;
-		targetTile.collider = false;
-		rebuildPathfinding();
-		restoreDropZone = () => {
-			tilemapTile.solid = prevSolid;
-			targetTile.collider = prevCollider;
-			rebuildPathfinding();
-		};
+	const runPathfinding = () => {
+		const { path, startingIndex } = findPath(playerTileIndex, targetTileIndex);
+		queuePath(targetPlayer, path, startingIndex);
+	};
+
+	if (isMatchingDZ) {
+		withDropZoneWalkable(targetTileIndex, runPathfinding);
+	} else {
+		runPathfinding();
 	}
-
-	const { path, startingIndex } = findPath(playerTileIndex, targetTileIndex);
-	queuePath(targetPlayer, path, startingIndex);
-
-	if (restoreDropZone) restoreDropZone();
 }

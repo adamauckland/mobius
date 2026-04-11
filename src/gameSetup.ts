@@ -58,6 +58,8 @@ import { createHUD } from "./ui/hud";
 import { runCountdown } from "./ui/countdown";
 import { resetGameTimer, setupGameLoop, startBonusCountdown } from "./gameLoop";
 import { initPackBrowser } from "./ui/packBrowser";
+import type { HUDRefs } from "./ui/hud";
+import type { Actor } from "excalibur";
 
 export { resetGameTimer };
 
@@ -134,28 +136,21 @@ if (savedTransition) {
 	}
 }
 
-function startGame(customMapData: IMapData) {
-	loadWorld(customMapData);
-	if (customMapData.timeLimit > 0) {
-		model.timeLimit = customMapData.timeLimit;
-	} else {
-		model.timeLimit = 0;
-	}
-
-	// Hide start screen
+function hideStartScreen() {
 	startScreen.style.display = "none";
+}
 
-	// Fade out level transition overlay if visible
-	if (localStorage.getItem("levelTransition")) {
-		localStorage.removeItem("levelTransition");
-		levelTransition.style.opacity = "0";
-		setTimeout(() => {
-			levelTransition.style.display = "none";
-			levelTransition.style.opacity = "1";
-		}, 400);
-	}
+function fadeLevelTransition() {
+	if (!localStorage.getItem("levelTransition")) return;
+	localStorage.removeItem("levelTransition");
+	levelTransition.style.opacity = "0";
+	setTimeout(() => {
+		levelTransition.style.display = "none";
+		levelTransition.style.opacity = "1";
+	}, 400);
+}
 
-	// Show "Back to Editor" button
+function createEditorButton() {
 	const backBtn = document.createElement("button");
 	backBtn.textContent = "EDITOR";
 	backBtn.style.cssText = `
@@ -175,169 +170,153 @@ function startGame(customMapData: IMapData) {
 		backBtn.style.opacity = "0.7";
 	});
 	document.body.appendChild(backBtn);
+}
 
-	// Create tilemap
+function applyTileGraphic(tile: any, tileIndex: number) {
+	const tileData = tiles[tileIndex];
+	const sprite = TileSheet.getSprite(tileData.sprite[0], tileData.sprite[1]);
+
+	if (tileData instanceof Tree) {
+		tile.addGraphic(TileSheet.getSprite(0, 0));
+		tile.solid = true;
+	} else if (tileData instanceof Void) {
+		tile.solid = true;
+	} else if (tileData instanceof Barrier) {
+		tile.addGraphic(TileSheet.getSprite(0, 0));
+		tile.solid = true;
+	} else if (tileData instanceof Fence) {
+		tile.addGraphic(TileSheet.getSprite(0, 0));
+		tile.solid = true;
+		tile.addGraphic(getFenceSprite(tileIndex));
+	} else if (tileData instanceof OneWayGate) {
+		tile.addGraphic(TileSheet.getSprite(0, 0));
+	} else if (tileData instanceof DropZone) {
+		tile.addGraphic(TileSheet.getSprite(0, 0));
+		tile.solid = true;
+	} else if (tileData instanceof ExitDoor) {
+		tile.addGraphic(TileSheet.getSprite(0, 0));
+	} else {
+		tile.addGraphic(sprite);
+	}
+	if (tileData instanceof Portal) {
+		tile.addGraphic(rlSS.getSprite(31, 22));
+	}
+}
+
+function createTilemap(): TileMap {
 	const tilemap = new TileMap({
 		rows: GRID_ROWS,
 		columns: GRID_COLS,
 		tileWidth: TILE_SIZE,
 		tileHeight: TILE_SIZE,
 	});
-
 	let tileIndex = 0;
 	for (let tile of tilemap.tiles) {
-		const sprite = TileSheet.getSprite(
-			tiles[tileIndex].sprite[0],
-			tiles[tileIndex].sprite[1],
-		);
-		if (tiles[tileIndex] instanceof Tree) {
-			tile.addGraphic(TileSheet.getSprite(0, 0)); // ground under tree
-			tile.solid = true;
-		} else if (tiles[tileIndex] instanceof Void) {
-			// no graphics — transparent edge of world
-			tile.solid = true;
-		} else if (tiles[tileIndex] instanceof Barrier) {
-			tile.addGraphic(TileSheet.getSprite(0, 0)); // ground under barrier
-			tile.solid = true;
-		} else if (tiles[tileIndex] instanceof Fence) {
-			tile.addGraphic(TileSheet.getSprite(0, 0)); // ground under fence
-			tile.solid = true;
-			tile.addGraphic(getFenceSprite(tileIndex));
-		} else if (tiles[tileIndex] instanceof OneWayGate) {
-			tile.addGraphic(TileSheet.getSprite(0, 0)); // ground under gate
-		} else if (tiles[tileIndex] instanceof DropZone) {
-			tile.addGraphic(TileSheet.getSprite(0, 0)); // ground under drop zone
-			tile.solid = true;
-		} else if (tiles[tileIndex] instanceof ExitDoor) {
-			tile.addGraphic(TileSheet.getSprite(0, 0)); // ground under exit door
-		} else {
-			tile.addGraphic(sprite);
-		}
-		if (tiles[tileIndex] instanceof Portal) {
-			tile.addGraphic(rlSS.getSprite(31, 22));
-		}
+		applyTileGraphic(tile, tileIndex);
 		tileIndex++;
 	}
+	return tilemap;
+}
 
-	// Spawn tile overlays
-	spawnTreeOverlays();
-	spawnGateOverlays();
-	spawnDropZoneOverlays();
-	const doorActors = spawnExitDoorOverlays();
+function movePlayerToStart() {
+	if (customStartTile === null) return;
+	const sx = (customStartTile % GRID_COLS) * TILE_SIZE + TILE_SIZE / 2;
+	const sy = Math.floor(customStartTile / GRID_COLS) * TILE_SIZE + TILE_SIZE / 2;
+	player.pos.x = sx;
+	player.pos.y = sy;
+	player.logicalTileIndex = customStartTile;
+	player.currentMoveTileIndex = customStartTile;
+}
 
-	// Initialize pathfinding
-	initPathfinding(tilemap);
-	initWorldObjectsTileMap(tilemap);
-
-	// Move player to custom start if set
-	if (customStartTile !== null) {
-		const sx = (customStartTile % GRID_COLS) * TILE_SIZE + TILE_SIZE / 2;
-		const sy =
-			Math.floor(customStartTile / GRID_COLS) * TILE_SIZE + TILE_SIZE / 2;
-		player.pos.x = sx;
-		player.pos.y = sy;
-		player.logicalTileIndex = customStartTile;
-		player.currentMoveTileIndex = customStartTile;
-	}
-
-	// Add scene elements
-	game.add(tilemap);
+function setupCamera() {
 	game.currentScene.camera.zoom = 4;
 	const cameraRadius =
 		(Math.min(game.drawWidth, game.drawHeight) /
 			game.currentScene.camera.zoom) *
 		0.25;
 	game.currentScene.camera.strategy.radiusAroundActor(player, cameraRadius);
-	game.add(player);
+}
 
-	// Start recording (clicks + game events)
+function startRecording() {
 	activeEntry().recorder.startRecording();
 	gameEventBus.startRecording();
 	model.isRecording = true;
+}
 
-	// Spawn barriers and switches, subscribe event handlers
-	initBarriers(tilemap);
-	spawnBarriers();
-	setupBarrierEvents();
-
-	// Spawn entities from map data
+function spawnEntities(customMapData: IMapData) {
 	spawnRocksAt(customMapData.rocks);
 	spawnParcelsAt(customMapData.parcels);
 	spawnCollectablesAt(customMapData.collectables);
 	spawnCritterGroupsAt(customMapData.critters);
 	spawnMovingBlocksAt(customMapData.movingBlocks);
 	spawnMonstersAt(customMapData.monsters);
+}
 
-	// Create HUD
-	const hud = createHUD();
-
-	// --- Exit door + critter gating ---
-
-	function triggerLevelComplete() {
-		if (model.gameOver) return;
-		model.gameOver = true;
-		sfxLevelComplete();
-		hud.dimOverlay.graphics.isVisible = true;
-		hud.levelCompleteLabel.graphics.isVisible = true;
-		hud.levelCompleteLabel.scale.x = 0.3;
-		hud.levelCompleteLabel.scale.y = 0.3;
-		hud.levelCompleteLabel.actions.scaleTo(vec(1, 1), vec(3, 3));
-		startBonusCountdown();
-		restartButton.style.display = "block";
-		if (model.projectJson && model.currentLevel + 1 < model.totalLevels) {
-			continueButton.style.display = "block";
-		}
+function triggerLevelComplete(hud: HUDRefs) {
+	if (model.gameOver) return;
+	model.gameOver = true;
+	sfxLevelComplete();
+	hud.dimOverlay.graphics.isVisible = true;
+	hud.levelCompleteLabel.graphics.isVisible = true;
+	hud.levelCompleteLabel.scale.x = 0.3;
+	hud.levelCompleteLabel.scale.y = 0.3;
+	hud.levelCompleteLabel.actions.scaleTo(vec(1, 1), vec(3, 3));
+	startBonusCountdown();
+	restartButton.style.display = "block";
+	if (model.projectJson && model.currentLevel + 1 < model.totalLevels) {
+		continueButton.style.display = "block";
 	}
+}
 
-	function revealExitDoors() {
-		for (const door of doorActors) {
-			door.graphics.isVisible = true;
-			door.scale.x = 0;
-			door.scale.y = 0;
-			door.actions.scaleTo(vec(1, 1), vec(3, 3));
-			spawnExitDoorReveal(door.pos.clone());
-		}
-		sfxExitDoorOpen();
+function revealExitDoors(doorActors: Actor[]) {
+	for (const door of doorActors) {
+		door.graphics.isVisible = true;
+		door.scale.x = 0;
+		door.scale.y = 0;
+		door.actions.scaleTo(vec(1, 1), vec(3, 3));
+		spawnExitDoorReveal(door.pos.clone());
 	}
+	sfxExitDoorOpen();
+}
 
-	function hideExitDoors() {
-		for (const door of doorActors) {
-			door.graphics.isVisible = false;
-			door.actions.clearActions();
-			door.scale.x = 1;
-			door.scale.y = 1;
-		}
-		resetAllCrittersCollectedFlag();
+function hideExitDoors(doorActors: Actor[]) {
+	for (const door of doorActors) {
+		door.graphics.isVisible = false;
+		door.actions.clearActions();
+		door.scale.x = 1;
+		door.scale.y = 1;
 	}
+	resetAllCrittersCollectedFlag();
+}
 
+function setupExitDoorGating(hud: HUDRefs, doorActors: Actor[]) {
 	const hasCritters = getCritterCount().total > 0;
 
-	// Hide exit doors until all critters are collected
 	if (hasCritters) {
-		hideExitDoors();
+		hideExitDoors(doorActors);
 		setOnAllCrittersCollected(() => {
 			if (doorActors.length > 0) {
-				revealExitDoors();
+				revealExitDoors(doorActors);
 			} else {
-				// No exit door on this level — complete immediately
-				triggerLevelComplete();
+				triggerLevelComplete(hud);
 			}
 		});
 	}
 
-	// Wire exit door callback on the active player (and re-wire after rewind)
 	function wireExitDoor() {
-		activeEntry().player.onReachedExitDoor = () => triggerLevelComplete();
+		activeEntry().player.onReachedExitDoor = () => triggerLevelComplete(hud);
 		if (hasCritters) {
-			hideExitDoors();
+			hideExitDoors(doorActors);
 		}
 	}
 	wireExitDoor();
 	setOnNewActivePlayer(wireExitDoor);
 
-	// Death handler
+	return wireExitDoor;
+}
+
+function setupDeathHandler(hud: HUDRefs, wireExitDoor: () => void) {
 	setOnPlayerKilled((killedPlayer) => {
-		// Only the active (recording) player can die
 		if (killedPlayer !== activeEntry().player) return;
 		if (model.gameOver) return;
 
@@ -348,19 +327,10 @@ function startGame(customMapData: IMapData) {
 		spawnDeathExplosion(killedPlayer.pos.clone());
 
 		if (model.lives <= 0) {
-			game.clock.schedule(() => {
-				model.gameOver = true;
-				hud.dimOverlay.graphics.isVisible = true;
-				hud.gameOverLabel.graphics.isVisible = true;
-				hud.gameOverLabel.scale.x = 0.3;
-				hud.gameOverLabel.scale.y = 0.3;
-				hud.gameOverLabel.actions.scaleTo(vec(1, 1), vec(3, 3));
-				restartButton.style.display = "block";
-			}, 2000);
+			showGameOver(hud);
 			return;
 		}
 
-		// Rewind: delay so the explosion plays out, then reset
 		game.clock.schedule(() => {
 			replayAll();
 			activeEntry().recorder.startRecording();
@@ -368,21 +338,63 @@ function startGame(customMapData: IMapData) {
 			wireExitDoor();
 		}, 2000);
 	});
+}
 
-	// Rewind button — triggers time rewind without blocking input
+function showGameOver(hud: HUDRefs) {
+	game.clock.schedule(() => {
+		model.gameOver = true;
+		hud.dimOverlay.graphics.isVisible = true;
+		hud.gameOverLabel.graphics.isVisible = true;
+		hud.gameOverLabel.scale.x = 0.3;
+		hud.gameOverLabel.scale.y = 0.3;
+		hud.gameOverLabel.actions.scaleTo(vec(1, 1), vec(3, 3));
+		restartButton.style.display = "block";
+	}, 2000);
+}
+
+function startGame(customMapData: IMapData) {
+	loadWorld(customMapData);
+	model.timeLimit = customMapData.timeLimit > 0 ? customMapData.timeLimit : 0;
+
+	hideStartScreen();
+	fadeLevelTransition();
+	createEditorButton();
+
+	const tilemap = createTilemap();
+	spawnTreeOverlays();
+	spawnGateOverlays();
+	spawnDropZoneOverlays();
+	const doorActors = spawnExitDoorOverlays();
+
+	initPathfinding(tilemap);
+	initWorldObjectsTileMap(tilemap);
+	movePlayerToStart();
+
+	game.add(tilemap);
+	setupCamera();
+	game.add(player);
+
+	startRecording();
+	initBarriers(tilemap);
+	spawnBarriers();
+	setupBarrierEvents();
+	spawnEntities(customMapData);
+
+	const hud = createHUD();
+	const wireExitDoor = setupExitDoorGating(hud, doorActors);
+	setupDeathHandler(hud, wireExitDoor);
+
 	hud.rewindButton.on("pointerup", () => {
 		if (model.gameOver) return;
 		stopAndSpawnNext();
 		wireExitDoor();
 	});
 
-	// Countdown then start
 	runCountdown(() => {
 		resetGameTimer();
 		setupClickHandler();
 	});
 
-	// Game loop
 	setupGameLoop(hud, () => {
 		restartButton.style.display = "block";
 	});
