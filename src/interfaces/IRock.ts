@@ -1,5 +1,5 @@
 import { Actor } from "excalibur";
-import { PlayerActor } from "../entities/Player/PlayerActor";
+import { PlayerActor } from "@/entities/Player/PlayerActor";
 
 export interface IRock {
 	actor: Actor;

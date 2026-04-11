@@ -1,5 +1,5 @@
-import { game } from "../game";
-import type { GameEventMap, IGameEvent } from "./GameEvents";
+import { game } from "@/game";
+import type { GameEventMap, IGameEvent } from "@/events/GameEvents";
 
 type Handler<T> = (data: T) => void;
 

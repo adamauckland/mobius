@@ -1,5 +1,5 @@
-import { rlSS } from "../resources/resources";
-import { tiles, Fence, GRID_COLS, GRID_ROWS } from "./tiledata";
+import { rlSS } from "@/resources/resources";
+import { tiles, Fence, GRID_COLS, GRID_ROWS } from "@/tiles/tiledata";
 
 /** Auto-tile fence sprites from roguelike sheet (wooden fence at rows 23-24, cols 45-51) */
 export function getFenceSprite(index: number) {

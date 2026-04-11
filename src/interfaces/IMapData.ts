@@ -1,4 +1,4 @@
-import { TileInfoType } from "../levels/TileInfoType";
+import { TileInfoType } from "@/levels/TileInfoType";
 
 export interface IMapData {
 	name: string;

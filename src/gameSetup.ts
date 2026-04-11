@@ -1,5 +1,5 @@
 import { TileMap, vec } from "excalibur";
-import { TileSheet, rlSS } from "./resources/resources";
+import { TileSheet, rlSS } from "@/resources/resources";
 import {
 	Tree,
 	Void,
@@ -15,50 +15,50 @@ import {
 	GRID_ROWS,
 	loadWorld,
 	customStartTile,
-} from "./tiles/tiledata";
-import { deserializeMap, deserializeProject } from "./levels/mapData";
-import { type IMapData } from "./interfaces/IMapData";
-import { player } from "./entities/Player/PlayerActor";
-import { game } from "./game";
-import { model } from "./model";
-import { initPathfinding } from "./ui/pathfinding";
+} from "@/tiles/tiledata";
+import { deserializeMap, deserializeProject } from "@/levels/mapData";
+import { type IMapData } from "@/interfaces/IMapData";
+import { player } from "@/entities/Player/PlayerActor";
+import { game } from "@/game";
+import { model } from "@/model";
+import { initPathfinding } from "@/ui/pathfinding";
 import {
 	activeEntry,
 	setupClickHandler,
 	replayAll,
 	stopAndSpawnNext,
 	setOnNewActivePlayer,
-} from "./entities/Player/playerManager";
+} from "@/entities/Player/playerManager";
 import {
 	spawnRocksAt,
 	spawnCollectablesAt,
 	spawnParcelsAt,
 	initWorldObjectsTileMap,
-} from "./entities/worldObjects";
-import { initBarriers, spawnBarriers, setupBarrierEvents } from "./entities/barriers";
-import { gameEventBus } from "./events/GameEventBus";
-import { spawnMovingBlocksAt } from "./entities/movingBlocks";
-import { spawnCritterGroupsAt } from "./entities/Critter/spawn";
-import { spawnMonstersAt, setOnPlayerKilled } from "./entities/monsters";
-import { sfxDeath, sfxLevelComplete, sfxExitDoorOpen } from "./audio/sounds";
-import { spawnDeathExplosion, spawnExitDoorReveal } from "./entities/lightTrail";
-import { getCritterCount } from "./entities/Critter/state";
+} from "@/entities/worldObjects";
+import { initBarriers, spawnBarriers, setupBarrierEvents } from "@/entities/barriers";
+import { gameEventBus } from "@/events/GameEventBus";
+import { spawnMovingBlocksAt } from "@/entities/movingBlocks";
+import { spawnCritterGroupsAt } from "@/entities/Critter/spawn";
+import { spawnMonstersAt, setOnPlayerKilled } from "@/entities/monsters";
+import { sfxDeath, sfxLevelComplete, sfxExitDoorOpen } from "@/audio/sounds";
+import { spawnDeathExplosion, spawnExitDoorReveal } from "@/entities/lightTrail";
+import { getCritterCount } from "@/entities/Critter/state";
 import {
 	setOnAllCrittersCollected,
 	resetAllCrittersCollectedFlag,
-} from "./entities/Critter/collection";
-import { getFenceSprite } from "./tiles/fenceSprites";
+} from "@/entities/Critter/collection";
+import { getFenceSprite } from "@/tiles/fenceSprites";
 import {
 	spawnTreeOverlays,
 	spawnGateOverlays,
 	spawnDropZoneOverlays,
 	spawnExitDoorOverlays,
-} from "./tiles/tileOverlays";
-import { createHUD } from "./ui/hud";
-import { runCountdown } from "./ui/countdown";
-import { resetGameTimer, setupGameLoop, startBonusCountdown } from "./gameLoop";
-import { initPackBrowser } from "./ui/packBrowser";
-import type { HUDRefs } from "./ui/hud";
+} from "@/tiles/tileOverlays";
+import { createHUD } from "@/ui/hud";
+import { runCountdown } from "@/ui/countdown";
+import { resetGameTimer, setupGameLoop, startBonusCountdown } from "@/gameLoop";
+import { initPackBrowser } from "@/ui/packBrowser";
+import type { HUDRefs } from "@/ui/hud";
 import type { Actor } from "excalibur";
 
 export { resetGameTimer };

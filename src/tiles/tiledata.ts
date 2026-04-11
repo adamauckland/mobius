@@ -1,4 +1,4 @@
-import type { IMapData } from "../interfaces/IMapData";
+import type { IMapData } from "@/interfaces/IMapData";
 
 // for tilemap creation, create tiles with a sprite info and
 // a collider setting for Graph parsing

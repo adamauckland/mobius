@@ -94,9 +94,9 @@ import {
   spawnParcelsAt,
   getParcels,
   PARCEL_SPRITES,
-} from "../entities/worldObjects";
-import { TILE_SIZE, GRID_COLS } from "../tiles/tiledata";
-import { setupTestWorld } from "./testWorld";
+} from "@/entities/worldObjects";
+import { TILE_SIZE, GRID_COLS } from "@/tiles/tiledata";
+import { setupTestWorld } from "@/__tests__/testWorld";
 
 describe("worldObjects", () => {
   beforeEach(() => {

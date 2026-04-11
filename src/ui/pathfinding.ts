@@ -15,9 +15,9 @@ import {
 	TILE_SIZE,
 	GRID_COLS,
 	GRID_ROWS,
-} from "../tiles/tiledata";
-import { PlayerActor } from "../entities/Player/PlayerActor";
-import { model } from "../model";
+} from "@/tiles/tiledata";
+import { PlayerActor } from "@/entities/Player/PlayerActor";
+import { model } from "@/model";
 import {
 	getRockAtTile,
 	pickUpRock,
@@ -25,9 +25,9 @@ import {
 	getParcelAtTile,
 	pickUpParcel,
 	dropParcel,
-} from "../entities/worldObjects";
-import { game } from "../game";
-import { dismountBlock } from "../entities/movingBlocks";
+} from "@/entities/worldObjects";
+import { game } from "@/game";
+import { dismountBlock } from "@/entities/movingBlocks";
 
 // create graph for dijkstra — deferred until initPathfinding so tiles are populated
 let myDijkstraGraph = new ExcaliburGraph();

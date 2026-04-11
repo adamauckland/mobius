@@ -1,5 +1,5 @@
 import { Actor } from "excalibur";
-import { game } from "../../game";
+import { game } from "@/game";
 import {
 	IDLE_LOOK_MIN_MS,
 	IDLE_LOOK_MAX_MS,
@@ -13,10 +13,10 @@ import {
 	BOUNCE_FREQ_FLEE,
 	BOUNCE_FREQ_IDLE,
 	BOUNCE_AMPLITUDE,
-} from "./SETTINGS";
-import { createCritterGraphics } from "./graphics";
-import type { ICritterGraphics } from "./types/ICritterGraphics";
-import { ICritter } from "./types/ICritter";
+} from "@/entities/Critter/SETTINGS";
+import { createCritterGraphics } from "@/entities/Critter/graphics";
+import type { ICritterGraphics } from "@/entities/Critter/types/ICritterGraphics";
+import { ICritter } from "@/entities/Critter/types/ICritter";
 
 interface BlinkState {
 	nextBlink: number;

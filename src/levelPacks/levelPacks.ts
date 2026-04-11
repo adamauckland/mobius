@@ -9,10 +9,10 @@ import {
 	limit,
 	serverTimestamp,
 } from "firebase/firestore";
-import { db } from "./firebase";
-import type { IProjectData } from "../interfaces/IProjectData";
-import { serializeProject, deserializeProject } from "../levels/mapData";
-import { ILevelPack } from "../interfaces/ILevelPack";
+import { db } from "@/levelPacks/firebase";
+import type { IProjectData } from "@/interfaces/IProjectData";
+import { serializeProject, deserializeProject } from "@/levels/mapData";
+import { ILevelPack } from "@/interfaces/ILevelPack";
 
 const PACKS_COLLECTION = "levelPacks";
 

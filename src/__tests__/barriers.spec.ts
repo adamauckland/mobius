@@ -71,12 +71,12 @@ import {
 	resetBarriers,
 	setupBarrierEvents,
 	teardownBarrierEvents,
-} from "../entities/barriers";
-import { tiles, Barrier, Switch } from "../tiles/tiledata";
-import { setupTestWorld } from "./testWorld";
-import { rebuildPathfinding } from "../ui/pathfinding";
-import { game } from "../game";
-import { gameEventBus } from "../events/GameEventBus";
+} from "@/entities/barriers";
+import { tiles, Barrier, Switch } from "@/tiles/tiledata";
+import { setupTestWorld } from "@/__tests__/testWorld";
+import { rebuildPathfinding } from "@/ui/pathfinding";
+import { game } from "@/game";
+import { gameEventBus } from "@/events/GameEventBus";
 
 describe("barriers", () => {
 	let mockTileMap: any;

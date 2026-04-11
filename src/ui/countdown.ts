@@ -8,9 +8,9 @@ import {
 	TextAlign,
 	BaseAlign,
 } from "excalibur";
-import { game } from "../game";
-import { Z_COUNTDOWN } from "./zIndex";
-import { sfxCountdownTick, sfxCountdownGo } from "../audio/sounds";
+import { game } from "@/game";
+import { Z_COUNTDOWN } from "@/ui/zIndex";
+import { sfxCountdownTick, sfxCountdownGo } from "@/audio/sounds";
 
 export function runCountdown(onGo: () => void) {
 	const countdownFont = new Font({

@@ -57,9 +57,9 @@ import {
   resetMonsters,
   updateMonsters,
   setOnPlayerKilled,
-} from "../entities/monsters";
-import { TILE_SIZE, GRID_COLS } from "../tiles/tiledata";
-import { setupTestWorld } from "./testWorld";
+} from "@/entities/monsters";
+import { TILE_SIZE, GRID_COLS } from "@/tiles/tiledata";
+import { setupTestWorld } from "@/__tests__/testWorld";
 
 describe("monsters", () => {
   beforeEach(() => {

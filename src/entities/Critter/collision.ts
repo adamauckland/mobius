@@ -7,9 +7,9 @@ import {
 	DropZone,
 	Fence,
 	TILE_SIZE,
-} from "../../tiles/tiledata";
-import { getRocks } from "../worldObjects";
-import { CRITTER_SIZE } from "./SETTINGS";
+} from "@/tiles/tiledata";
+import { getRocks } from "@/entities/worldObjects";
+import { CRITTER_SIZE } from "@/entities/Critter/SETTINGS";
 
 // --- Tile collision ---
 /** Check if a single tile index is blocked. */

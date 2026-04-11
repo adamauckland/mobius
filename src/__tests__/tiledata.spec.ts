@@ -21,8 +21,8 @@ import {
 	portalTileIndices,
 	dropZoneTileIndices,
 	customStartTile,
-} from "../tiles/tiledata";
-import { IMapData } from "../interfaces/IMapData";
+} from "@/tiles/tiledata";
+import { IMapData } from "@/interfaces/IMapData";
 
 describe("constants", () => {
 	it("has correct tile size", () => {

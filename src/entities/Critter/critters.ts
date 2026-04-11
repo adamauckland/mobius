@@ -5,12 +5,12 @@ import {
 	GRID_ROWS,
 	tiles,
 	OneWayGate,
-} from "../../tiles/tiledata";
-import { game } from "../../game";
-import { zFromY, Z_LAYER_PICKUP, Z_LAYER_SHADOW } from "../../ui/zIndex";
-import { playerEntries } from "../Player/playerManager";
-import { ICritter } from "./types/ICritter";
-import { ICritterGroup } from "./types/ICritterGroup";
+} from "@/tiles/tiledata";
+import { game } from "@/game";
+import { zFromY, Z_LAYER_PICKUP, Z_LAYER_SHADOW } from "@/ui/zIndex";
+import { playerEntries } from "@/entities/Player/playerManager";
+import { ICritter } from "@/entities/Critter/types/ICritter";
+import { ICritterGroup } from "@/entities/Critter/types/ICritterGroup";
 import {
 	CRITTER_SIZE,
 	CRITTERS_PER_GROUP,
@@ -24,12 +24,12 @@ import {
 	GATE_DIRECTION_VECTORS,
 	GATE_PUSH_SPEED,
 	WALL_RESTITUTION,
-} from "./SETTINGS";
-import { sfxCritterFlee } from "../../audio/sounds";
-import { critterGroups } from "./state";
-import { isTileBlocked } from "./collision";
-import { attachCritterAnimation } from "./animation";
-import { createShadowActor } from "./graphics";
+} from "@/entities/Critter/SETTINGS";
+import { sfxCritterFlee } from "@/audio/sounds";
+import { critterGroups } from "@/entities/Critter/state";
+import { isTileBlocked } from "@/entities/Critter/collision";
+import { attachCritterAnimation } from "@/entities/Critter/animation";
+import { createShadowActor } from "@/entities/Critter/graphics";
 
 function gatherPlayerPositions(): Vector[] {
 	const positions: Vector[] = [];

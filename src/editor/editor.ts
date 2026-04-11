@@ -1,14 +1,14 @@
-import tilesImgUrl from "../assets/tiles.png";
-import roguelikeImgUrl from "../assets/roguelike.png";
+import tilesImgUrl from "@/assets/tiles.png";
+import roguelikeImgUrl from "@/assets/roguelike.png";
 import {
 	createEmptyMap,
 	serializeProject,
 	deserializeProject,
-} from "./levels/mapData";
-import { type IProjectData } from "./interfaces/IProjectData";
-import { type IMapData } from "./interfaces/IMapData";
-import { GRID_COLS, GRID_ROWS, TILE_SIZE } from "./tiles/tiledata";
-import { publishPack } from "./levelPacks/levelPacks";
+} from "@/levels/mapData";
+import { type IProjectData } from "@/interfaces/IProjectData";
+import { type IMapData } from "@/interfaces/IMapData";
+import { GRID_COLS, GRID_ROWS, TILE_SIZE } from "@/tiles/tiledata";
+import { publishPack } from "@/levelPacks/levelPacks";
 
 // ---------------------------------------------------------------------------
 // Sprite helpers – draw directly from loaded PNGs
@@ -751,7 +751,15 @@ function onMouseDown(e: MouseEvent) {
 		mouseDown = true;
 		const [wx, wy] = screenToWorld(e.clientX, e.clientY);
 		const idx = worldToTile(wx, wy);
-		const paintable = ["grass", "tree", "void", "fence", "barrier", "eraser"];
+		const paintable = [
+			"grass",
+			"tree",
+			"void",
+			"fence",
+			"barrier",
+			"eraser",
+			"critter",
+		];
 		if (e.shiftKey && paintable.includes(selectedTool) && idx >= 0) {
 			rectAnchorTile = idx;
 			rectErasing = selectedTool === "eraser";
@@ -774,7 +782,15 @@ function onMouseMove(e: MouseEvent) {
 	}
 
 	// Drag-paint for paintable tools (skipped while previewing a rect)
-	const paintable = ["grass", "tree", "void", "fence", "barrier", "eraser"];
+	const paintable = [
+		"grass",
+		"tree",
+		"void",
+		"fence",
+		"barrier",
+		"eraser",
+		"critter",
+	];
 	if (
 		mouseDown &&
 		rectAnchorTile < 0 &&
