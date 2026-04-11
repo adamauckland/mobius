@@ -101,8 +101,13 @@ vi.mock("../entities/worldObjects", () => ({
 	tryCollectAtTile: vi.fn(),
 }));
 
-vi.mock("../entities/barriers", () => ({
-	tryActivateSwitch: vi.fn(),
+vi.mock("../events/GameEventBus", () => ({
+	gameEventBus: {
+		emit: vi.fn(),
+		dispatch: vi.fn(),
+		on: vi.fn(),
+		off: vi.fn(),
+	},
 }));
 
 const mockGetMovingBlockNear = vi.fn<(pos: unknown) => unknown>();
@@ -144,9 +149,9 @@ import {
 	dropRockAtTile,
 	tryCollectAtTile,
 } from "../entities/worldObjects";
-import { tryActivateSwitch } from "../entities/barriers";
 import { sfxOneWayGate, sfxPortal } from "../audio/sounds";
 import { model } from "../model";
+import { gameEventBus } from "../events/GameEventBus";
 
 function makePlayer() {
 	return new PlayerActor(
@@ -460,7 +465,17 @@ describe("PlayerActor moveToTile arrival callback", () => {
 
 		expect(model.movesRemaining).toBe(4);
 		expect(tryCollectAtTile).toHaveBeenCalledWith(30);
-		expect(tryActivateSwitch).toHaveBeenCalledWith(30);
+		expect(gameEventBus.emit).toHaveBeenCalledWith("switch:activate", {
+			tileIndex: 30,
+		});
+	});
+
+	it("does not emit switch:activate when player is a ghost", () => {
+		const player = makePlayer();
+		player.isGhost = true;
+		arriveAt(player, 30);
+
+		expect(gameEventBus.emit).not.toHaveBeenCalled();
 	});
 
 	it("auto-drops a parcel onto a matching DropZone underfoot", () => {

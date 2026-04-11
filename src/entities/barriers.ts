@@ -13,6 +13,7 @@ import { rebuildPathfinding } from "../ui/pathfinding";
 import { spawnLight } from "./lightTrail";
 import { sfxSwitch } from "../audio/sounds";
 import { IBarrierEntry } from "../interfaces/IBarrierEntry";
+import { gameEventBus } from "../events/GameEventBus";
 
 const barrierActors: IBarrierEntry[] = [];
 const switchActors = new Map<number, Actor>(); // tileIndex → Actor
@@ -88,13 +89,13 @@ export function resetBarriers() {
 	rebuildPathfinding();
 }
 
-/**
- * Called when the player lands on a tile.
- * If it is an un-activated Switch, open every Barrier in the same group.
- */
-export function tryActivateSwitch(tileIndex: number): boolean {
+// --- Event handlers ---
+
+/** Handle the switch:activate event. Validates the tile, performs visual
+ *  changes on the switch, and dispatches barrier:open for matching barriers. */
+function handleSwitchActivate({ tileIndex }: { tileIndex: number }) {
 	const tile = tiles[tileIndex];
-	if (!(tile instanceof Switch) || tile.activated) return false;
+	if (!(tile instanceof Switch) || tile.activated) return;
 
 	tile.activated = true;
 	const { groupId } = tile;
@@ -119,6 +120,13 @@ export function tryActivateSwitch(tileIndex: number): boolean {
 		}
 	}
 
+	// Dispatch barrier:open (not recorded — it cascades from switch:activate)
+	gameEventBus.dispatch("barrier:open", { groupId });
+}
+
+/** Handle the barrier:open event. Opens all barriers in the group,
+ *  animates them away, and rebuilds pathfinding. */
+function handleBarrierOpen({ groupId }: { groupId: number }) {
 	// Open every barrier in this group
 	for (let i = 0; i < tiles.length; i++) {
 		const t = tiles[i];
@@ -140,6 +148,25 @@ export function tryActivateSwitch(tileIndex: number): boolean {
 
 	// Rebuild pathfinding so newly-opened tiles are walkable
 	rebuildPathfinding();
+}
 
+/** Subscribe barrier event handlers to the game event bus. */
+let eventsSetUp = false;
+export function setupBarrierEvents() {
+	if (eventsSetUp) return;
+	eventsSetUp = true;
+	gameEventBus.on("switch:activate", handleSwitchActivate);
+	gameEventBus.on("barrier:open", handleBarrierOpen);
+}
+
+/**
+ * Convenience function: check if tileIndex is an un-activated Switch
+ * and emit the switch:activate event if so.
+ * Returns true if the event was emitted.
+ */
+export function tryActivateSwitch(tileIndex: number): boolean {
+	const tile = tiles[tileIndex];
+	if (!(tile instanceof Switch) || tile.activated) return false;
+	gameEventBus.emit("switch:activate", { tileIndex });
 	return true;
 }

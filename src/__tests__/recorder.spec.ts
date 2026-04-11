@@ -110,6 +110,7 @@ describe("GameRecorder", () => {
 					{ timestamp: 100, targetTileIndex: 5 },
 					{ timestamp: 200, targetTileIndex: 10 },
 				],
+				gameEvents: [],
 			};
 			const onClick = vi.fn();
 			recorder.startReplay(recording, onClick);
@@ -125,6 +126,7 @@ describe("GameRecorder", () => {
 					{ timestamp: 0, targetTileIndex: 7 },
 					{ timestamp: 100, targetTileIndex: 14 },
 				],
+				gameEvents: [],
 			};
 			const onClick = vi.fn();
 			recorder.startReplay(recording, onClick);
@@ -139,6 +141,7 @@ describe("GameRecorder", () => {
 		it("sets isReplaying to false after last event + buffer", () => {
 			const recording: IGameRecording = {
 				events: [{ timestamp: 100, targetTileIndex: 5 }],
+				gameEvents: [],
 			};
 			recorder.startReplay(recording, vi.fn());
 			expect(recorder.isReplaying).toBe(true);
@@ -155,6 +158,7 @@ describe("GameRecorder", () => {
 					{ timestamp: 100, targetTileIndex: 5 },
 					{ timestamp: 200, targetTileIndex: 10 },
 				],
+				gameEvents: [],
 			};
 			recorder.startReplay(recording, vi.fn());
 			expect(scheduledCallbacks.length).toBeGreaterThan(0);
@@ -166,6 +170,7 @@ describe("GameRecorder", () => {
 		it("starting a new replay stops the previous one", () => {
 			const recording: IGameRecording = {
 				events: [{ timestamp: 100, targetTileIndex: 5 }],
+				gameEvents: [],
 			};
 			recorder.startReplay(recording, vi.fn());
 			// Second replay should clear previous schedules
@@ -174,7 +179,7 @@ describe("GameRecorder", () => {
 		});
 
 		it("handles empty recordings", () => {
-			const recording: IGameRecording = { events: [] };
+			const recording: IGameRecording = { events: [], gameEvents: [] };
 			recorder.startReplay(recording, vi.fn());
 			expect(recorder.isReplaying).toBe(true);
 			// Only the end callback should be scheduled

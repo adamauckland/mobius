@@ -35,7 +35,8 @@ import {
 	spawnParcelsAt,
 	initWorldObjectsTileMap,
 } from "./entities/worldObjects";
-import { initBarriers, spawnBarriers } from "./entities/barriers";
+import { initBarriers, spawnBarriers, setupBarrierEvents } from "./entities/barriers";
+import { gameEventBus } from "./events/GameEventBus";
 import { spawnMovingBlocksAt } from "./entities/movingBlocks";
 import { spawnMonstersAt, setOnPlayerKilled } from "./entities/monsters";
 import { sfxDeath, sfxLevelComplete } from "./audio/sounds";
@@ -243,13 +244,15 @@ function startGame(customMapData: IMapData) {
 	game.currentScene.camera.strategy.radiusAroundActor(player, cameraRadius);
 	game.add(player);
 
-	// Start recording
+	// Start recording (clicks + game events)
 	activeEntry().recorder.startRecording();
+	gameEventBus.startRecording();
 	model.isRecording = true;
 
-	// Spawn barriers and switches
+	// Spawn barriers and switches, subscribe event handlers
 	initBarriers(tilemap);
 	spawnBarriers();
+	setupBarrierEvents();
 
 	// Spawn entities from map data
 	spawnRocksAt(customMapData.rocks);

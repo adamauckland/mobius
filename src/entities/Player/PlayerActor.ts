@@ -31,8 +31,8 @@ import {
 	dropParcelAtTile,
 	tryCollectAtTile,
 } from "../worldObjects";
-import { tryActivateSwitch } from "../barriers";
 import { zFromY, Z_LAYER_PLAYER } from "../../ui/zIndex";
+import { gameEventBus } from "../../events/GameEventBus";
 import { sfxOneWayGate, sfxPortal } from "../../audio/sounds";
 import { game } from "../../game";
 import type { MovingBlock } from "../movingBlocks";
@@ -145,6 +145,8 @@ export class PlayerActor extends Actor {
 	carriedParcel: Parcel | null = null;
 	onArriveAtTile: (() => void) | null = null; // called when path completes
 	ridingBlock: MovingBlock | null = null;
+	/** Ghost players replay visually but do not emit game events. */
+	isGhost = false;
 	private idleGraphic: Graphic;
 	private walkGraphic: Graphic;
 
@@ -251,7 +253,11 @@ export class PlayerActor extends Actor {
 		model.movesRemaining--;
 		tryCollectAtTile(node);
 		this.tryAutoDropParcel(node);
-		tryActivateSwitch(node);
+		// Ghost players don't emit game events — their switch activations
+		// are replayed from the recorded event timeline.
+		if (!this.isGhost) {
+			gameEventBus.emit("switch:activate", { tileIndex: node });
+		}
 		this.tryFireArrivalCallback();
 		this.dropCarriedAtPortal(node);
 		this.tryHandlePortal(node);

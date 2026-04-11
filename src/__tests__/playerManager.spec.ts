@@ -134,6 +134,21 @@ vi.mock("../entities/movingBlocks", () => ({
 	mountBlock: vi.fn(),
 }));
 
+vi.mock("../events/GameEventBus", () => ({
+	gameEventBus: {
+		emit: vi.fn(),
+		dispatch: vi.fn(),
+		on: vi.fn(),
+		off: vi.fn(),
+		startRecording: vi.fn(),
+		stopRecording: vi.fn(() => []),
+		replayEvents: vi.fn(),
+		stopReplay: vi.fn(),
+		reset: vi.fn(),
+		isRecording: false,
+	},
+}));
+
 vi.mock("../gameSetup", () => ({
 	resetGameTimer: vi.fn(),
 }));
@@ -151,6 +166,7 @@ import { resetMonsters } from "../entities/monsters";
 import { resetBarriers } from "../entities/barriers";
 import { resetMovingBlocks } from "../entities/movingBlocks";
 import { game } from "../game";
+import { gameEventBus } from "../events/GameEventBus";
 
 describe("playerManager", () => {
 	beforeEach(() => {
@@ -162,11 +178,12 @@ describe("playerManager", () => {
 			expect(playerEntries.length).toBeGreaterThanOrEqual(1);
 		});
 
-		it("each entry has player, recorder, and recording", () => {
+		it("each entry has player, recorder, recording, and spawnTileIndex", () => {
 			const entry = playerEntries[0];
 			expect(entry.player).toBeDefined();
 			expect(entry.recorder).toBeDefined();
 			expect(entry).toHaveProperty("recording");
+			expect(entry).toHaveProperty("spawnTileIndex");
 		});
 	});
 
@@ -193,14 +210,17 @@ describe("playerManager", () => {
 			expect(resetMonsters).toHaveBeenCalled();
 		});
 
-		it("resets all player positions to start", () => {
+		it("resets each player to their own spawn position", () => {
 			replayAll();
 			for (const entry of playerEntries) {
-				expect(entry.player.pos.x).toBe(START_POS_X);
-				expect(entry.player.pos.y).toBe(START_POS_Y);
-				expect(entry.player.logicalTileIndex).toBe(START_TILE_INDEX);
-				expect(entry.player.currentMoveTileIndex).toBe(START_TILE_INDEX);
-				expect(entry.player.previousTileIndex).toBe(START_TILE_INDEX);
+				const idx = entry.spawnTileIndex;
+				const expectedX = (idx % 50) * 16 + 8; // GRID_COLS=50, TILE_SIZE=16
+				const expectedY = Math.floor(idx / 50) * 16 + 8;
+				expect(entry.player.pos.x).toBe(expectedX);
+				expect(entry.player.pos.y).toBe(expectedY);
+				expect(entry.player.logicalTileIndex).toBe(idx);
+				expect(entry.player.currentMoveTileIndex).toBe(idx);
+				expect(entry.player.previousTileIndex).toBe(idx);
 			}
 		});
 
@@ -222,6 +242,17 @@ describe("playerManager", () => {
 			playerEntries[0].player.graphics.isVisible = false;
 			replayAll();
 			expect(playerEntries[0].player.graphics.isVisible).toBe(true);
+		});
+
+		it("stops event bus replay before resetting", () => {
+			replayAll();
+			expect(gameEventBus.stopReplay).toHaveBeenCalled();
+		});
+
+		it("marks entries without recordings as not ghost", () => {
+			replayAll();
+			// The first (and only) entry has no recording, so should not be a ghost
+			expect(playerEntries[0].player.isGhost).toBe(false);
 		});
 	});
 

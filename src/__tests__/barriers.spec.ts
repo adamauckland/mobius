@@ -37,7 +37,14 @@ vi.mock("../resources/resources", () => ({
 }));
 
 vi.mock("../game", () => ({
-	game: { add: vi.fn() },
+	game: {
+		add: vi.fn(),
+		clock: {
+			now: () => 0,
+			schedule: vi.fn(),
+			clearSchedule: vi.fn(),
+		},
+	},
 }));
 
 vi.mock("../zIndex", () => ({
@@ -63,11 +70,13 @@ import {
 	spawnBarriers,
 	resetBarriers,
 	tryActivateSwitch,
+	setupBarrierEvents,
 } from "../entities/barriers";
 import { tiles, Barrier, Switch } from "../tiles/tiledata";
 import { setupTestWorld } from "./testWorld";
 import { rebuildPathfinding } from "../ui/pathfinding";
 import { game } from "../game";
+import { gameEventBus } from "../events/GameEventBus";
 
 describe("barriers", () => {
 	let mockTileMap: any;
@@ -75,12 +84,14 @@ describe("barriers", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		setupTestWorld();
+		gameEventBus.reset();
 
 		// Create a mock tilemap that mirrors the tiles array with a solid property
 		mockTileMap = {
 			tiles: tiles.map((t) => ({ solid: t.collider })),
 		};
 		initBarriers(mockTileMap);
+		setupBarrierEvents();
 	});
 
 	describe("spawnBarriers", () => {
@@ -162,6 +173,69 @@ describe("barriers", () => {
 			}
 
 			expect(rebuildPathfinding).toHaveBeenCalled();
+		});
+	});
+
+	describe("event-driven activation", () => {
+		it("switch:activate event triggers switch and barrier opening", () => {
+			spawnBarriers();
+			const switchIdx = tiles.findIndex((t) => t instanceof Switch);
+			if (switchIdx === -1) return;
+
+			const switchTile = tiles[switchIdx] as Switch;
+			const groupId = switchTile.groupId;
+
+			// Emit the event directly (simulating what a player would do)
+			gameEventBus.emit("switch:activate", { tileIndex: switchIdx });
+
+			expect(switchTile.activated).toBe(true);
+
+			for (let i = 0; i < tiles.length; i++) {
+				const t = tiles[i];
+				if (t instanceof Barrier && t.groupId === groupId) {
+					expect(t.collider).toBe(false);
+				}
+			}
+		});
+
+		it("dispatch also triggers handlers (for replay)", () => {
+			spawnBarriers();
+			const switchIdx = tiles.findIndex((t) => t instanceof Switch);
+			if (switchIdx === -1) return;
+
+			const switchTile = tiles[switchIdx] as Switch;
+
+			// dispatch (used by replay) should also trigger the handler
+			gameEventBus.dispatch("switch:activate", { tileIndex: switchIdx });
+
+			expect(switchTile.activated).toBe(true);
+		});
+
+		it("switch:activate on non-switch tile is a no-op", () => {
+			spawnBarriers();
+			const grassIdx = tiles.findIndex(
+				(t) => !(t instanceof Switch) && !(t instanceof Barrier),
+			);
+
+			// Should not throw
+			gameEventBus.emit("switch:activate", { tileIndex: grassIdx });
+
+			// Pathfinding should not have been rebuilt (no barrier opened)
+			expect(rebuildPathfinding).not.toHaveBeenCalled();
+		});
+
+		it("emit records the event when recording is active", () => {
+			spawnBarriers();
+			const switchIdx = tiles.findIndex((t) => t instanceof Switch);
+			if (switchIdx === -1) return;
+
+			gameEventBus.startRecording();
+			gameEventBus.emit("switch:activate", { tileIndex: switchIdx });
+			const events = gameEventBus.stopRecording();
+
+			expect(events).toHaveLength(1);
+			expect(events[0].type).toBe("switch:activate");
+			expect(events[0].data).toEqual({ tileIndex: switchIdx });
 		});
 	});
 });

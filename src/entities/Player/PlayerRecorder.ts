@@ -35,11 +35,11 @@ export class PlayerRecorder {
 
 	stopRecording(): IGameRecording {
 		this._isRecording = false;
-		return { events: [...this.events] };
+		return { events: [...this.events], gameEvents: [] };
 	}
 
 	getRecording(): IGameRecording {
-		return { events: [...this.events] };
+		return { events: [...this.events], gameEvents: [] };
 	}
 
 	startReplay(

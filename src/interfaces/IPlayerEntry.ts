@@ -6,4 +6,6 @@ export interface IPlayerEntry {
 	player: PlayerActor;
 	recorder: PlayerRecorder;
 	recording: IGameRecording | null;
+	/** The tile index where this player was spawned (used to reset on rewind). */
+	spawnTileIndex: number;
 }
