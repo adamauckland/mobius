@@ -137,6 +137,10 @@ export function sfxCountdownGo() {
 	playArpeggio([220, 330, 440], 0.08, "square", 0.15);
 }
 
+export function sfxCritterFlee() {
+	playArpeggio([900, 700], 0.06, "triangle", 0.08);
+}
+
 // --- Looping platform hum ---
 
 let platformOsc: OscillatorNode | null = null;

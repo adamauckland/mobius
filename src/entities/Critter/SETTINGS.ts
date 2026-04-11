@@ -32,7 +32,8 @@ export const DAMPING = 0.92;
 /** Visual bounce amplitude and frequency */
 export const BOUNCE_AMPLITUDE = 1.5; // px
 
-export const BOUNCE_FREQ = 0.008; // radians per ms
+export const BOUNCE_FREQ_FLEE = 0.016; // radians per ms
+export const BOUNCE_FREQ_IDLE = 0.008; // radians per ms
 
 /** Speed at which a one-way gate pushes a critter (px/s) */
 export const GATE_PUSH_SPEED = 400;
@@ -42,3 +43,20 @@ export const GATE_DIRECTION_VECTORS: Record<string, [number, number]> = {
 	left: [-1, 0],
 	right: [1, 0],
 };
+
+// --- Graphics ---
+export const BLINK_HALF_DURATION = 40; // ms per half-open transition
+
+export const BLINK_CLOSED_DURATION = 60; // ms eyes stay fully closed
+
+export const BLINK_TOTAL_DURATION =
+	BLINK_HALF_DURATION * 2 + BLINK_CLOSED_DURATION;
+export const EYE_BASE_LEFT_X = -2;
+export const EYE_BASE_RIGHT_X = 1;
+export const EYE_BASE_Y = -1;
+export const EYE_SHIFT_MAX = 1; // max px the eyes shift toward movement direction
+
+export const IDLE_LOOK_DIRECTIONS = [-EYE_SHIFT_MAX, 0, EYE_SHIFT_MAX]; // left, center, right
+
+export const IDLE_LOOK_MIN_MS = 800;
+export const IDLE_LOOK_MAX_MS = 2500;

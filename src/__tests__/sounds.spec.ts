@@ -135,6 +135,14 @@ describe("sound effects", () => {
 		expect(mockOscillators).toHaveLength(4);
 	});
 
+	it("sfxCritterFlee plays a descending 2-note arpeggio", async () => {
+		const { sfxCritterFlee } = await import("../audio/sounds");
+		sfxCritterFlee();
+		vi.advanceTimersByTime(200);
+		expect(mockOscillators).toHaveLength(2);
+		expect(mockOscillators[0].type).toBe("triangle");
+	});
+
 	it("sfxPortal creates a frequency sweep", async () => {
 		const { sfxPortal } = await import("../audio/sounds");
 		sfxPortal();

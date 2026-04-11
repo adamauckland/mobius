@@ -10,4 +10,5 @@ export interface ICritter {
 	groupIndex: number; // which group this critter belongs to
 	collected: boolean;
 	onGate: boolean;
+	fleeing: boolean;
 }

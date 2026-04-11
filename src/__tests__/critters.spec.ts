@@ -102,6 +102,7 @@ vi.mock("../ui/zIndex", () => ({
 
 vi.mock("../audio/sounds", () => ({
 	sfxCollect: vi.fn(),
+	sfxCritterFlee: vi.fn(),
 	sfxPickUpRock: vi.fn(),
 	sfxDropRock: vi.fn(),
 	sfxPickUpParcel: vi.fn(),
@@ -124,17 +125,15 @@ vi.mock("../ui/pathfinding", () => ({
 	rebuildPathfinding: vi.fn(),
 }));
 
-import {
-	spawnCritterGroupsAt,
-	updateCritters,
-	tryCollectCritters,
-	resetCritters,
-} from "../entities/Critter/critters";
+import { sfxCritterFlee } from "../audio/sounds";
+import { updateCritters, resetCritters } from "../entities/Critter/critters";
+import { tryCollectCritters } from "../entities/Critter/collection";
+import { spawnCritterGroupsAt } from "../entities/Critter/spawn";
 import {
 	getCritterGroups,
 	getCritterCount,
 	clearCritters,
-} from "../entities/Critter/critterState";
+} from "../entities/Critter/state";
 import { playerEntries } from "../entities/Player/playerManager";
 import { TILE_SIZE, GRID_COLS, tiles, Fence } from "../tiles/tiledata";
 import { setupTestWorld } from "./testWorld";
@@ -243,6 +242,41 @@ describe("critters", () => {
 				// Critter center should stay to the right of the fence tile
 				expect(c.position.x).toBeGreaterThanOrEqual(fenceRightEdge - 1);
 			}
+		});
+
+		it("plays flee sound when critter starts fleeing", () => {
+			spawnCritterGroupsAt([100]);
+			const groups = getCritterGroups();
+			const group = groups[groups.length - 1];
+			const critter = group.critters[0];
+
+			// Place player right on top of the critter to trigger flee
+			playerEntries[0].player.pos.x = critter.position.x;
+			playerEntries[0].player.pos.y = critter.position.y;
+
+			updateCritters(16);
+			expect(sfxCritterFlee).toHaveBeenCalled();
+		});
+
+		it("does not replay flee sound if already fleeing", () => {
+			spawnCritterGroupsAt([100]);
+			const groups = getCritterGroups();
+			const group = groups[groups.length - 1];
+			const critter = group.critters[0];
+
+			playerEntries[0].player.pos.x = critter.position.x;
+			playerEntries[0].player.pos.y = critter.position.y;
+
+			updateCritters(16);
+			(sfxCritterFlee as ReturnType<typeof vi.fn>).mockClear();
+
+			// Keep player nearby — critter is still fleeing
+			playerEntries[0].player.pos.x = critter.position.x;
+			playerEntries[0].player.pos.y = critter.position.y;
+			updateCritters(16);
+
+			// Sound should not play again since critter was already fleeing
+			expect(sfxCritterFlee).not.toHaveBeenCalled();
 		});
 
 		it("keeps critters within world bounds", () => {
