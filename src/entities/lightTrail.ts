@@ -104,6 +104,36 @@ const DEATH_END_PALETTE = [
 	"#ff6622",
 ];
 
+const COLLECT_BEGIN_PALETTE = [
+	"#44eeff",
+	"#66ffff",
+	"#22ddee",
+	"#88ffee",
+	"#44ddff",
+];
+const COLLECT_END_PALETTE = [
+	"#ffffff",
+	"#eeffff",
+	"#ccffff",
+	"#ddeeff",
+	"#ffffee",
+];
+
+const EXIT_DOOR_BEGIN_PALETTE = [
+	"#ffee44",
+	"#ffdd22",
+	"#ffcc00",
+	"#ffe066",
+	"#ffbb00",
+];
+const EXIT_DOOR_END_PALETTE = [
+	"#00e676",
+	"#44ff88",
+	"#22dd66",
+	"#66ffaa",
+	"#00cc55",
+];
+
 const REWIND_BEGIN_PALETTE = [
 	"#66bbff",
 	"#4488ff",
@@ -233,6 +263,93 @@ export function spawnRewindPixels(from: Vector, to: Vector) {
 				...sharedConfig,
 				beginColor: Color.fromHex(REWIND_BEGIN_PALETTE[i]),
 				endColor: Color.fromHex(REWIND_END_PALETTE[i]),
+			},
+		});
+		game.add(emitter);
+		emitter.emitParticles(perEmitter);
+		emitters.push(emitter);
+	}
+
+	game.clock.schedule(() => {
+		for (const e of emitters) e.kill();
+	}, LIFE_MS + 100);
+}
+
+/**
+ * Spawn a golden-green starburst when an exit door is revealed.
+ */
+export function spawnExitDoorReveal(pos: Vector) {
+	const PARTICLE_COUNT = 120;
+	const LIFE_MS = 1200;
+
+	const emitter = new ParticleEmitter({
+		pos: pos.clone(),
+		z: Z_RIPPLE + 1,
+		emitterType: EmitterType.Circle,
+		radius: 2,
+		isEmitting: false,
+		particle: {
+			life: LIFE_MS,
+			fade: true,
+			beginColor: Color.fromHex(EXIT_DOOR_BEGIN_PALETTE[0]),
+			endColor: Color.fromHex(EXIT_DOOR_END_PALETTE[0]),
+			minSize: 3,
+			maxSize: 7,
+			minSpeed: 30,
+			maxSpeed: 80,
+			minAngle: 0,
+			maxAngle: Math.PI * 2,
+		},
+	});
+
+	game.add(emitter);
+	emitColouredBurst(
+		emitter,
+		PARTICLE_COUNT,
+		EXIT_DOOR_BEGIN_PALETTE,
+		EXIT_DOOR_END_PALETTE,
+	);
+	game.clock.schedule(() => emitter.kill(), LIFE_MS + 100);
+}
+
+/**
+ * Spawn a burst of cyan pixels from a critter that get sucked into the player.
+ * Uses GPU emitter with focus acceleration for a fast, satisfying collect feel.
+ */
+export function spawnCollectBurst(from: Vector, to: Vector) {
+	const PARTICLE_COUNT = 60;
+	const LIFE_MS = 800;
+	const SPAWN_RADIUS = 20;
+
+	const focus = to.clone();
+	const sharedConfig = {
+		life: LIFE_MS,
+		fade: true,
+		startSize: 2,
+		endSize: 1,
+		minSpeed: 30,
+		maxSpeed: 60,
+		minAngle: 0,
+		maxAngle: Math.PI * 2,
+		focus,
+		focusAccel: 2000,
+	};
+
+	const emitters: GpuParticleEmitter[] = [];
+	const perEmitter = Math.ceil(PARTICLE_COUNT / COLLECT_BEGIN_PALETTE.length);
+
+	for (let i = 0; i < COLLECT_BEGIN_PALETTE.length; i++) {
+		const emitter = new GpuParticleEmitter({
+			pos: from.clone(),
+			z: Z_RIPPLE + 1,
+			emitterType: EmitterType.Circle,
+			radius: SPAWN_RADIUS,
+			isEmitting: false,
+			maxParticles: perEmitter,
+			particle: {
+				...sharedConfig,
+				beginColor: Color.fromHex(COLLECT_BEGIN_PALETTE[i]),
+				endColor: Color.fromHex(COLLECT_END_PALETTE[i]),
 			},
 		});
 		game.add(emitter);

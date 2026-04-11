@@ -22,7 +22,7 @@ import {
 	dropZoneTileIndices,
 	customStartTile,
 } from "../tiles/tiledata";
-import { type IMapData } from "../levels/IMapData";
+import { IMapData } from "../interfaces/IMapData";
 
 describe("constants", () => {
 	it("has correct tile size", () => {
@@ -166,6 +166,7 @@ describe("loadWorld", () => {
 			monsters: [],
 			movingBlocks: [],
 			timeLimit: 60,
+			critters: [],
 		};
 		loadWorld(map);
 
@@ -202,6 +203,7 @@ describe("loadWorld", () => {
 			monsters: [],
 			movingBlocks: [],
 			timeLimit: 60,
+			critters: [],
 		};
 		loadWorld(map);
 		expect(portalTileIndices).toEqual([1, 2]);
@@ -225,6 +227,7 @@ describe("loadWorld", () => {
 			monsters: [],
 			movingBlocks: [],
 			timeLimit: 60,
+			critters: [],
 		};
 		loadWorld(map);
 		expect(dropZoneTileIndices).toEqual([1, 2]);
@@ -248,6 +251,7 @@ describe("loadWorld", () => {
 			monsters: [],
 			movingBlocks: [],
 			timeLimit: 60,
+			critters: [],
 		};
 		loadWorld(map);
 		expect(customStartTile).toBe(3);
@@ -266,6 +270,7 @@ describe("loadWorld", () => {
 			monsters: [],
 			movingBlocks: [],
 			timeLimit: 60,
+			critters: [],
 		};
 		loadWorld(map);
 		expect(tiles[0]).toBeInstanceOf(Tree);

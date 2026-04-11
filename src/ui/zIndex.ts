@@ -6,6 +6,7 @@
 const LAYER_SCALE = 10;
 
 // Intra-tile layer offsets (background/grass is the tilemap itself at z=0)
+export const Z_LAYER_SHADOW = 0;
 export const Z_LAYER_TREE = 1;
 export const Z_PLAYER_BACKGROUND_MOVER = 2;
 export const Z_LAYER_PLAYER = 3;

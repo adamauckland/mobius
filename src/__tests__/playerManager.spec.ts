@@ -48,6 +48,18 @@ vi.mock("excalibur", () => {
 		static fromHex() {
 			return new MockColor();
 		}
+		static fromRGB() {
+			return new MockColor();
+		}
+	}
+	class MockGraphicsGroup {
+		members: any[];
+		constructor(options?: any) {
+			this.members = options?.members ?? [];
+		}
+	}
+	function mockVec(x: number, y: number) {
+		return new MockVector(x, y);
 	}
 	class MockEngine {}
 	return {
@@ -56,6 +68,8 @@ vi.mock("excalibur", () => {
 		Circle: MockCircle,
 		Polygon: MockPolygon,
 		Color: MockColor,
+		GraphicsGroup: MockGraphicsGroup,
+		vec: mockVec,
 		Engine: MockEngine,
 		EasingFunctions: { Linear: "linear" },
 		ScreenElement: MockActor,
