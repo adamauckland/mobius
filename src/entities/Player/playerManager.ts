@@ -138,7 +138,7 @@ export function replayAll() {
 		// but their game events come from the recorded timeline.
 		entry.player.isGhost = !!entry.recording;
 		if (entry.recording) {
-			entry.recorder.startReplay(entry.recording, (tileIndex) => {
+			entry.recorder.startReplay(entry.recording.events, (tileIndex) => {
 				handleTileClick(tileIndex, entry.player);
 			});
 			gameEventBus.replayEvents(entry.recording.gameEvents);
@@ -237,8 +237,10 @@ export function stopAndSpawnNext(targetTileIndex?: number) {
 	}
 
 	// Stop recording the active player and save its recording (clicks + game events)
-	active.recording = active.recorder.stopRecording();
-	active.recording.gameEvents = gameEventBus.stopRecording();
+	active.recording = {
+		events: active.recorder.stopRecording(),
+		gameEvents: gameEventBus.stopRecording(),
+	};
 	model.isRecording = false;
 
 	// Create a new player at the spawn position

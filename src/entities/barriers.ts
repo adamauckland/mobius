@@ -151,22 +151,13 @@ function handleBarrierOpen({ groupId }: { groupId: number }) {
 }
 
 /** Subscribe barrier event handlers to the game event bus. */
-let eventsSetUp = false;
 export function setupBarrierEvents() {
-	if (eventsSetUp) return;
-	eventsSetUp = true;
 	gameEventBus.on("switch:activate", handleSwitchActivate);
 	gameEventBus.on("barrier:open", handleBarrierOpen);
 }
 
-/**
- * Convenience function: check if tileIndex is an un-activated Switch
- * and emit the switch:activate event if so.
- * Returns true if the event was emitted.
- */
-export function tryActivateSwitch(tileIndex: number): boolean {
-	const tile = tiles[tileIndex];
-	if (!(tile instanceof Switch) || tile.activated) return false;
-	gameEventBus.emit("switch:activate", { tileIndex });
-	return true;
+/** Unsubscribe barrier event handlers from the game event bus. */
+export function teardownBarrierEvents() {
+	gameEventBus.off("switch:activate", handleSwitchActivate);
+	gameEventBus.off("barrier:open", handleBarrierOpen);
 }

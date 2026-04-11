@@ -2,7 +2,6 @@
 
 import { game } from "../../game";
 import { IClickEvent } from "../../interfaces/IClickEvent";
-import { IGameRecording } from "../../interfaces/IGameRecording";
 
 export class PlayerRecorder {
 	private events: IClickEvent[] = [];
@@ -33,23 +32,23 @@ export class PlayerRecorder {
 		});
 	}
 
-	stopRecording(): IGameRecording {
+	stopRecording(): IClickEvent[] {
 		this._isRecording = false;
-		return { events: [...this.events], gameEvents: [] };
+		return [...this.events];
 	}
 
-	getRecording(): IGameRecording {
-		return { events: [...this.events], gameEvents: [] };
+	getRecording(): IClickEvent[] {
+		return [...this.events];
 	}
 
 	startReplay(
-		recording: IGameRecording,
+		events: IClickEvent[],
 		onClickTile: (tileIndex: number) => void,
 	) {
 		this.stopReplay();
 		this._isReplaying = true;
 
-		for (const event of recording.events) {
+		for (const event of events) {
 			const id = game.clock.schedule(() => {
 				onClickTile(event.targetTileIndex);
 			}, event.timestamp);
@@ -58,8 +57,8 @@ export class PlayerRecorder {
 
 		// end replay after the last event + a buffer for movement to finish
 		const lastTime =
-			recording.events.length > 0
-				? recording.events[recording.events.length - 1].timestamp
+			events.length > 0
+				? events[events.length - 1].timestamp
 				: 0;
 		const endId = game.clock.schedule(() => {
 			this._isReplaying = false;

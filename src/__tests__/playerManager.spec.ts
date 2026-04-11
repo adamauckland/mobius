@@ -139,7 +139,6 @@ vi.mock("../entities/monsters", () => ({
 
 vi.mock("../entities/barriers", () => ({
 	resetBarriers: vi.fn(),
-	tryActivateSwitch: vi.fn(),
 }));
 
 vi.mock("../entities/movingBlocks", () => ({

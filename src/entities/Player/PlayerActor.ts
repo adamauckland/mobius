@@ -21,6 +21,7 @@ import {
 	Tree,
 	Fence,
 	Barrier,
+	Switch,
 	DropZone,
 } from "../../tiles/tiledata";
 import type { Direction } from "../../tiles/tiledata";
@@ -258,9 +259,7 @@ export class PlayerActor extends Actor {
 		model.movesRemaining--;
 		tryCollectAtTile(node);
 		this.tryAutoDropParcel(node);
-		// Ghost players don't emit game events — their switch activations
-		// are replayed from the recorded event timeline.
-		if (!this.isGhost) {
+		if (!this.isGhost && tiles[node] instanceof Switch) {
 			gameEventBus.emit("switch:activate", { tileIndex: node });
 		}
 		this.tryFireArrivalCallback();
