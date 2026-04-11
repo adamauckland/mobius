@@ -3,6 +3,8 @@ import { game } from "./game";
 import { model } from "./model";
 import { updateMovingBlocks } from "./entities/movingBlocks";
 import { updateMonsters } from "./entities/monsters";
+import { updateCritters } from "./entities/Critter/critters";
+import { tryCollectCritters } from "./entities/Critter/collection";
 import { getScore, addScore } from "./entities/worldObjects";
 import { sfxHeartbeat } from "./audio/sounds";
 import { spawnDeathExplosion } from "./entities/lightTrail";
@@ -71,6 +73,8 @@ export function setupGameLoop(hud: HUDRefs, onTimeUp?: () => void) {
 		if (model.gameOver) return;
 		updateMovingBlocks(evt.elapsed);
 		updateMonsters(evt.elapsed);
+		updateCritters(evt.elapsed);
+		tryCollectCritters();
 		elapsedGameTime += evt.elapsed;
 
 		if (model.timeLimit > 0) {

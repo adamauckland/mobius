@@ -15,6 +15,7 @@ import { model } from "../../model";
 import { game } from "../../game";
 import { handleTileClick } from "../../ui/pathfinding";
 import { resetRocks, resetParcels } from "../worldObjects";
+import { resetCritters } from "../Critter/critters";
 import { resetMonsters } from "../monsters";
 import { resetBarriers } from "../barriers";
 import { resetGameTimer } from "../../gameLoop";
@@ -106,6 +107,7 @@ export function replayAll() {
 	resetBarriers();
 	resetMovingBlocks();
 	resetMonsters();
+	resetCritters();
 	resetGameTimer();
 	gameEventBus.stopReplay();
 	for (const entry of playerEntries) {
@@ -154,6 +156,7 @@ export function timeRewind() {
 	resetBarriers();
 	resetMovingBlocks();
 	resetMonsters();
+	resetCritters();
 	resetGameTimer();
 	gameEventBus.reset();
 

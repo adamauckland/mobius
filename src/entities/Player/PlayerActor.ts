@@ -147,6 +147,8 @@ export class PlayerActor extends Actor {
 	ridingBlock: MovingBlock | null = null;
 	/** Ghost players replay visually but do not emit game events. */
 	isGhost = false;
+	private nextMoveDurationMs = 200;
+	private movingThroughGate = false;
 	private idleGraphic: Graphic;
 	private walkGraphic: Graphic;
 
@@ -162,7 +164,7 @@ export class PlayerActor extends Actor {
 	private updatePreDrawGraphics(): void {
 		const isMoving =
 			this.playerActionBuffer.length > 0 || this.actions.getQueue().hasNext();
-		if (isMoving) {
+		if (isMoving && !this.movingThroughGate) {
 			this.graphics.use(this.walkGraphic);
 			this.graphics.offset.y = carryBounceOffset(game.clock.now());
 		} else {
@@ -214,7 +216,9 @@ export class PlayerActor extends Actor {
 		this.previousTileIndex = this.currentMoveTileIndex;
 		this.currentMoveTileIndex = nextTile;
 		model.currentTileIndex = nextTile;
-		this.moveToTile(nextTile);
+		const duration = this.nextMoveDurationMs;
+		this.nextMoveDurationMs = 200;
+		this.moveToTile(nextTile, duration);
 	}
 
 	private tryAutoMount(): boolean {
@@ -239,17 +243,18 @@ export class PlayerActor extends Actor {
 		}
 	}
 
-	moveToTile(node: number) {
+	moveToTile(node: number, durationMs = 200) {
 		const center = tileIndexToPixelCenter(node);
 		const target = new Vector(center.x, center.y);
 
 		this.actions
-			.easeTo(target, 200, EasingFunctions.Linear)
+			.easeTo(target, durationMs, EasingFunctions.Linear)
 			.callMethod(() => this.onArriveAtNode(node));
 	}
 
 	/** Runs once the easeTo to `node` completes. Order matters — see callers. */
 	private onArriveAtNode(node: number): void {
+		this.movingThroughGate = false;
 		model.movesRemaining--;
 		tryCollectAtTile(node);
 		this.tryAutoDropParcel(node);
@@ -328,7 +333,7 @@ export class PlayerActor extends Actor {
 		}
 	}
 
-	/** One-way gate: queue a forced move in the gate's direction. */
+	/** One-way gate: queue a forced move in the gate's direction at 2x speed. */
 	private tryHandleOneWayGate(node: number): void {
 		const gateTile = tiles[node];
 		if (!(gateTile instanceof OneWayGate)) return;
@@ -336,6 +341,8 @@ export class PlayerActor extends Actor {
 		sfxOneWayGate();
 		const nextIdx = gateExitTileIndex(node, gateTile.direction);
 		if (nextIdx !== null) {
+			this.movingThroughGate = true;
+			this.nextMoveDurationMs = 100;
 			this.playerActionBuffer = [nextIdx];
 		}
 	}

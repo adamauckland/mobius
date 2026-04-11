@@ -38,9 +38,15 @@ import {
 import { initBarriers, spawnBarriers, setupBarrierEvents } from "./entities/barriers";
 import { gameEventBus } from "./events/GameEventBus";
 import { spawnMovingBlocksAt } from "./entities/movingBlocks";
+import { spawnCritterGroupsAt } from "./entities/Critter/spawn";
 import { spawnMonstersAt, setOnPlayerKilled } from "./entities/monsters";
-import { sfxDeath, sfxLevelComplete } from "./audio/sounds";
-import { spawnDeathExplosion } from "./entities/lightTrail";
+import { sfxDeath, sfxLevelComplete, sfxExitDoorOpen } from "./audio/sounds";
+import { spawnDeathExplosion, spawnExitDoorReveal } from "./entities/lightTrail";
+import { getCritterCount } from "./entities/Critter/state";
+import {
+	setOnAllCrittersCollected,
+	resetAllCrittersCollectedFlag,
+} from "./entities/Critter/collection";
 import { getFenceSprite } from "./tiles/fenceSprites";
 import {
 	spawnTreeOverlays,
@@ -217,7 +223,7 @@ function startGame(customMapData: IMapData) {
 	spawnTreeOverlays();
 	spawnGateOverlays();
 	spawnDropZoneOverlays();
-	spawnExitDoorOverlays();
+	const doorActors = spawnExitDoorOverlays();
 
 	// Initialize pathfinding
 	initPathfinding(tilemap);
@@ -258,30 +264,73 @@ function startGame(customMapData: IMapData) {
 	spawnRocksAt(customMapData.rocks);
 	spawnParcelsAt(customMapData.parcels);
 	spawnCollectablesAt(customMapData.collectables);
+	spawnCritterGroupsAt(customMapData.critters);
 	spawnMovingBlocksAt(customMapData.movingBlocks);
 	spawnMonstersAt(customMapData.monsters);
 
 	// Create HUD
 	const hud = createHUD();
 
-	// Exit door handler — wire up on the active player (and re-wire after rewind)
-	function wireExitDoor() {
-		activeEntry().player.onReachedExitDoor = () => {
-			if (model.gameOver) return;
-			model.gameOver = true;
-			sfxLevelComplete();
-			hud.dimOverlay.graphics.isVisible = true;
-			hud.levelCompleteLabel.graphics.isVisible = true;
-			hud.levelCompleteLabel.scale.x = 0.3;
-			hud.levelCompleteLabel.scale.y = 0.3;
-			hud.levelCompleteLabel.actions.scaleTo(vec(1, 1), vec(3, 3));
-			startBonusCountdown();
-			restartButton.style.display = "block";
-			// Show continue button if there are more levels
-			if (model.projectJson && model.currentLevel + 1 < model.totalLevels) {
-				continueButton.style.display = "block";
+	// --- Exit door + critter gating ---
+
+	function triggerLevelComplete() {
+		if (model.gameOver) return;
+		model.gameOver = true;
+		sfxLevelComplete();
+		hud.dimOverlay.graphics.isVisible = true;
+		hud.levelCompleteLabel.graphics.isVisible = true;
+		hud.levelCompleteLabel.scale.x = 0.3;
+		hud.levelCompleteLabel.scale.y = 0.3;
+		hud.levelCompleteLabel.actions.scaleTo(vec(1, 1), vec(3, 3));
+		startBonusCountdown();
+		restartButton.style.display = "block";
+		if (model.projectJson && model.currentLevel + 1 < model.totalLevels) {
+			continueButton.style.display = "block";
+		}
+	}
+
+	function revealExitDoors() {
+		for (const door of doorActors) {
+			door.graphics.isVisible = true;
+			door.scale.x = 0;
+			door.scale.y = 0;
+			door.actions.scaleTo(vec(1, 1), vec(3, 3));
+			spawnExitDoorReveal(door.pos.clone());
+		}
+		sfxExitDoorOpen();
+	}
+
+	function hideExitDoors() {
+		for (const door of doorActors) {
+			door.graphics.isVisible = false;
+			door.actions.clearActions();
+			door.scale.x = 1;
+			door.scale.y = 1;
+		}
+		resetAllCrittersCollectedFlag();
+	}
+
+	const hasCritters = getCritterCount().total > 0;
+
+	// Hide exit doors until all critters are collected
+	if (hasCritters) {
+		hideExitDoors();
+		setOnAllCrittersCollected(() => {
+			if (doorActors.length > 0) {
+				revealExitDoors();
+			} else {
+				// No exit door on this level — complete immediately
+				triggerLevelComplete();
 			}
-		};
+		});
+	}
+
+	// Wire exit door callback on the active player (and re-wire after rewind)
+	function wireExitDoor() {
+		activeEntry().player.onReachedExitDoor = () => triggerLevelComplete();
+		if (hasCritters) {
+			hideExitDoors();
+		}
 	}
 	wireExitDoor();
 	setOnNewActivePlayer(wireExitDoor);

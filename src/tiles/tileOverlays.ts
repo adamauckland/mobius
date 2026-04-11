@@ -101,7 +101,8 @@ export function spawnDropZoneOverlays() {
 	}
 }
 
-export function spawnExitDoorOverlays() {
+export function spawnExitDoorOverlays(): Actor[] {
+	const actors: Actor[] = [];
 	for (let i = 0; i < tiles.length; i++) {
 		if (tiles[i] instanceof ExitDoor) {
 			const tx = i % GRID_COLS;
@@ -117,6 +118,8 @@ export function spawnExitDoorOverlays() {
 			});
 			doorActor.graphics.use(rlSS.getSprite(35, 0));
 			game.add(doorActor);
+			actors.push(doorActor);
 		}
 	}
+	return actors;
 }
