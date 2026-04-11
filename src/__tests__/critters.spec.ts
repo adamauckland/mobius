@@ -126,13 +126,15 @@ vi.mock("../ui/pathfinding", () => ({
 
 import {
 	spawnCritterGroupsAt,
-	getCritterGroups,
-	getCritterCount,
 	updateCritters,
 	tryCollectCritters,
 	resetCritters,
-	clearCritters,
 } from "../entities/Critter/critters";
+import {
+	getCritterGroups,
+	getCritterCount,
+	clearCritters,
+} from "../entities/Critter/critterState";
 import { playerEntries } from "../entities/Player/playerManager";
 import { TILE_SIZE, GRID_COLS, tiles, Fence } from "../tiles/tiledata";
 import { setupTestWorld } from "./testWorld";
@@ -170,8 +172,8 @@ describe("critters", () => {
 			const cx = (55 % GRID_COLS) * TILE_SIZE + TILE_SIZE / 2;
 			const cy = Math.floor(55 / GRID_COLS) * TILE_SIZE + TILE_SIZE / 2;
 			for (const critter of group.critters) {
-				expect(Math.abs(critter.pos.x - cx)).toBeLessThan(TILE_SIZE);
-				expect(Math.abs(critter.pos.y - cy)).toBeLessThan(TILE_SIZE);
+				expect(Math.abs(critter.position.x - cx)).toBeLessThan(TILE_SIZE);
+				expect(Math.abs(critter.position.y - cy)).toBeLessThan(TILE_SIZE);
 			}
 		});
 
@@ -203,17 +205,17 @@ describe("critters", () => {
 			const critter = group.critters[0];
 
 			// Place player right on top of the critter
-			const px = critter.pos.x;
+			const px = critter.position.x;
 			playerEntries[0].player.pos.x = px;
-			playerEntries[0].player.pos.y = critter.pos.y;
+			playerEntries[0].player.pos.y = critter.position.y;
 
-			const origX = critter.pos.x;
+			const origX = critter.position.x;
 			// Simulate a few frames
 			for (let i = 0; i < 10; i++) {
 				updateCritters(16);
 			}
 			// Critter should have moved away
-			expect(critter.pos.x).not.toBeCloseTo(origX, 0);
+			expect(critter.position.x).not.toBeCloseTo(origX, 0);
 		});
 
 		it("does not move critters through a fence tile", () => {
@@ -226,8 +228,8 @@ describe("critters", () => {
 			const critter = group.critters[0];
 
 			// Place player to the right to push critter left toward the fence
-			playerEntries[0].player.pos.x = critter.pos.x + TILE_SIZE;
-			playerEntries[0].player.pos.y = critter.pos.y;
+			playerEntries[0].player.pos.x = critter.position.x + TILE_SIZE;
+			playerEntries[0].player.pos.y = critter.position.y;
 
 			const fenceLeftEdge = (1 % GRID_COLS) * TILE_SIZE;
 			const fenceRightEdge = fenceLeftEdge + TILE_SIZE;
@@ -239,7 +241,7 @@ describe("critters", () => {
 			// Critter should not have entered the fence tile
 			for (const c of group.critters) {
 				// Critter center should stay to the right of the fence tile
-				expect(c.pos.x).toBeGreaterThanOrEqual(fenceRightEdge - 1);
+				expect(c.position.x).toBeGreaterThanOrEqual(fenceRightEdge - 1);
 			}
 		});
 
@@ -249,16 +251,16 @@ describe("critters", () => {
 			const group = groups[groups.length - 1];
 
 			// Push player into the critters to force them to the edge
-			playerEntries[0].player.pos.x = group.critters[0].pos.x;
-			playerEntries[0].player.pos.y = group.critters[0].pos.y;
+			playerEntries[0].player.pos.x = group.critters[0].position.x;
+			playerEntries[0].player.pos.y = group.critters[0].position.y;
 
 			for (let i = 0; i < 100; i++) {
 				updateCritters(16);
 			}
 
 			for (const critter of group.critters) {
-				expect(critter.pos.x).toBeGreaterThanOrEqual(0);
-				expect(critter.pos.y).toBeGreaterThanOrEqual(0);
+				expect(critter.position.x).toBeGreaterThanOrEqual(0);
+				expect(critter.position.y).toBeGreaterThanOrEqual(0);
 			}
 		});
 	});
@@ -271,8 +273,8 @@ describe("critters", () => {
 			const critter = group.critters[0];
 
 			// Move player directly on top of this critter
-			playerEntries[0].player.pos.x = critter.pos.x;
-			playerEntries[0].player.pos.y = critter.pos.y;
+			playerEntries[0].player.pos.x = critter.position.x;
+			playerEntries[0].player.pos.y = critter.position.y;
 
 			const collected = tryCollectCritters();
 			expect(collected).toBeGreaterThanOrEqual(1);
@@ -296,8 +298,8 @@ describe("critters", () => {
 			const critter = group.critters[0];
 
 			// Collect it once
-			playerEntries[0].player.pos.x = critter.pos.x;
-			playerEntries[0].player.pos.y = critter.pos.y;
+			playerEntries[0].player.pos.x = critter.position.x;
+			playerEntries[0].player.pos.y = critter.position.y;
 			tryCollectCritters();
 
 			// Try again — should not count again
@@ -315,16 +317,16 @@ describe("critters", () => {
 
 			// Collect and move the critter
 			critter.collected = true;
-			critter.pos.x = 9999;
-			critter.pos.y = 9999;
+			critter.position.x = 9999;
+			critter.position.y = 9999;
 
 			resetCritters();
 
 			expect(critter.collected).toBe(false);
 			const cx = (100 % GRID_COLS) * TILE_SIZE + TILE_SIZE / 2;
 			const cy = Math.floor(100 / GRID_COLS) * TILE_SIZE + TILE_SIZE / 2;
-			expect(Math.abs(critter.pos.x - cx)).toBeLessThan(TILE_SIZE);
-			expect(Math.abs(critter.pos.y - cy)).toBeLessThan(TILE_SIZE);
+			expect(Math.abs(critter.position.x - cx)).toBeLessThan(TILE_SIZE);
+			expect(Math.abs(critter.position.y - cy)).toBeLessThan(TILE_SIZE);
 		});
 
 		it("re-creates killed actors", () => {

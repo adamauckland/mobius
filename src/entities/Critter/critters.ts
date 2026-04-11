@@ -1,4 +1,4 @@
-import { Actor, Vector, Circle, Color, GraphicsGroup, vec } from "excalibur";
+import { Actor, Vector, Circle } from "excalibur";
 import {
 	TILE_SIZE,
 	GRID_COLS,
@@ -17,145 +17,40 @@ import { spawnScoreLight } from "../lightTrail";
 import { sfxCollect } from "../../audio/sounds";
 import { addScore } from "../worldObjects";
 import { playerEntries } from "../Player/playerManager";
-
-// --- Types ---
-
-export interface ICritter {
-	actor: Actor;
-	shadow: Actor;
-	pos: Vector; // sub-pixel position (not tile-locked)
-	vel: Vector;
-	groupIndex: number; // which group this critter belongs to
-	collected: boolean;
-	onGate: boolean;
-}
-
-export interface ICritterGroup {
-	originTile: number; // tile index where the group was spawned
-	critters: ICritter[];
-}
-
-// --- Constants ---
-
-const CRITTER_SIZE = 8;
-const CRITTERS_PER_GROUP = 5;
-const CRITTER_COLOR = Color.fromHex("#44eeff");
-const SHADOW_COLOR = Color.fromRGB(0, 0, 0, 0.25);
-const SHADOW_RADIUS_X = 3;
-const SHADOW_RADIUS_Y = 1.5;
-
-/** Half the player speed. Player moves 16px in 200ms = 80px/s. */
-const FLEE_SPEED = 1000; // px/s
-/** Distance at which critters start fleeing from a player */
-const FLEE_RADIUS = 48; // px (3 tiles)
-/** Separation: push apart when closer than this */
-const SEPARATION_RADIUS = 10; // px
-const SEPARATION_STRENGTH = 60; // px/s
-/** Cohesion: pull toward group center */
-const COHESION_STRENGTH = 15; // px/s
-/** Collection radius — player must be this close to collect */
-const COLLECT_RADIUS = 10; // px
-/** Maximum velocity magnitude */
-const MAX_SPEED = 50; // px/s
-/** Damping applied each frame so critters slow when not fleeing */
-const DAMPING = 0.92;
-/** Visual bounce amplitude and frequency */
-const BOUNCE_AMPLITUDE = 1.5; // px
-const BOUNCE_FREQ = 0.008; // radians per ms
-/** Speed at which a one-way gate pushes a critter (px/s) */
-const GATE_PUSH_SPEED = 200;
-
-const GATE_DIRECTION_VECTORS: Record<string, [number, number]> = {
-	up: [0, -1],
-	down: [0, 1],
-	left: [-1, 0],
-	right: [1, 0],
-};
-
-// --- State ---
-
-const critterGroups: ICritterGroup[] = [];
-
-export function getCritterGroups(): ICritterGroup[] {
-	return critterGroups;
-}
-
-export function clearCritters() {
-	critterGroups.length = 0;
-}
-
-export function getCritterCount(): { total: number; collected: number } {
-	let total = 0;
-	let collected = 0;
-	for (const group of critterGroups) {
-		for (const c of group.critters) {
-			total++;
-			if (c.collected) collected++;
-		}
-	}
-	return { total, collected };
-}
-
-// --- Graphics ---
-
-const BLINK_HALF_DURATION = 40; // ms per half-open transition
-const BLINK_CLOSED_DURATION = 60; // ms eyes stay fully closed
-const BLINK_TOTAL_DURATION = BLINK_HALF_DURATION * 2 + BLINK_CLOSED_DURATION;
-const EYE_BASE_LEFT_X = -2;
-const EYE_BASE_RIGHT_X = 1;
-const EYE_BASE_Y = -1;
-const EYE_SHIFT_MAX = 1; // max px the eyes shift toward movement direction
-const IDLE_LOOK_DIRECTIONS = [-EYE_SHIFT_MAX, 0, EYE_SHIFT_MAX]; // left, center, right
-const IDLE_LOOK_MIN_MS = 800;
-const IDLE_LOOK_MAX_MS = 2500;
-
-interface CritterGraphics {
-	open: GraphicsGroup;
-	halfOpen: GraphicsGroup;
-	closed: GraphicsGroup;
-	leftEyeOffset: Vector;
-	rightEyeOffset: Vector;
-	leftEyeHalfOffset: Vector;
-	rightEyeHalfOffset: Vector;
-}
-
-/** Build eyes-open, half-open, and closed graphics for a critter. */
-function createCritterGraphics(): CritterGraphics {
-	const body = new Circle({ radius: CRITTER_SIZE / 2, color: CRITTER_COLOR });
-	const eye = new Circle({ radius: 1, color: Color.Black });
-	const halfEye = new Circle({ radius: 0.5, color: Color.Black });
-	const leftEyeOffset = vec(EYE_BASE_LEFT_X, EYE_BASE_Y);
-	const rightEyeOffset = vec(EYE_BASE_RIGHT_X, EYE_BASE_Y);
-	const leftEyeHalfOffset = vec(EYE_BASE_LEFT_X, EYE_BASE_Y + 1);
-	const rightEyeHalfOffset = vec(EYE_BASE_RIGHT_X, EYE_BASE_Y + 1);
-	const bodyOffset = vec(-CRITTER_SIZE / 2, -CRITTER_SIZE / 2);
-	const open = new GraphicsGroup({
-		members: [
-			{ graphic: body, offset: bodyOffset },
-			{ graphic: eye, offset: leftEyeOffset },
-			{ graphic: eye, offset: rightEyeOffset },
-		],
-	});
-	const halfOpen = new GraphicsGroup({
-		members: [
-			{ graphic: body, offset: bodyOffset },
-			{ graphic: halfEye, offset: leftEyeHalfOffset },
-			{ graphic: halfEye, offset: rightEyeHalfOffset },
-		],
-	});
-	const closed = new GraphicsGroup({
-		members: [{ graphic: body, offset: bodyOffset }],
-	});
-	return {
-		open,
-		halfOpen,
-		closed,
-		leftEyeOffset,
-		rightEyeOffset,
-		leftEyeHalfOffset,
-		rightEyeHalfOffset,
-	};
-}
+import { ICritter } from "./ICritter";
+import { ICritterGroup } from "./ICritterGroup";
+import {
+	CRITTER_SIZE,
+	BOUNCE_FREQ,
+	BOUNCE_AMPLITUDE,
+	SHADOW_RADIUS_X,
+	SHADOW_RADIUS_Y,
+	SHADOW_COLOR,
+	CRITTERS_PER_GROUP,
+	FLEE_RADIUS,
+	FLEE_SPEED,
+	SEPARATION_RADIUS,
+	SEPARATION_STRENGTH,
+	COHESION_STRENGTH,
+	DAMPING,
+	MAX_SPEED,
+	GATE_DIRECTION_VECTORS,
+	GATE_PUSH_SPEED,
+	COLLECT_RADIUS,
+} from "./CRITTER_SETTINGS";
+import {
+	EYE_BASE_LEFT_X,
+	EYE_BASE_RIGHT_X,
+	IDLE_LOOK_MIN_MS,
+	IDLE_LOOK_MAX_MS,
+	BLINK_HALF_DURATION,
+	BLINK_CLOSED_DURATION,
+	BLINK_TOTAL_DURATION,
+	EYE_SHIFT_MAX,
+	IDLE_LOOK_DIRECTIONS,
+} from "./CRITTER_LOOK_SETTINGS";
+import { critterGroups } from "./critterState";
+import { createCritterGraphics } from "./createCritterGraphics";
 
 /** Attach blink/bounce/eye-shift animation to a critter's actor. */
 function attachCritterAnimation(actor: Actor, critter: ICritter) {
@@ -171,12 +66,14 @@ function attachCritterAnimation(actor: Actor, critter: ICritter) {
 		game.clock.now() +
 		IDLE_LOOK_MIN_MS +
 		Math.random() * (IDLE_LOOK_MAX_MS - IDLE_LOOK_MIN_MS);
+
 	actor.graphics.onPreDraw = () => {
 		const now = game.clock.now();
 		const speed = Math.sqrt(
-			critter.vel.x * critter.vel.x + critter.vel.y * critter.vel.y,
+			critter.velocity.x * critter.velocity.x +
+				critter.velocity.y * critter.velocity.y,
 		);
-		const facingAway = speed > 1 && critter.vel.y < 0;
+		const facingAway = speed > 1 && critter.velocity.y < 0;
 		// Start a new blink
 		if (blinkStart === 0 && now >= nextBlink) {
 			blinkStart = now;
@@ -209,7 +106,7 @@ function attachCritterAnimation(actor: Actor, critter: ICritter) {
 		// Eye shift: follow movement when moving, look around when idle
 		let shift: number;
 		if (speed > 1) {
-			shift = (critter.vel.x / speed) * EYE_SHIFT_MAX;
+			shift = (critter.velocity.x / speed) * EYE_SHIFT_MAX;
 			// Reset idle timer while moving
 			nextIdleLook =
 				now +
@@ -271,42 +168,53 @@ function createShadowActor(px: number, py: number): Actor {
 
 export function spawnCritterGroupsAt(tileIndices: number[]) {
 	for (const tileIdx of tileIndices) {
-		const cx = (tileIdx % GRID_COLS) * TILE_SIZE + TILE_SIZE / 2;
-		const cy = Math.floor(tileIdx / GRID_COLS) * TILE_SIZE + TILE_SIZE / 2;
-		const groupIndex = critterGroups.length;
-		const critters: ICritter[] = [];
-
-		for (let i = 0; i < CRITTERS_PER_GROUP; i++) {
-			// Spread critters in a small circle around the tile center
-			const angle = (i / CRITTERS_PER_GROUP) * Math.PI * 2;
-			const spread = 4;
-			const px = cx + Math.cos(angle) * spread;
-			const py = cy + Math.sin(angle) * spread;
-
-			const actor = new Actor({
-				pos: new Vector(px, py),
-				width: CRITTER_SIZE,
-				height: CRITTER_SIZE,
-				z: zFromY(py, Z_LAYER_PICKUP),
-			});
-			const shadow = createShadowActor(px, py);
-			const critter: ICritter = {
-				actor,
-				shadow,
-				pos: new Vector(px, py),
-				vel: new Vector(0, 0),
-				groupIndex,
-				collected: false,
-				onGate: false,
-			};
-			attachCritterAnimation(actor, critter);
-			critters.push(critter);
-			game.add(shadow);
-			game.add(actor);
-		}
-
-		critterGroups.push({ originTile: tileIdx, critters });
+		spawnCrittersAt(tileIdx);
 	}
+}
+
+export function spawnCrittersAt(tileIndex: number) {
+	const cx = (tileIndex % GRID_COLS) * TILE_SIZE + TILE_SIZE / 2;
+	const cy = Math.floor(tileIndex / GRID_COLS) * TILE_SIZE + TILE_SIZE / 2;
+	const groupIndex = critterGroups.length;
+	const critters: ICritter[] = [];
+
+	for (let i = 0; i < CRITTERS_PER_GROUP; i++) {
+		// Spread critters in a small circle around the tile center
+		const angle = (i / CRITTERS_PER_GROUP) * Math.PI * 2;
+		const spread = 4;
+		const px = cx + Math.cos(angle) * spread;
+		const py = cy + Math.sin(angle) * spread;
+
+		const { critter, shadow, actor } = spawnNewCritter(px, py, groupIndex);
+
+		critters.push(critter);
+		game.add(shadow);
+		game.add(actor);
+	}
+
+	critterGroups.push({ originTile: tileIndex, critters });
+}
+
+export function spawnNewCritter(px: number, py: number, groupIndex: number) {
+	const actor = new Actor({
+		pos: new Vector(px, py),
+		width: CRITTER_SIZE,
+		height: CRITTER_SIZE,
+		z: zFromY(py, Z_LAYER_PICKUP),
+	});
+	const shadow = createShadowActor(px, py);
+	const critter: ICritter = {
+		actor,
+		shadow,
+		position: new Vector(px, py),
+		velocity: new Vector(0, 0),
+		groupIndex,
+		collected: false,
+		onGate: false,
+	};
+	attachCritterAnimation(actor, critter);
+
+	return { critter, shadow, actor };
 }
 
 // --- Tile collision ---
@@ -373,8 +281,8 @@ function getAliveCrittersWithCenter(group: ICritterGroup): {
 	let centerX = 0;
 	let centerY = 0;
 	for (const c of alive) {
-		centerX += c.pos.x;
-		centerY += c.pos.y;
+		centerX += c.position.x;
+		centerY += c.position.y;
 	}
 	return {
 		alive,
@@ -394,20 +302,20 @@ function computeFleeAcceleration(
 	for (const ppos of playerPositions) {
 		const nearX = Math.max(
 			ppos.x - playerHalf,
-			Math.min(critter.pos.x, ppos.x + playerHalf),
+			Math.min(critter.position.x, ppos.x + playerHalf),
 		);
 		const nearY = Math.max(
 			ppos.y - playerHalf,
-			Math.min(critter.pos.y, ppos.y + playerHalf),
+			Math.min(critter.position.y, ppos.y + playerHalf),
 		);
-		const dx = critter.pos.x - nearX;
-		const dy = critter.pos.y - nearY;
+		const dx = critter.position.x - nearX;
+		const dy = critter.position.y - nearY;
 		const dist = Math.sqrt(dx * dx + dy * dy);
 		if (dist >= FLEE_RADIUS) continue;
 
 		if (dist < 0.1) {
-			const cdx = critter.pos.x - ppos.x;
-			const cdy = critter.pos.y - ppos.y;
+			const cdx = critter.position.x - ppos.x;
+			const cdy = critter.position.y - ppos.y;
 			const cdist = Math.sqrt(cdx * cdx + cdy * cdy);
 			if (cdist > 0.1) {
 				ax += (cdx / cdist) * FLEE_SPEED;
@@ -432,8 +340,8 @@ function computeSeparationAcceleration(
 	let ay = 0;
 	for (const other of alive) {
 		if (other === critter) continue;
-		const dx = critter.pos.x - other.pos.x;
-		const dy = critter.pos.y - other.pos.y;
+		const dx = critter.position.x - other.position.x;
+		const dy = critter.position.y - other.position.y;
 		const dist = Math.sqrt(dx * dx + dy * dy);
 		if (dist < SEPARATION_RADIUS && dist > 0.1) {
 			const strength = SEPARATION_STRENGTH * (1 - dist / SEPARATION_RADIUS);
@@ -449,8 +357,8 @@ function computeCohesionAcceleration(
 	centerX: number,
 	centerY: number,
 ): { ax: number; ay: number } {
-	const dcx = centerX - critter.pos.x;
-	const dcy = centerY - critter.pos.y;
+	const dcx = centerX - critter.position.x;
+	const dcy = centerY - critter.position.y;
 	const dcDist = Math.sqrt(dcx * dcx + dcy * dcy);
 	if (dcDist > 1) {
 		return {
@@ -462,15 +370,18 @@ function computeCohesionAcceleration(
 }
 
 function applyVelocity(critter: ICritter, ax: number, ay: number, dt: number) {
-	critter.vel.x = (critter.vel.x + ax * dt) * DAMPING;
-	critter.vel.y = (critter.vel.y + ay * dt) * DAMPING;
+	critter.velocity.x = (critter.velocity.x + ax * dt) * DAMPING;
+	critter.velocity.y = (critter.velocity.y + ay * dt) * DAMPING;
+}
 
+function clampSpeed(critter: ICritter) {
 	const speed = Math.sqrt(
-		critter.vel.x * critter.vel.x + critter.vel.y * critter.vel.y,
+		critter.velocity.x * critter.velocity.x +
+			critter.velocity.y * critter.velocity.y,
 	);
 	if (speed > MAX_SPEED) {
-		critter.vel.x = (critter.vel.x / speed) * MAX_SPEED;
-		critter.vel.y = (critter.vel.y / speed) * MAX_SPEED;
+		critter.velocity.x = (critter.velocity.x / speed) * MAX_SPEED;
+		critter.velocity.y = (critter.velocity.y / speed) * MAX_SPEED;
 	}
 }
 
@@ -478,10 +389,10 @@ function moveCritter(
 	critter: ICritter,
 	dt: number,
 ): { prevX: number; prevY: number } {
-	const prevX = critter.pos.x;
-	const prevY = critter.pos.y;
-	critter.pos.x += critter.vel.x * dt;
-	critter.pos.y += critter.vel.y * dt;
+	const prevX = critter.position.x;
+	const prevY = critter.position.y;
+	critter.position.x += critter.velocity.x * dt;
+	critter.position.y += critter.velocity.y * dt;
 	return { prevX, prevY };
 }
 
@@ -489,60 +400,60 @@ function clampToWorldBounds(critter: ICritter) {
 	const halfSize = CRITTER_SIZE / 2;
 	const maxX = GRID_COLS * TILE_SIZE - halfSize;
 	const maxY = GRID_ROWS * TILE_SIZE - halfSize;
-	if (critter.pos.x < halfSize) {
-		critter.pos.x = halfSize;
-		critter.vel.x = Math.abs(critter.vel.x);
+	if (critter.position.x < halfSize) {
+		critter.position.x = halfSize;
+		critter.velocity.x = Math.abs(critter.velocity.x);
 	}
-	if (critter.pos.x > maxX) {
-		critter.pos.x = maxX;
-		critter.vel.x = -Math.abs(critter.vel.x);
+	if (critter.position.x > maxX) {
+		critter.position.x = maxX;
+		critter.velocity.x = -Math.abs(critter.velocity.x);
 	}
-	if (critter.pos.y < halfSize) {
-		critter.pos.y = halfSize;
-		critter.vel.y = Math.abs(critter.vel.y);
+	if (critter.position.y < halfSize) {
+		critter.position.y = halfSize;
+		critter.velocity.y = Math.abs(critter.velocity.y);
 	}
-	if (critter.pos.y > maxY) {
-		critter.pos.y = maxY;
-		critter.vel.y = -Math.abs(critter.vel.y);
+	if (critter.position.y > maxY) {
+		critter.position.y = maxY;
+		critter.velocity.y = -Math.abs(critter.velocity.y);
 	}
 }
 
 function handleTileCollisions(critter: ICritter, prevX: number, prevY: number) {
 	const tileIdx =
-		Math.floor(critter.pos.x / TILE_SIZE) +
-		Math.floor(critter.pos.y / TILE_SIZE) * GRID_COLS;
+		Math.floor(critter.position.x / TILE_SIZE) +
+		Math.floor(critter.position.y / TILE_SIZE) * GRID_COLS;
 	const currentTile = tiles[tileIdx];
 	const onGate = currentTile instanceof OneWayGate;
 	critter.onGate = onGate;
 
-	if (!onGate && isTileBlocked(critter.pos.x, critter.pos.y)) {
-		const blockedX = isTileBlocked(critter.pos.x, prevY);
-		const blockedY = isTileBlocked(prevX, critter.pos.y);
-		if (blockedX) critter.vel.x = -critter.vel.x;
-		if (blockedY) critter.vel.y = -critter.vel.y;
+	if (!onGate && isTileBlocked(critter.position.x, critter.position.y)) {
+		const blockedX = isTileBlocked(critter.position.x, prevY);
+		const blockedY = isTileBlocked(prevX, critter.position.y);
+		if (blockedX) critter.velocity.x = -critter.velocity.x;
+		if (blockedY) critter.velocity.y = -critter.velocity.y;
 		if (!blockedX && !blockedY) {
-			critter.vel.x = -critter.vel.x;
-			critter.vel.y = -critter.vel.y;
+			critter.velocity.x = -critter.velocity.x;
+			critter.velocity.y = -critter.velocity.y;
 		}
-		critter.pos.x = prevX;
-		critter.pos.y = prevY;
+		critter.position.x = prevX;
+		critter.position.y = prevY;
 	}
 
 	if (onGate) {
 		const [gdx, gdy] =
 			GATE_DIRECTION_VECTORS[(currentTile as OneWayGate).direction];
-		critter.vel.x = gdx * GATE_PUSH_SPEED * 2;
-		critter.vel.y = gdy * GATE_PUSH_SPEED * 2;
+		critter.velocity.x = gdx * GATE_PUSH_SPEED;
+		critter.velocity.y = gdy * GATE_PUSH_SPEED;
 	}
 }
 
 function syncCritterActors(critter: ICritter) {
-	critter.actor.pos.x = critter.pos.x;
-	critter.actor.pos.y = critter.pos.y;
-	critter.actor.z = zFromY(critter.pos.y, Z_LAYER_PICKUP);
-	critter.shadow.pos.x = critter.pos.x;
-	critter.shadow.pos.y = critter.pos.y + CRITTER_SIZE / 2;
-	critter.shadow.z = zFromY(critter.pos.y, Z_LAYER_SHADOW);
+	critter.actor.pos.x = critter.position.x;
+	critter.actor.pos.y = critter.position.y;
+	critter.actor.z = zFromY(critter.position.y, Z_LAYER_PICKUP);
+	critter.shadow.pos.x = critter.position.x;
+	critter.shadow.pos.y = critter.position.y + CRITTER_SIZE / 2;
+	critter.shadow.z = zFromY(critter.position.y, Z_LAYER_SHADOW);
 }
 
 function updateCritter(
@@ -560,7 +471,10 @@ function updateCritter(
 	const ay = flee.ay + sep.ay + coh.ay;
 
 	applyVelocity(critter, ax, ay, dt);
+	clampSpeed(critter);
+
 	const { prevX, prevY } = moveCritter(critter, dt);
+
 	clampToWorldBounds(critter);
 	handleTileCollisions(critter, prevX, prevY);
 	syncCritterActors(critter);
@@ -600,14 +514,14 @@ export function tryCollectCritters(): number {
 				// Distance from critter center to nearest point on player bounding box
 				const closestX = Math.max(
 					px - playerHalf,
-					Math.min(critter.pos.x, px + playerHalf),
+					Math.min(critter.position.x, px + playerHalf),
 				);
 				const closestY = Math.max(
 					py - playerHalf,
-					Math.min(critter.pos.y, py + playerHalf),
+					Math.min(critter.position.y, py + playerHalf),
 				);
-				const dx = critter.pos.x - closestX;
-				const dy = critter.pos.y - closestY;
+				const dx = critter.position.x - closestX;
+				const dy = critter.position.y - closestY;
 				const dist = Math.sqrt(dx * dx + dy * dy);
 				if (dist < COLLECT_RADIUS) {
 					critter.collected = true;
@@ -639,10 +553,10 @@ export function resetCritters() {
 			const px = cx + Math.cos(angle) * spread;
 			const py = cy + Math.sin(angle) * spread;
 
-			critter.pos.x = px;
-			critter.pos.y = py;
-			critter.vel.x = 0;
-			critter.vel.y = 0;
+			critter.position.x = px;
+			critter.position.y = py;
+			critter.velocity.x = 0;
+			critter.velocity.y = 0;
 			critter.collected = false;
 			critter.actor.pos.x = px;
 			critter.actor.pos.y = py;
