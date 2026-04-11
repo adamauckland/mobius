@@ -1,11 +1,11 @@
 import { Actor, Vector } from "excalibur";
-import { rlSS } from "../resources/resources";
-import { TILE_SIZE, GRID_COLS } from "../tiles/tiledata";
-import { game } from "../game";
-import { zFromY, Z_LAYER_PLAYER } from "../ui/zIndex";
-import type { PlayerActor } from "./Player/PlayerActor";
-import { playerEntries } from "./Player/playerManager";
-import { IMonster } from "../interfaces/IMonster";
+import { rlSS } from "@/resources/resources";
+import { TILE_SIZE, GRID_COLS } from "@/tiles/tiledata";
+import { game } from "@/game";
+import { zFromY, Z_LAYER_PLAYER } from "@/ui/zIndex";
+import type { PlayerActor } from "@/entities/Player/PlayerActor";
+import { playerEntries } from "@/entities/Player/playerManager";
+import { IMonster } from "@/interfaces/IMonster";
 
 const monsters: IMonster[] = [];
 

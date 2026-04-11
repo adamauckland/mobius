@@ -1,12 +1,12 @@
 import { Actor, Vector } from "excalibur";
-import { game } from "../../game";
-import { GRID_COLS, TILE_SIZE } from "../../tiles/tiledata";
-import { zFromY, Z_LAYER_PICKUP } from "../../ui/zIndex";
-import { CRITTERS_PER_GROUP, CRITTER_SIZE } from "./SETTINGS";
-import { attachCritterAnimation } from "./animation";
-import { critterGroups } from "./state";
-import { ICritter } from "./types/ICritter";
-import { createShadowActor } from "./graphics";
+import { game } from "@/game";
+import { GRID_COLS, TILE_SIZE } from "@/tiles/tiledata";
+import { zFromY, Z_LAYER_PICKUP } from "@/ui/zIndex";
+import { CRITTERS_PER_GROUP, CRITTER_SIZE } from "@/entities/Critter/SETTINGS";
+import { attachCritterAnimation } from "@/entities/Critter/animation";
+import { critterGroups } from "@/entities/Critter/state";
+import { ICritter } from "@/entities/Critter/types/ICritter";
+import { createShadowActor } from "@/entities/Critter/graphics";
 
 export function spawnCritterGroupsAt(tileIndices: number[]) {
 	for (const tileIdx of tileIndices) {

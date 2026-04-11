@@ -111,15 +111,15 @@ vi.mock("../zIndex", () => ({
 	Z_HUD: 1000,
 }));
 
-import { spawnDeathExplosion, spawnRewindPixels } from "../entities/lightTrail";
+import { spawnDeathExplosion, spawnRewindPixels } from "@/entities/lightTrail";
 import {
 	Vector,
 	ParticleEmitter,
 	GpuParticleEmitter,
 	EmitterType,
 } from "excalibur";
-import { game } from "../game";
-import { Z_RIPPLE } from "../ui/zIndex";
+import { game } from "@/game";
+import { Z_RIPPLE } from "@/ui/zIndex";
 
 describe("lightTrail", () => {
 	beforeEach(() => {

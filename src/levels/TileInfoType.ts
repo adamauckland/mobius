@@ -1,4 +1,4 @@
-import type { Direction } from "../tiles/tiledata";
+import type { Direction } from "@/tiles/tiledata";
 
 // Tile code encoding/decoding
 

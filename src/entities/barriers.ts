@@ -1,19 +1,19 @@
 import { Actor, Vector, vec, TileMap } from "excalibur";
-import { rlSS } from "../resources/resources";
+import { rlSS } from "@/resources/resources";
 import {
 	tiles,
 	Barrier,
 	Switch,
 	GRID_COLS,
 	TILE_SIZE,
-} from "../tiles/tiledata";
-import { game } from "../game";
-import { zFromY, Z_LAYER_TREE, Z_LAYER_PICKUP } from "../ui/zIndex";
-import { rebuildPathfinding } from "../ui/pathfinding";
-import { spawnLight } from "./lightTrail";
-import { sfxSwitch } from "../audio/sounds";
-import { IBarrierEntry } from "../interfaces/IBarrierEntry";
-import { gameEventBus } from "../events/GameEventBus";
+} from "@/tiles/tiledata";
+import { game } from "@/game";
+import { zFromY, Z_LAYER_TREE, Z_LAYER_PICKUP } from "@/ui/zIndex";
+import { rebuildPathfinding } from "@/ui/pathfinding";
+import { spawnLight } from "@/entities/lightTrail";
+import { sfxSwitch } from "@/audio/sounds";
+import { IBarrierEntry } from "@/interfaces/IBarrierEntry";
+import { gameEventBus } from "@/events/GameEventBus";
 
 const barrierActors: IBarrierEntry[] = [];
 const switchActors = new Map<number, Actor>(); // tileIndex → Actor

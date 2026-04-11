@@ -4,8 +4,8 @@ import {
 	createEmptyMap,
 	serializeMap,
 	deserializeMap,
-} from "../levels/mapData";
-import { type IMapData } from "../interfaces/IMapData";
+} from "@/levels/mapData";
+import { type IMapData } from "@/interfaces/IMapData";
 
 describe("codeToTile (legacy decode)", () => {
 	it("decodes 'g' as grass", () => {

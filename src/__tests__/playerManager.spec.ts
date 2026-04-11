@@ -171,15 +171,14 @@ import {
 	activeEntry,
 	replayAll,
 	setupClickHandler,
-} from "../entities/Player/playerManager";
-import { model } from "../model";
-import { START_POS_X, START_POS_Y, START_TILE_INDEX } from "../tiles/tiledata";
-import { resetRocks, resetParcels } from "../entities/worldObjects";
-import { resetMonsters } from "../entities/monsters";
-import { resetBarriers } from "../entities/barriers";
-import { resetMovingBlocks } from "../entities/movingBlocks";
-import { game } from "../game";
-import { gameEventBus } from "../events/GameEventBus";
+} from "@/entities/Player/playerManager";
+import { model } from "@/model";
+import { resetRocks, resetParcels } from "@/entities/worldObjects";
+import { resetMonsters } from "@/entities/monsters";
+import { resetBarriers } from "@/entities/barriers";
+import { resetMovingBlocks } from "@/entities/movingBlocks";
+import { game } from "@/game";
+import { gameEventBus } from "@/events/GameEventBus";
 
 describe("playerManager", () => {
 	beforeEach(() => {

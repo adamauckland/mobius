@@ -48,7 +48,7 @@ export function initPackBrowser(
 
 		try {
 			const { browsePacks, getPackProject } =
-				await import("../levelPacks/levelPacks");
+				await import("@/levelPacks/levelPacks");
 			const packs = await browsePacks();
 
 			listContainer.innerHTML = "";

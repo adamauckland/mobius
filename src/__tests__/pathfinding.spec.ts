@@ -129,7 +129,7 @@ import {
 	handleTileClick,
 	rebuildPathfinding,
 	resetDijkstraGraph,
-} from "../ui/pathfinding";
+} from "@/ui/pathfinding";
 import {
 	tiles,
 	Tree,
@@ -140,10 +140,10 @@ import {
 	GRID_COLS,
 	GRID_ROWS,
 	START_TILE_INDEX,
-} from "../tiles/tiledata";
-import { setupTestWorld } from "./testWorld";
-import { model } from "../model";
-import { dropRock, dropParcel, getRockAtTile } from "../entities/worldObjects";
+} from "@/tiles/tiledata";
+import { setupTestWorld } from "@/__tests__/testWorld";
+import { model } from "@/model";
+import { dropRock, dropParcel, getRockAtTile } from "@/entities/worldObjects";
 
 describe("pathfinding", () => {
 	let mockTileMap: any;

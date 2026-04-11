@@ -6,7 +6,7 @@ import {
 	Engine,
 	Graphic,
 } from "excalibur";
-import { model } from "../../model";
+import { model } from "@/model";
 import {
 	GRID_COLS,
 	GRID_ROWS,
@@ -23,23 +23,23 @@ import {
 	Barrier,
 	Switch,
 	DropZone,
-} from "../../tiles/tiledata";
-import type { Direction } from "../../tiles/tiledata";
-import { playerWalkAnimation, playerImage } from "../../resources/resources";
-import type { Parcel } from "../worldObjects";
+} from "@/tiles/tiledata";
+import type { Direction } from "@/tiles/tiledata";
+import { playerWalkAnimation, playerImage } from "@/resources/resources";
+import type { Parcel } from "@/entities/worldObjects";
 import {
 	dropRockAtTile,
 	dropParcelAtTile,
 	tryCollectAtTile,
-} from "../worldObjects";
-import { zFromY, Z_LAYER_PLAYER } from "../../ui/zIndex";
-import { gameEventBus } from "../../events/GameEventBus";
-import { sfxOneWayGate, sfxPortal } from "../../audio/sounds";
-import { game } from "../../game";
-import type { MovingBlock } from "../movingBlocks";
-import { getMovingBlockNear, mountBlock } from "../movingBlocks";
+} from "@/entities/worldObjects";
+import { zFromY, Z_LAYER_PLAYER } from "@/ui/zIndex";
+import { gameEventBus } from "@/events/GameEventBus";
+import { sfxOneWayGate, sfxPortal } from "@/audio/sounds";
+import { game } from "@/game";
+import type { MovingBlock } from "@/entities/movingBlocks";
+import { getMovingBlockNear, mountBlock } from "@/entities/movingBlocks";
 import { Collider, CollisionContact, Side } from "excalibur";
-import { IRock } from "../../interfaces/IRock";
+import { IRock } from "@/interfaces/IRock";
 
 // --- Pure helpers (exported for unit testing) ---
 

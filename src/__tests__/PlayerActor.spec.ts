@@ -128,7 +128,7 @@ import {
 	findAdjacentDropZoneIndex,
 	gateExitTileIndex,
 	carryBounceOffset,
-} from "../entities/Player/PlayerActor";
+} from "@/entities/Player/PlayerActor";
 import {
 	TILE_SIZE,
 	GRID_COLS,
@@ -143,16 +143,16 @@ import {
 	OneWayGate,
 	portalTileIndices,
 	exitDoorTileIndices,
-} from "../tiles/tiledata";
-import { setupTestWorld } from "./testWorld";
+} from "@/tiles/tiledata";
+import { setupTestWorld } from "@/__tests__/testWorld";
 import {
 	dropParcelAtTile,
 	dropRockAtTile,
 	tryCollectAtTile,
-} from "../entities/worldObjects";
-import { sfxOneWayGate, sfxPortal } from "../audio/sounds";
-import { model } from "../model";
-import { gameEventBus } from "../events/GameEventBus";
+} from "@/entities/worldObjects";
+import { sfxOneWayGate, sfxPortal } from "@/audio/sounds";
+import { model } from "@/model";
+import { gameEventBus } from "@/events/GameEventBus";
 
 function makePlayer() {
 	return new PlayerActor(

@@ -1,15 +1,15 @@
 import { Actor, Vector, Circle } from "excalibur";
-import { zFromY, Z_LAYER_SHADOW } from "../../ui/zIndex";
+import { zFromY, Z_LAYER_SHADOW } from "@/ui/zIndex";
 import {
 	CRITTER_SIZE,
 	SHADOW_RADIUS_X,
 	SHADOW_RADIUS_Y,
 	SHADOW_COLOR,
-} from "./SETTINGS";
+} from "@/entities/Critter/SETTINGS";
 import { Color, vec, GraphicsGroup } from "excalibur";
-import { EYE_BASE_LEFT_X, EYE_BASE_Y, EYE_BASE_RIGHT_X } from "./SETTINGS";
-import { CRITTER_COLOR } from "./SETTINGS";
-import { ICritterGraphics } from "./types/ICritterGraphics";
+import { EYE_BASE_LEFT_X, EYE_BASE_Y, EYE_BASE_RIGHT_X } from "@/entities/Critter/SETTINGS";
+import { CRITTER_COLOR } from "@/entities/Critter/SETTINGS";
+import { ICritterGraphics } from "@/entities/Critter/types/ICritterGraphics";
 
 /** Build eyes-open, half-open, and closed graphics for a critter. */
 export function createCritterGraphics(): ICritterGraphics {

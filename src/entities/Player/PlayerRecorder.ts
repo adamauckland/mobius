@@ -1,7 +1,7 @@
 // Records and replays tile click events
 
-import { game } from "../../game";
-import { IClickEvent } from "../../interfaces/IClickEvent";
+import { game } from "@/game";
+import { IClickEvent } from "@/interfaces/IClickEvent";
 
 export class PlayerRecorder {
 	private events: IClickEvent[] = [];

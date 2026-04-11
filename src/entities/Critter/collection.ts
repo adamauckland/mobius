@@ -1,12 +1,12 @@
 import { Vector } from "excalibur";
-import { sfxCollect } from "../../audio/sounds";
-import { TILE_SIZE } from "../../tiles/tiledata";
-import { spawnScoreLight, spawnCollectBurst } from "../lightTrail";
-import { playerEntries } from "../Player/playerManager";
-import { addScore } from "../worldObjects";
-import { COLLECT_RADIUS } from "./SETTINGS";
-import { critterGroups } from "./state";
-import { getCritterCount } from "./state";
+import { sfxCollect } from "@/audio/sounds";
+import { TILE_SIZE } from "@/tiles/tiledata";
+import { spawnScoreLight, spawnCollectBurst } from "@/entities/lightTrail";
+import { playerEntries } from "@/entities/Player/playerManager";
+import { addScore } from "@/entities/worldObjects";
+import { COLLECT_RADIUS } from "@/entities/Critter/SETTINGS";
+import { critterGroups } from "@/entities/Critter/state";
+import { getCritterCount } from "@/entities/Critter/state";
 
 let allCollectedCallback: (() => void) | null = null;
 let allCollectedFired = false;

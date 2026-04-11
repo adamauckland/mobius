@@ -52,11 +52,11 @@ import {
 	getMovingBlockNear,
 	mountBlock,
 	dismountBlock,
-} from "../entities/movingBlocks";
+} from "@/entities/movingBlocks";
 import { Vector } from "excalibur";
-import { tiles, TILE_SIZE, GRID_COLS } from "../tiles/tiledata";
-import { setupTestWorld } from "./testWorld";
-import { game } from "../game";
+import { tiles, TILE_SIZE, GRID_COLS } from "@/tiles/tiledata";
+import { setupTestWorld } from "@/__tests__/testWorld";
+import { game } from "@/game";
 
 describe("movingBlocks", () => {
 	beforeEach(() => {

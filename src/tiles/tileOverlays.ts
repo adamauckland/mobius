@@ -1,5 +1,5 @@
 import { Actor, vec, BoundingBox } from "excalibur";
-import { TileSheet, rlSS } from "../resources/resources";
+import { TileSheet, rlSS } from "@/resources/resources";
 import {
 	tiles,
 	Tree,
@@ -8,10 +8,10 @@ import {
 	ExitDoor,
 	GRID_COLS,
 	TILE_SIZE,
-} from "./tiledata";
-import { game } from "../game";
-import { zFromY, Z_LAYER_TREE, Z_PLAYER_BACKGROUND_MOVER } from "../ui/zIndex";
-import { DROPZONE_SPRITES } from "../entities/worldObjects";
+} from "@/tiles/tiledata";
+import { game } from "@/game";
+import { zFromY, Z_LAYER_TREE, Z_PLAYER_BACKGROUND_MOVER } from "@/ui/zIndex";
+import { DROPZONE_SPRITES } from "@/entities/worldObjects";
 
 export function spawnTreeOverlays() {
 	for (let i = 0; i < tiles.length; i++) {

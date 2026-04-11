@@ -1,6 +1,6 @@
-import { GRID_COLS, GRID_ROWS, loadWorld } from "../tiles/tiledata";
-import type { IMapData } from "../interfaces/IMapData";
-import type { TileInfoType } from "../levels/TileInfoType";
+import { GRID_COLS, GRID_ROWS, loadWorld } from "@/tiles/tiledata";
+import type { IMapData } from "@/interfaces/IMapData";
+import type { TileInfoType } from "@/levels/TileInfoType";
 
 /**
  * Build and load a 50x50 grass map for tests, with a few non-grass tiles

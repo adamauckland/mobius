@@ -1,15 +1,15 @@
 import { Actor, Vector, TileMap } from "excalibur";
-import { rlSS } from "../resources/resources";
+import { rlSS } from "@/resources/resources";
 import {
 	TILE_SIZE,
 	GRID_COLS,
 	DropZone,
 	tiles,
 	dropZoneTileIndices,
-} from "../tiles/tiledata";
-import { game } from "../game";
-import { zFromY, Z_LAYER_PICKUP, Z_LAYER_ROCK } from "../ui/zIndex";
-import { spawnLight, spawnScoreLight } from "./lightTrail";
+} from "@/tiles/tiledata";
+import { game } from "@/game";
+import { zFromY, Z_LAYER_PICKUP, Z_LAYER_ROCK } from "@/ui/zIndex";
+import { spawnLight, spawnScoreLight } from "@/entities/lightTrail";
 import {
 	sfxCollect,
 	sfxPickUpRock,
@@ -17,10 +17,10 @@ import {
 	sfxPickUpParcel,
 	sfxDropParcel,
 	sfxParcelPlaced,
-} from "../audio/sounds";
-import { PlayerActor } from "./Player/PlayerActor";
-import { rebuildPathfinding } from "../ui/pathfinding";
-import { IRock } from "../interfaces/IRock";
+} from "@/audio/sounds";
+import { PlayerActor } from "@/entities/Player/PlayerActor";
+import { rebuildPathfinding } from "@/ui/pathfinding";
+import { IRock } from "@/interfaces/IRock";
 
 let tileMapRef: TileMap;
 

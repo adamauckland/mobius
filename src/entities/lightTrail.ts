@@ -9,8 +9,8 @@ import {
 	GpuParticleEmitter,
 	EmitterType,
 } from "excalibur";
-import { game } from "../game";
-import { Z_RIPPLE, Z_HUD } from "../ui/zIndex";
+import { game } from "@/game";
+import { Z_RIPPLE, Z_HUD } from "@/ui/zIndex";
 
 /**
  * Spawn a glowing light that moves from `from` to `to` over `durationMs`,

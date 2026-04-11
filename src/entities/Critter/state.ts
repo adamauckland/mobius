@@ -1,4 +1,4 @@
-import { ICritterGroup } from "./types/ICritterGroup";
+import { ICritterGroup } from "@/entities/Critter/types/ICritterGroup";
 
 export const critterGroups: ICritterGroup[] = [];
 

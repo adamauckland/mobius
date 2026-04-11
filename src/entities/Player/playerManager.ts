@@ -1,7 +1,7 @@
 import { Vector, Actor, Circle, Color, Polygon } from "excalibur";
-import { PlayerActor, player } from "./PlayerActor";
-import { playerWalkAnimation, playerImage } from "../../resources/resources";
-import { PlayerRecorder } from "./PlayerRecorder";
+import { PlayerActor, player } from "@/entities/Player/PlayerActor";
+import { playerWalkAnimation, playerImage } from "@/resources/resources";
+import { PlayerRecorder } from "@/entities/Player/PlayerRecorder";
 import {
 	TILE_SIZE,
 	GRID_COLS,
@@ -10,20 +10,20 @@ import {
 	START_POS_Y,
 	START_TILE_INDEX,
 	customStartTile,
-} from "../../tiles/tiledata";
-import { model } from "../../model";
-import { game } from "../../game";
-import { handleTileClick } from "../../ui/pathfinding";
-import { resetRocks, resetParcels } from "../worldObjects";
-import { resetCritters } from "../Critter/critters";
-import { resetMonsters } from "../monsters";
-import { resetBarriers } from "../barriers";
-import { resetGameTimer } from "../../gameLoop";
-import { resetMovingBlocks } from "../movingBlocks";
-import { zFromY, Z_LAYER_PLAYER, Z_RIPPLE } from "../../ui/zIndex";
-import { spawnRewindPixels } from "../lightTrail";
-import { IPlayerEntry } from "../../interfaces/IPlayerEntry";
-import { gameEventBus } from "../../events/GameEventBus";
+} from "@/tiles/tiledata";
+import { model } from "@/model";
+import { game } from "@/game";
+import { handleTileClick } from "@/ui/pathfinding";
+import { resetRocks, resetParcels } from "@/entities/worldObjects";
+import { resetCritters } from "@/entities/Critter/critters";
+import { resetMonsters } from "@/entities/monsters";
+import { resetBarriers } from "@/entities/barriers";
+import { resetGameTimer } from "@/gameLoop";
+import { resetMovingBlocks } from "@/entities/movingBlocks";
+import { zFromY, Z_LAYER_PLAYER, Z_RIPPLE } from "@/ui/zIndex";
+import { spawnRewindPixels } from "@/entities/lightTrail";
+import { IPlayerEntry } from "@/interfaces/IPlayerEntry";
+import { gameEventBus } from "@/events/GameEventBus";
 
 let inputLockedUntil = 0;
 

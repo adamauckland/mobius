@@ -8,7 +8,7 @@ import {
 	Z_RIPPLE,
 	Z_HUD,
 	Z_COUNTDOWN,
-} from "../ui/zIndex";
+} from "@/ui/zIndex";
 
 describe("zFromY", () => {
 	it("returns y * 10 + layer", () => {

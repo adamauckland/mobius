@@ -21,7 +21,7 @@ vi.mock("../game", () => ({
 	},
 }));
 
-import { gameEventBus } from "../events/GameEventBus";
+import { gameEventBus } from "@/events/GameEventBus";
 
 describe("GameEventBus", () => {
 	beforeEach(() => {

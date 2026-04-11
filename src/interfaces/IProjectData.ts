@@ -1,4 +1,4 @@
-import { IMapData } from "./IMapData";
+import { IMapData } from "@/interfaces/IMapData";
 
 // A project is a collection of levels
 

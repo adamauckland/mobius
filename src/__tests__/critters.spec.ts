@@ -126,23 +126,23 @@ vi.mock("../ui/pathfinding", () => ({
 	rebuildPathfinding: vi.fn(),
 }));
 
-import { sfxCritterFlee } from "../audio/sounds";
-import { spawnCollectBurst } from "../entities/lightTrail";
-import { updateCritters, resetCritters } from "../entities/Critter/critters";
+import { sfxCritterFlee } from "@/audio/sounds";
+import { spawnCollectBurst } from "@/entities/lightTrail";
+import { updateCritters, resetCritters } from "@/entities/Critter/critters";
 import {
 	tryCollectCritters,
 	setOnAllCrittersCollected,
 	resetAllCrittersCollectedFlag,
-} from "../entities/Critter/collection";
-import { spawnCritterGroupsAt } from "../entities/Critter/spawn";
+} from "@/entities/Critter/collection";
+import { spawnCritterGroupsAt } from "@/entities/Critter/spawn";
 import {
 	getCritterGroups,
 	getCritterCount,
 	clearCritters,
-} from "../entities/Critter/state";
-import { playerEntries } from "../entities/Player/playerManager";
-import { TILE_SIZE, GRID_COLS, tiles, Fence } from "../tiles/tiledata";
-import { setupTestWorld } from "./testWorld";
+} from "@/entities/Critter/state";
+import { playerEntries } from "@/entities/Player/playerManager";
+import { TILE_SIZE, GRID_COLS, tiles, Fence } from "@/tiles/tiledata";
+import { setupTestWorld } from "@/__tests__/testWorld";
 
 describe("critters", () => {
 	beforeEach(() => {
@@ -151,6 +151,7 @@ describe("critters", () => {
 		// Reset playerEntries to a single mock player
 		playerEntries.length = 0;
 		playerEntries.push({
+			spawnTileIndex: 0,
 			player: {
 				pos: { x: 0, y: 0 },
 				graphics: { isVisible: true },

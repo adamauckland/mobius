@@ -1,6 +1,6 @@
 // Synthesized retro sound effects using Web Audio API — no files needed.
 
-import { game } from "../game";
+import { game } from "@/game";
 
 let ctx: AudioContext | null = null;
 

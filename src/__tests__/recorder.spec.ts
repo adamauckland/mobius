@@ -21,8 +21,8 @@ vi.mock("../game", () => ({
 	},
 }));
 
-import { PlayerRecorder } from "../entities/Player/PlayerRecorder";
-import type { IClickEvent } from "../interfaces/IClickEvent";
+import { PlayerRecorder } from "@/entities/Player/PlayerRecorder";
+import type { IClickEvent } from "@/interfaces/IClickEvent";
 
 describe("GameRecorder", () => {
 	let recorder: PlayerRecorder;

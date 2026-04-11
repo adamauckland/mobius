@@ -1,11 +1,11 @@
-import "./style.css";
+import "@/style.css";
 import { Loader } from "excalibur";
-import { Resources } from "./resources/resources";
-import { game } from "./game";
-import { model } from "./model";
-import "./gameSetup";
-import { startCustomMap, startProjectLevel } from "./gameSetup";
-import { showEditor } from "./editor";
+import { Resources } from "@/resources/resources";
+import { game } from "@/game";
+import { model } from "@/model";
+import "@/gameSetup";
+import { startCustomMap, startProjectLevel } from "@/gameSetup";
+import { showEditor } from "@/editor/editor";
 
 // Load resources, then handle custom map / editor mode / project play
 const loader = new Loader();
@@ -65,7 +65,7 @@ fontReady.then(() =>
 			if (packId) {
 				// Clear the URL param so reloads don't re-fetch
 				window.history.replaceState({}, "", window.location.pathname);
-				import("./levelPacks/levelPacks").then(
+				import("@/levelPacks/levelPacks").then(
 					async ({ loadPack, getPackProject }) => {
 						try {
 							const pack = await loadPack(packId);

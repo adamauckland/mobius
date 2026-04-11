@@ -1,6 +1,6 @@
-import { IMapData } from "../interfaces/IMapData";
-import { IProjectData } from "../interfaces/IProjectData";
-import { TileInfoType } from "./TileInfoType";
+import { IMapData } from "@/interfaces/IMapData";
+import { IProjectData } from "@/interfaces/IProjectData";
+import { TileInfoType } from "@/levels/TileInfoType";
 
 /**
  * Decode a legacy compact tile code into a TileInfo. Maps used to store tiles
