@@ -37,7 +37,7 @@ import {
 } from "./entities/worldObjects";
 import { initBarriers, spawnBarriers } from "./entities/barriers";
 import { spawnMovingBlocksAt } from "./entities/movingBlocks";
-import { spawnCritterGroupsAt } from "./entities/critters";
+import { spawnCritterGroupsAt } from "./entities/Critter/critters";
 import { spawnMonstersAt, setOnPlayerKilled } from "./entities/monsters";
 import { sfxDeath, sfxLevelComplete } from "./audio/sounds";
 import { spawnDeathExplosion } from "./entities/lightTrail";

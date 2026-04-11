@@ -132,7 +132,7 @@ import {
 	tryCollectCritters,
 	resetCritters,
 	clearCritters,
-} from "../entities/critters";
+} from "../entities/Critter/critters";
 import { playerEntries } from "../entities/Player/playerManager";
 import { TILE_SIZE, GRID_COLS, tiles, Fence } from "../tiles/tiledata";
 import { setupTestWorld } from "./testWorld";

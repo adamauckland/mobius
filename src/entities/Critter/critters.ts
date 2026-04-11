@@ -9,14 +9,14 @@ import {
 	DropZone,
 	OneWayGate,
 	Fence,
-} from "../tiles/tiledata";
-import { getRocks } from "./worldObjects";
-import { game } from "../game";
-import { zFromY, Z_LAYER_PICKUP, Z_LAYER_SHADOW } from "../ui/zIndex";
-import { spawnScoreLight } from "./lightTrail";
-import { sfxCollect } from "../audio/sounds";
-import { addScore } from "./worldObjects";
-import { playerEntries } from "./Player/playerManager";
+} from "../../tiles/tiledata";
+import { getRocks } from "../worldObjects";
+import { game } from "../../game";
+import { zFromY, Z_LAYER_PICKUP, Z_LAYER_SHADOW } from "../../ui/zIndex";
+import { spawnScoreLight } from "../lightTrail";
+import { sfxCollect } from "../../audio/sounds";
+import { addScore } from "../worldObjects";
+import { playerEntries } from "../Player/playerManager";
 
 // --- Types ---
 
@@ -376,7 +376,11 @@ function getAliveCrittersWithCenter(group: ICritterGroup): {
 		centerX += c.pos.x;
 		centerY += c.pos.y;
 	}
-	return { alive, centerX: centerX / alive.length, centerY: centerY / alive.length };
+	return {
+		alive,
+		centerX: centerX / alive.length,
+		centerY: centerY / alive.length,
+	};
 }
 
 function computeFleeAcceleration(
@@ -470,7 +474,10 @@ function applyVelocity(critter: ICritter, ax: number, ay: number, dt: number) {
 	}
 }
 
-function moveCritter(critter: ICritter, dt: number): { prevX: number; prevY: number } {
+function moveCritter(
+	critter: ICritter,
+	dt: number,
+): { prevX: number; prevY: number } {
 	const prevX = critter.pos.x;
 	const prevY = critter.pos.y;
 	critter.pos.x += critter.vel.x * dt;

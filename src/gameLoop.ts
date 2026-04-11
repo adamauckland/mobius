@@ -3,7 +3,10 @@ import { game } from "./game";
 import { model } from "./model";
 import { updateMovingBlocks } from "./entities/movingBlocks";
 import { updateMonsters } from "./entities/monsters";
-import { updateCritters, tryCollectCritters } from "./entities/critters";
+import {
+	updateCritters,
+	tryCollectCritters,
+} from "./entities/Critter/critters";
 import { getScore, addScore } from "./entities/worldObjects";
 import { sfxHeartbeat } from "./audio/sounds";
 import { spawnDeathExplosion } from "./entities/lightTrail";
