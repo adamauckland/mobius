@@ -21,7 +21,7 @@ import { resetBarriers } from "../barriers";
 import { resetGameTimer } from "../../gameLoop";
 import { resetMovingBlocks } from "../movingBlocks";
 import { zFromY, Z_LAYER_PLAYER, Z_RIPPLE } from "../../ui/zIndex";
-import { spawnRewindPixels, REWIND_EFFECT_DURATION } from "../lightTrail";
+import { spawnRewindPixels } from "../lightTrail";
 import { IPlayerEntry } from "../../interfaces/IPlayerEntry";
 import { gameEventBus } from "../../events/GameEventBus";
 
@@ -284,14 +284,10 @@ export function stopAndSpawnNext(targetTileIndex?: number) {
 	model.isRecording = true;
 
 	// Rewind pixel effect: explode at old position, rebuild at spawn
-	newPlayer.graphics.isVisible = false;
 	spawnRewindPixels(oldPos, spawnPos);
-	game.clock.schedule(() => {
-		newPlayer.graphics.isVisible = true;
-		newPlayer.scale.x = 0.2;
-		newPlayer.scale.y = 0.2;
-		newPlayer.actions.scaleTo(new Vector(1, 1), new Vector(4, 4));
-	}, REWIND_EFFECT_DURATION);
+	newPlayer.scale.x = 0.2;
+	newPlayer.scale.y = 0.2;
+	newPlayer.actions.scaleTo(new Vector(1, 1), new Vector(4, 4));
 
 	// Follow the new player
 	const cameraRadius =
