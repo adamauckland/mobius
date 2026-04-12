@@ -115,12 +115,12 @@ function createScoreDisplay(): Text {
 		font: createHUDFont(48, TextAlign.Center),
 	});
 	const scoreLabel = new ScreenElement({
-		pos: vec(0, 10),
+		pos: vec(-1000, 10),
 		z: Z_HUD,
 	});
 	scoreLabel.graphics.use(scoreText);
 	scoreLabel.on("preupdate", () => {
-		scoreLabel.pos.x = game.screen.resolution.width / 2;
+		//	scoreLabel.pos.x = game.screen.resolution.width / 2;
 	});
 	game.add(scoreLabel);
 	return scoreText;
@@ -133,7 +133,7 @@ function createLivesDisplay(): Text {
 		font: createHUDFont(32, TextAlign.Left, Color.Black),
 	});
 	const livesBackdropLabel = new ScreenElement({
-		pos: vec(10, 45),
+		pos: vec(-1010, 45),
 		z: Z_HUD,
 	});
 	livesBackdropLabel.graphics.use(livesBackdropText);
@@ -145,7 +145,7 @@ function createLivesDisplay(): Text {
 		font: createHUDFont(32, TextAlign.Left, Color.Red),
 	});
 	const livesLabel = new ScreenElement({
-		pos: vec(10, 45),
+		pos: vec(-1010, 45),
 		z: Z_HUD,
 	});
 	livesLabel.graphics.use(livesText);
