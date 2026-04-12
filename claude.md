@@ -1,6 +1,7 @@
 - write small functions
 - each function should do one thing
+- prefer dependency injection and inversion of control
+- unit test each file
 - code is typescript
 - when generating code, functions should be defined before they are called as per general javascript expectation rules
-- unit test each file
 - unit tests are implemented with vitest

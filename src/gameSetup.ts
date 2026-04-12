@@ -51,6 +51,7 @@ import {
 	spawnExitDoorReveal,
 } from "@/entities/Light/lightTrail";
 import { getCritterCount } from "@/entities/Critter/state";
+import { canCompleteLevel } from "@/rules/canCompleteLevel";
 import {
 	setOnAllCrittersCollected,
 	resetAllCrittersCollectedFlag,
@@ -313,7 +314,18 @@ function setupExitDoorGating(hud: HUDRefs, doorActors: Actor[]) {
 	}
 
 	function wireExitDoor() {
-		activeEntry().player.onReachedExitDoor = () => triggerLevelComplete(hud);
+		activeEntry().player.onReachedExitDoor = () => {
+			const { total, collected } = getCritterCount();
+			if (
+				!canCompleteLevel({
+					critterTotal: total,
+					critterCollected: collected,
+				})
+			) {
+				return;
+			}
+			triggerLevelComplete(hud);
+		};
 		if (hasCritters) {
 			hideExitDoors(doorActors);
 		}

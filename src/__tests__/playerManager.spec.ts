@@ -226,14 +226,23 @@ describe("playerManager", () => {
 			replayAll();
 			for (const entry of playerEntries) {
 				const idx = entry.spawnTileIndex;
-				const expectedX = (idx % 50) * 16 + 8; // GRID_COLS=50, TILE_SIZE=16
-				const expectedY = Math.floor(idx / 50) * 16 + 8;
-				expect(entry.player.pos.x).toBe(expectedX);
-				expect(entry.player.pos.y).toBe(expectedY);
+				expect(entry.player.pos.x).toBe(entry.spawnX);
+				expect(entry.player.pos.y).toBe(entry.spawnY);
 				expect(entry.player.logicalTileIndex).toBe(idx);
 				expect(entry.player.currentMoveTileIndex).toBe(idx);
 				expect(entry.player.previousTileIndex).toBe(idx);
 			}
+		});
+
+		it("restores exact mid-tile pixel position, not tile center", () => {
+			const entry = playerEntries[0];
+			entry.spawnX = 123.45;
+			entry.spawnY = 67.89;
+			entry.player.pos.x = 999;
+			entry.player.pos.y = 999;
+			replayAll();
+			expect(entry.player.pos.x).toBe(123.45);
+			expect(entry.player.pos.y).toBe(67.89);
 		});
 
 		it("clears player carried items", () => {

@@ -47,6 +47,8 @@ export const playerEntries: IPlayerEntry[] = [
 		recorder: new PlayerRecorder(),
 		recording: null,
 		spawnTileIndex: startTileIdx(),
+		spawnX: startPosX(),
+		spawnY: startPosY(),
 	},
 ];
 
@@ -126,10 +128,8 @@ export function replayAll() {
 		// starts at the level start; subsequent players return to the tile
 		// where they were created via portal/rewind).
 		const spawnIdx = entry.spawnTileIndex;
-		const sx = (spawnIdx % GRID_COLS) * TILE_SIZE + TILE_SIZE / 2;
-		const sy = Math.floor(spawnIdx / GRID_COLS) * TILE_SIZE + TILE_SIZE / 2;
-		entry.player.pos.x = sx;
-		entry.player.pos.y = sy;
+		entry.player.pos.x = entry.spawnX;
+		entry.player.pos.y = entry.spawnY;
 		entry.player.logicalTileIndex = spawnIdx;
 		entry.player.currentMoveTileIndex = spawnIdx;
 		entry.player.previousTileIndex = spawnIdx;
@@ -203,6 +203,8 @@ export function timeRewind() {
 		recorder: new PlayerRecorder(),
 		recording: null,
 		spawnTileIndex: startTileIdx(),
+		spawnX: startPosX(),
+		spawnY: startPosY(),
 	});
 
 	// Re-follow the surviving player
@@ -273,6 +275,8 @@ export function stopAndSpawnNext(targetTileIndex?: number) {
 		recorder: new PlayerRecorder(),
 		recording: null,
 		spawnTileIndex: spawnTile,
+		spawnX: spawnPos.x,
+		spawnY: spawnPos.y,
 	};
 	playerEntries.push(newEntry);
 
