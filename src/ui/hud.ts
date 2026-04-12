@@ -160,7 +160,7 @@ function createLevelIndicator() {
 		font: createHUDFont(24, TextAlign.Left),
 	});
 	const levelLabel = new ScreenElement({
-		pos: vec(10, 78),
+		pos: vec(10, 10),
 		z: Z_HUD,
 	});
 	levelLabel.graphics.use(levelText);
@@ -366,7 +366,7 @@ export function createHUD(): HUDRefs {
 
 	createLevelIndicator();
 
-	const gameOverLabel = createCenteredOverlay("Time Up", Color.Red, 100);
+	const gameOverLabel = createCenteredOverlay("TIME UP", Color.Red, 100);
 	const timesUpLabel = createCenteredOverlay(
 		"TIME'S UP",
 		Color.fromHex("#ff6600"),
