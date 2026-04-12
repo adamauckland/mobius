@@ -15,7 +15,7 @@ import {
 import { rebuildPathfinding } from "@/ui/pathfinding";
 import { zFromY, Z_LAYER_ROCK } from "@/ui/zIndex";
 import { Actor, Vector } from "excalibur";
-import { addScore, score } from "../Collectable/collectables";
+import { addScore } from "../Collectable/collectables";
 import { spawnLight, spawnScoreLight } from "../Light/lightTrail";
 import { PlayerActor } from "../Player/PlayerActor";
 import { tileMapRef } from "..";

@@ -1,4 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import {
+	playerEntries,
+	activeEntry,
+	replayAll,
+	setupClickHandler,
+} from "@/entities/Player/playerManager";
+import { model } from "@/model";
+import { resetParcels } from "@/entities/Parcel/Parcel";
+import { resetRocks } from "@/entities/Rock/rocks";
+import { resetMonsters } from "@/entities/Monster/monsters";
+import { resetBarriers } from "@/entities/Barrier/barriers";
+import { resetMovingBlocks } from "@/entities/MovingPlatform/movingPlatform";
+import { game } from "@/game";
+import { gameEventBus } from "@/events/GameEventBus";
 
 // Mock excalibur
 vi.mock("excalibur", () => {
@@ -165,21 +179,6 @@ vi.mock("../events/GameEventBus", () => ({
 vi.mock("../gameSetup", () => ({
 	resetGameTimer: vi.fn(),
 }));
-
-import {
-	playerEntries,
-	activeEntry,
-	replayAll,
-	setupClickHandler,
-} from "@/entities/Player/playerManager";
-import { model } from "@/model";
-import { resetParcels } from "@/entities/Parcel/Parcel";
-import { resetRocks } from "@/entities/rocks";
-import { resetMonsters } from "@/entities/Monster/monsters";
-import { resetBarriers } from "@/entities/Barrier/barriers";
-import { resetMovingBlocks } from "@/entities/MovingPlatform/movingPlatform";
-import { game } from "@/game";
-import { gameEventBus } from "@/events/GameEventBus";
 
 describe("playerManager", () => {
 	beforeEach(() => {

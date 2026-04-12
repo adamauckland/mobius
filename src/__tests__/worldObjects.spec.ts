@@ -98,7 +98,7 @@ import {
 	resetRocks,
 	spawnRocksAt,
 	getRocks,
-} from "@/entities/rocks";
+} from "@/entities/Rock/rocks";
 import { TILE_SIZE, GRID_COLS } from "@/tiles/tiledata";
 import { setupTestWorld } from "@/__tests__/testWorld";
 

@@ -32,7 +32,7 @@ import {
 import { initWorldObjectsTileMap } from "@/entities";
 import { spawnParcelsAt } from "./entities/Parcel/Parcel";
 import { spawnCollectablesAt } from "./entities/Collectable/collectables";
-import { spawnRocksAt } from "./entities/rocks";
+import { spawnRocksAt } from "./entities/Rock/rocks";
 import {
 	initBarriers,
 	spawnBarriers,

@@ -8,8 +8,8 @@ import {
 	Fence,
 	TILE_SIZE,
 } from "@/tiles/tiledata";
-import { getRocks } from "../rocks";
 import { CRITTER_SIZE } from "@/entities/Critter/SETTINGS";
+import { getRocks } from "../Rock/rocks";
 
 // --- Tile collision ---
 /** Check if a single tile index is blocked. */

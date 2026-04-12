@@ -29,7 +29,7 @@ import { playerWalkAnimation, playerImage } from "@/resources/resources";
 import type { Parcel } from "../Parcel/Parcel";
 import { dropParcelAtTile } from "../Parcel/Parcel";
 import { tryCollectAtTile } from "../Collectable/collectables";
-import { dropRockAtTile } from "../rocks";
+import { dropRockAtTile } from "../Rock/rocks";
 import { zFromY, Z_LAYER_PLAYER } from "@/ui/zIndex";
 import { gameEventBus } from "@/events/GameEventBus";
 import { sfxOneWayGate, sfxPortal } from "@/audio/sounds";

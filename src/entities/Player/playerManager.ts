@@ -15,7 +15,7 @@ import { model } from "@/model";
 import { game } from "@/game";
 import { handleTileClick } from "@/ui/pathfinding";
 import { resetParcels } from "../Parcel/Parcel";
-import { resetRocks } from "../rocks";
+import { resetRocks } from "../Rock/rocks";
 import { resetCritters } from "@/entities/Critter/critters";
 import { resetMonsters } from "@/entities/Monster/monsters";
 import { resetBarriers } from "@/entities/Barrier/barriers";

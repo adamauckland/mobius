@@ -144,7 +144,7 @@ import {
 import { setupTestWorld } from "@/__tests__/testWorld";
 import { model } from "@/model";
 import { dropParcel } from "@/entities/Parcel/Parcel";
-import { dropRock, getRockAtTile } from "@/entities/rocks";
+import { dropRock, getRockAtTile } from "@/entities/Rock/rocks";
 
 describe("pathfinding", () => {
 	let mockTileMap: any;

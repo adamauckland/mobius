@@ -5,7 +5,7 @@ import { rlSS } from "@/resources/resources";
 import { GRID_COLS, TILE_SIZE } from "@/tiles/tiledata";
 import { zFromY, Z_LAYER_ROCK } from "@/ui/zIndex";
 import { Actor, Vector } from "excalibur";
-import { PlayerActor } from "./Player/PlayerActor";
+import { PlayerActor } from "../Player/PlayerActor";
 
 const rocks: IRock[] = [];
 

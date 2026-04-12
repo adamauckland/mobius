@@ -23,7 +23,7 @@ import {
 	pickUpParcel,
 	dropParcel,
 } from "@/entities/Parcel/Parcel";
-import { getRockAtTile, pickUpRock, dropRock } from "@/entities/rocks";
+import { getRockAtTile, pickUpRock, dropRock } from "@/entities/Rock/rocks";
 import { game } from "@/game";
 import { dismountBlock } from "@/entities/MovingPlatform/movingPlatform";
 
