@@ -155,14 +155,17 @@ function createLivesDisplay(): Text {
 
 function createLevelIndicator() {
 	if (model.totalLevels <= 1) return;
+
 	const levelText = new Text({
 		text: `Level ${model.currentLevel + 1}/${model.totalLevels}`,
 		font: createHUDFont(24, TextAlign.Left),
 	});
+
 	const levelLabel = new ScreenElement({
 		pos: vec(10, 10),
 		z: Z_HUD,
 	});
+
 	levelLabel.graphics.use(levelText);
 	game.add(levelLabel);
 }

@@ -152,6 +152,7 @@ import {
 	handleTileClick,
 	rebuildPathfinding,
 	resetDijkstraGraph,
+	findReachableTileNearTarget,
 } from "@/ui/pathfinding";
 import {
 	tiles,
@@ -159,6 +160,7 @@ import {
 	Fence,
 	Barrier,
 	Grass,
+	Void,
 	TILE_SIZE,
 	GRID_COLS,
 	GRID_ROWS,
@@ -204,6 +206,31 @@ describe("pathfinding", () => {
 	describe("resetDijkstraGraph", () => {
 		it("does not throw", () => {
 			expect(() => resetDijkstraGraph()).not.toThrow();
+		});
+	});
+
+	describe("findReachableTileNearTarget", () => {
+		it("returns the target itself when it is passable", () => {
+			// player at (4,0) → target at (10,0), both grass
+			expect(findReachableTileNearTarget(4, 10)).toBe(10);
+		});
+
+		it("routes around blocked tiles to the closest reachable tile", () => {
+			// Test world: indices 0=tree, 1=fence, 2=barrier (all blocked at row 0).
+			// Player at (4,0)=index 4, target at (0,0)=index 0 (tree).
+			// The closest reachable tile to (0,0) is (0,1)=index GRID_COLS,
+			// reached by going down from row 0 and around the wall.
+			expect(findReachableTileNearTarget(4, 0)).toBe(GRID_COLS);
+		});
+
+		it("treats void tiles as blocked and walks the player as close as possible", () => {
+			// Drop a void tile at index 10 (col 10, row 0) and click it from
+			// the player's spawn — the redirect should pick a passable neighbour.
+			tiles[10] = new Void();
+			const result = findReachableTileNearTarget(START_TILE_INDEX, 10);
+			expect(result).not.toBeNull();
+			expect(result).not.toBe(10);
+			expect(tiles[result!].collider).toBe(false);
 		});
 	});
 

@@ -7,9 +7,6 @@ import {
 } from "@excaliburjs/plugin-pathfinding";
 import { TileMap } from "excalibur";
 import {
-	Tree,
-	Barrier,
-	Fence,
 	DropZone,
 	tiles,
 	TILE_SIZE,
@@ -93,11 +90,9 @@ function getPlayerTileIndex(player: PlayerActor): number {
 
 /** Returns true if the tile is impassable. */
 function isTileBlocked(tileIndex: number): boolean {
-	if (tiles[tileIndex] instanceof Tree) return true;
-	if (tiles[tileIndex] instanceof Fence) return true;
 	const tile = tiles[tileIndex];
-	if (tile instanceof Barrier && tile.collider) return true;
-	return false;
+	if (!tile) return true;
+	return tile.collider === true;
 }
 
 /**
@@ -131,6 +126,55 @@ export function findNearestPassableTile(startIndex: number): number | null {
 		}
 	}
 	return null;
+}
+
+/**
+ * BFS from `playerIndex` through passable tiles only. Returns the visited
+ * tile whose Manhattan distance to `targetIndex` is smallest — i.e. the
+ * reachable tile nearest the (possibly unreachable) target. Returns null
+ * if the player is somehow boxed in with no neighbours considered.
+ */
+export function findReachableTileNearTarget(
+	playerIndex: number,
+	targetIndex: number,
+): number | null {
+	const targetX = targetIndex % GRID_COLS;
+	const targetY = Math.floor(targetIndex / GRID_COLS);
+	const visited = new Set<number>();
+	const queue: number[] = [playerIndex];
+	visited.add(playerIndex);
+
+	let bestIndex: number | null = playerIndex;
+	let bestDist =
+		Math.abs((playerIndex % GRID_COLS) - targetX) +
+		Math.abs(Math.floor(playerIndex / GRID_COLS) - targetY);
+
+	while (queue.length > 0) {
+		const idx = queue.shift()!;
+		const x = idx % GRID_COLS;
+		const y = Math.floor(idx / GRID_COLS);
+		for (const [dx, dy] of [
+			[0, -1],
+			[0, 1],
+			[-1, 0],
+			[1, 0],
+		] as const) {
+			const nx = x + dx;
+			const ny = y + dy;
+			if (nx < 0 || nx >= GRID_COLS || ny < 0 || ny >= GRID_ROWS) continue;
+			const nIdx = nx + ny * GRID_COLS;
+			if (visited.has(nIdx)) continue;
+			visited.add(nIdx);
+			if (isTileBlocked(nIdx)) continue;
+			const dist = Math.abs(nx - targetX) + Math.abs(ny - targetY);
+			if (dist < bestDist) {
+				bestDist = dist;
+				bestIndex = nIdx;
+			}
+			queue.push(nIdx);
+		}
+	}
+	return bestIndex;
 }
 
 /** If clicking own tile while carrying something, drop it. Returns true if an item was dropped. */
@@ -249,13 +293,15 @@ function isMatchingDropZoneForPlayer(
 	);
 }
 
-function resolveBlockedTarget(targetTileIndex: number): number | null {
-	const nearest = findNearestPassableTile(targetTileIndex);
-	if (nearest === null) {
-		model.warningText = "UNREACHABLE TILE";
-		showWarning();
-		return null;
-	}
+function resolveBlockedTarget(
+	playerTileIndex: number,
+	targetTileIndex: number,
+): number | null {
+	const nearest = findReachableTileNearTarget(
+		playerTileIndex,
+		targetTileIndex,
+	);
+	if (nearest === null || nearest === playerTileIndex) return null;
 	return nearest;
 }
 
@@ -298,14 +344,17 @@ export function handleTileClick(
 	model.targetTileIndex = targetTileIndex;
 
 	if (!tryDismount(targetPlayer)) return;
+	if (!isValidTileIndex(targetTileIndex)) return;
 
 	const isMatchingDZ = isMatchingDropZoneForPlayer(
 		targetTileIndex,
 		targetPlayer,
 	);
 
+	const playerTileIndex = getPlayerTileIndex(targetPlayer);
+
 	if (!isMatchingDZ && isTileBlocked(targetTileIndex)) {
-		const resolved = resolveBlockedTarget(targetTileIndex);
+		const resolved = resolveBlockedTarget(playerTileIndex, targetTileIndex);
 		if (resolved === null) return;
 		targetTileIndex = resolved;
 	}
@@ -315,7 +364,6 @@ export function handleTileClick(
 	setArrivalPickup(targetTileIndex, targetPlayer);
 
 	targetPlayer.playerActionBuffer = [];
-	const playerTileIndex = getPlayerTileIndex(targetPlayer);
 
 	if (!isValidTileIndex(playerTileIndex)) return;
 	if (!isValidTileIndex(targetTileIndex)) return;
