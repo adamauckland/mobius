@@ -145,11 +145,9 @@ import {
 	exitDoorTileIndices,
 } from "@/tiles/tiledata";
 import { setupTestWorld } from "@/__tests__/testWorld";
-import {
-	dropParcelAtTile,
-	dropRockAtTile,
-	tryCollectAtTile,
-} from "@/entities/worldObjects";
+import { dropParcelAtTile } from "@/entities/Parcel/Parcel";
+import { tryCollectAtTile } from "@/entities/Collectable/collectables";
+import { dropRockAtTile } from "@/entities/rocks";
 import { sfxOneWayGate, sfxPortal } from "@/audio/sounds";
 import { model } from "@/model";
 import { gameEventBus } from "@/events/GameEventBus";

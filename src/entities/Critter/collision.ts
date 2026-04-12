@@ -8,7 +8,7 @@ import {
 	Fence,
 	TILE_SIZE,
 } from "@/tiles/tiledata";
-import { getRocks } from "@/entities/worldObjects";
+import { getRocks } from "../rocks";
 import { CRITTER_SIZE } from "@/entities/Critter/SETTINGS";
 
 // --- Tile collision ---

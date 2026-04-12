@@ -111,7 +111,10 @@ vi.mock("../zIndex", () => ({
 	Z_HUD: 1000,
 }));
 
-import { spawnDeathExplosion, spawnRewindPixels } from "@/entities/lightTrail";
+import {
+	spawnDeathExplosion,
+	spawnRewindPixels,
+} from "@/entities/Light/lightTrail";
 import {
 	Vector,
 	ParticleEmitter,

@@ -29,19 +29,27 @@ import {
 	stopAndSpawnNext,
 	setOnNewActivePlayer,
 } from "@/entities/Player/playerManager";
+import { initWorldObjectsTileMap } from "@/entities";
+import { spawnParcelsAt } from "./entities/Parcel/Parcel";
+import { spawnCollectablesAt } from "./entities/Collectable/collectables";
+import { spawnRocksAt } from "./entities/rocks";
 import {
-	spawnRocksAt,
-	spawnCollectablesAt,
-	spawnParcelsAt,
-	initWorldObjectsTileMap,
-} from "@/entities/worldObjects";
-import { initBarriers, spawnBarriers, setupBarrierEvents } from "@/entities/barriers";
+	initBarriers,
+	spawnBarriers,
+	setupBarrierEvents,
+} from "@/entities/Barrier/barriers";
 import { gameEventBus } from "@/events/GameEventBus";
-import { spawnMovingBlocksAt } from "@/entities/movingBlocks";
+import { spawnMovingBlocksAt } from "@/entities/MovingPlatform/movingPlatform";
 import { spawnCritterGroupsAt } from "@/entities/Critter/spawn";
-import { spawnMonstersAt, setOnPlayerKilled } from "@/entities/monsters";
+import {
+	spawnMonstersAt,
+	setOnPlayerKilled,
+} from "@/entities/Monster/monsters";
 import { sfxDeath, sfxLevelComplete, sfxExitDoorOpen } from "@/audio/sounds";
-import { spawnDeathExplosion, spawnExitDoorReveal } from "@/entities/lightTrail";
+import {
+	spawnDeathExplosion,
+	spawnExitDoorReveal,
+} from "@/entities/Light/lightTrail";
 import { getCritterCount } from "@/entities/Critter/state";
 import {
 	setOnAllCrittersCollected,
@@ -221,7 +229,8 @@ function createTilemap(): TileMap {
 function movePlayerToStart() {
 	if (customStartTile === null) return;
 	const sx = (customStartTile % GRID_COLS) * TILE_SIZE + TILE_SIZE / 2;
-	const sy = Math.floor(customStartTile / GRID_COLS) * TILE_SIZE + TILE_SIZE / 2;
+	const sy =
+		Math.floor(customStartTile / GRID_COLS) * TILE_SIZE + TILE_SIZE / 2;
 	player.pos.x = sx;
 	player.pos.y = sy;
 	player.logicalTileIndex = customStartTile;

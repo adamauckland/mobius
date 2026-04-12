@@ -1,13 +1,13 @@
 import { Color, Font, vec } from "excalibur";
 import { game } from "@/game";
 import { model } from "@/model";
-import { updateMovingBlocks } from "@/entities/movingBlocks";
-import { updateMonsters } from "@/entities/monsters";
+import { updateMovingBlocks } from "@/entities/MovingPlatform/movingPlatform";
+import { updateMonsters } from "@/entities/Monster/monsters";
 import { updateCritters } from "@/entities/Critter/critters";
 import { tryCollectCritters } from "@/entities/Critter/collection";
-import { getScore, addScore } from "@/entities/worldObjects";
+import { getScore, addScore } from "./entities/Collectable/collectables";
 import { sfxHeartbeat } from "@/audio/sounds";
-import { spawnDeathExplosion } from "@/entities/lightTrail";
+import { spawnDeathExplosion } from "@/entities/Light/lightTrail";
 import { activeEntry } from "@/entities/Player/playerManager";
 import type { HUDRefs } from "@/ui/hud";
 

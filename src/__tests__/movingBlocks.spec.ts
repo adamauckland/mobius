@@ -52,7 +52,7 @@ import {
 	getMovingBlockNear,
 	mountBlock,
 	dismountBlock,
-} from "@/entities/movingBlocks";
+} from "@/entities/MovingPlatform/movingPlatform";
 import { Vector } from "excalibur";
 import { tiles, TILE_SIZE, GRID_COLS } from "@/tiles/tiledata";
 import { setupTestWorld } from "@/__tests__/testWorld";

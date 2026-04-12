@@ -19,15 +19,13 @@ import {
 import { PlayerActor } from "@/entities/Player/PlayerActor";
 import { model } from "@/model";
 import {
-	getRockAtTile,
-	pickUpRock,
-	dropRock,
 	getParcelAtTile,
 	pickUpParcel,
 	dropParcel,
-} from "@/entities/worldObjects";
+} from "@/entities/Parcel/Parcel";
+import { getRockAtTile, pickUpRock, dropRock } from "@/entities/rocks";
 import { game } from "@/game";
-import { dismountBlock } from "@/entities/movingBlocks";
+import { dismountBlock } from "@/entities/MovingPlatform/movingPlatform";
 
 // create graph for dijkstra — deferred until initPathfinding so tiles are populated
 let myDijkstraGraph = new ExcaliburGraph();
@@ -229,7 +227,10 @@ function queuePath(
 	}
 }
 
-function isMatchingDropZoneForPlayer(tileIndex: number, player: PlayerActor): boolean {
+function isMatchingDropZoneForPlayer(
+	tileIndex: number,
+	player: PlayerActor,
+): boolean {
 	const tile = tiles[tileIndex];
 	return (
 		tile instanceof DropZone &&
@@ -289,7 +290,10 @@ export function handleTileClick(
 
 	if (!tryDismount(targetPlayer)) return;
 
-	const isMatchingDZ = isMatchingDropZoneForPlayer(targetTileIndex, targetPlayer);
+	const isMatchingDZ = isMatchingDropZoneForPlayer(
+		targetTileIndex,
+		targetPlayer,
+	);
 
 	if (!isMatchingDZ && isTileBlocked(targetTileIndex)) {
 		const resolved = resolveBlockedTarget(targetTileIndex);

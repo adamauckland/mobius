@@ -1,9 +1,12 @@
 import { Vector } from "excalibur";
 import { sfxCollect } from "@/audio/sounds";
 import { TILE_SIZE } from "@/tiles/tiledata";
-import { spawnScoreLight, spawnCollectBurst } from "@/entities/lightTrail";
+import {
+	spawnScoreLight,
+	spawnCollectBurst,
+} from "@/entities/Light/lightTrail";
 import { playerEntries } from "@/entities/Player/playerManager";
-import { addScore } from "@/entities/worldObjects";
+import { addScore } from "../Collectable/collectables";
 import { COLLECT_RADIUS } from "@/entities/Critter/SETTINGS";
 import { critterGroups } from "@/entities/Critter/state";
 import { getCritterCount } from "@/entities/Critter/state";

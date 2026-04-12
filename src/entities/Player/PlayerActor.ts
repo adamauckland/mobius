@@ -26,18 +26,19 @@ import {
 } from "@/tiles/tiledata";
 import type { Direction } from "@/tiles/tiledata";
 import { playerWalkAnimation, playerImage } from "@/resources/resources";
-import type { Parcel } from "@/entities/worldObjects";
-import {
-	dropRockAtTile,
-	dropParcelAtTile,
-	tryCollectAtTile,
-} from "@/entities/worldObjects";
+import type { Parcel } from "../Parcel/Parcel";
+import { dropParcelAtTile } from "../Parcel/Parcel";
+import { tryCollectAtTile } from "../Collectable/collectables";
+import { dropRockAtTile } from "../rocks";
 import { zFromY, Z_LAYER_PLAYER } from "@/ui/zIndex";
 import { gameEventBus } from "@/events/GameEventBus";
 import { sfxOneWayGate, sfxPortal } from "@/audio/sounds";
 import { game } from "@/game";
-import type { MovingBlock } from "@/entities/movingBlocks";
-import { getMovingBlockNear, mountBlock } from "@/entities/movingBlocks";
+import type { MovingBlock } from "@/entities/MovingPlatform/movingPlatform";
+import {
+	getMovingBlockNear,
+	mountBlock,
+} from "@/entities/MovingPlatform/movingPlatform";
 import { Collider, CollisionContact, Side } from "excalibur";
 import { IRock } from "@/interfaces/IRock";
 

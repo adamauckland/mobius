@@ -173,10 +173,11 @@ import {
 	setupClickHandler,
 } from "@/entities/Player/playerManager";
 import { model } from "@/model";
-import { resetRocks, resetParcels } from "@/entities/worldObjects";
-import { resetMonsters } from "@/entities/monsters";
-import { resetBarriers } from "@/entities/barriers";
-import { resetMovingBlocks } from "@/entities/movingBlocks";
+import { resetParcels } from "@/entities/Parcel/Parcel";
+import { resetRocks } from "@/entities/rocks";
+import { resetMonsters } from "@/entities/Monster/monsters";
+import { resetBarriers } from "@/entities/Barrier/barriers";
+import { resetMovingBlocks } from "@/entities/MovingPlatform/movingPlatform";
 import { game } from "@/game";
 import { gameEventBus } from "@/events/GameEventBus";
 

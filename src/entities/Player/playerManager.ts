@@ -14,14 +14,15 @@ import {
 import { model } from "@/model";
 import { game } from "@/game";
 import { handleTileClick } from "@/ui/pathfinding";
-import { resetRocks, resetParcels } from "@/entities/worldObjects";
+import { resetParcels } from "../Parcel/Parcel";
+import { resetRocks } from "../rocks";
 import { resetCritters } from "@/entities/Critter/critters";
-import { resetMonsters } from "@/entities/monsters";
-import { resetBarriers } from "@/entities/barriers";
+import { resetMonsters } from "@/entities/Monster/monsters";
+import { resetBarriers } from "@/entities/Barrier/barriers";
 import { resetGameTimer } from "@/gameLoop";
-import { resetMovingBlocks } from "@/entities/movingBlocks";
+import { resetMovingBlocks } from "@/entities/MovingPlatform/movingPlatform";
 import { zFromY, Z_LAYER_PLAYER, Z_RIPPLE } from "@/ui/zIndex";
-import { spawnRewindPixels } from "@/entities/lightTrail";
+import { spawnRewindPixels } from "@/entities/Light/lightTrail";
 import { IPlayerEntry } from "@/interfaces/IPlayerEntry";
 import { gameEventBus } from "@/events/GameEventBus";
 
@@ -41,7 +42,12 @@ player.onReachedPortal = () => {
 };
 
 export const playerEntries: IPlayerEntry[] = [
-	{ player, recorder: new PlayerRecorder(), recording: null, spawnTileIndex: startTileIdx() },
+	{
+		player,
+		recorder: new PlayerRecorder(),
+		recording: null,
+		spawnTileIndex: startTileIdx(),
+	},
 ];
 
 // The active entry is always the last one in the array

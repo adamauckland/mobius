@@ -1,16 +1,10 @@
 import { Actor, Vector, vec, TileMap } from "excalibur";
 import { rlSS } from "@/resources/resources";
-import {
-	tiles,
-	Barrier,
-	Switch,
-	GRID_COLS,
-	TILE_SIZE,
-} from "@/tiles/tiledata";
+import { tiles, Barrier, Switch, GRID_COLS, TILE_SIZE } from "@/tiles/tiledata";
 import { game } from "@/game";
 import { zFromY, Z_LAYER_TREE, Z_LAYER_PICKUP } from "@/ui/zIndex";
 import { rebuildPathfinding } from "@/ui/pathfinding";
-import { spawnLight } from "@/entities/lightTrail";
+import { spawnLight } from "@/entities/Light/lightTrail";
 import { sfxSwitch } from "@/audio/sounds";
 import { IBarrierEntry } from "@/interfaces/IBarrierEntry";
 import { gameEventBus } from "@/events/GameEventBus";

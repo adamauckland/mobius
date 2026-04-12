@@ -11,7 +11,7 @@ import {
 } from "@/tiles/tiledata";
 import { game } from "@/game";
 import { zFromY, Z_LAYER_TREE, Z_PLAYER_BACKGROUND_MOVER } from "@/ui/zIndex";
-import { DROPZONE_SPRITES } from "@/entities/worldObjects";
+import { DROPZONE_SPRITES } from "@/entities/Parcel/Parcel";
 
 export function spawnTreeOverlays() {
 	for (let i = 0; i < tiles.length; i++) {

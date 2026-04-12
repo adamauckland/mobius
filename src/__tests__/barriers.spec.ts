@@ -71,7 +71,7 @@ import {
 	resetBarriers,
 	setupBarrierEvents,
 	teardownBarrierEvents,
-} from "@/entities/barriers";
+} from "@/entities/Barrier/barriers";
 import { tiles, Barrier, Switch } from "@/tiles/tiledata";
 import { setupTestWorld } from "@/__tests__/testWorld";
 import { rebuildPathfinding } from "@/ui/pathfinding";

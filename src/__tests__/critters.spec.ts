@@ -127,7 +127,7 @@ vi.mock("../ui/pathfinding", () => ({
 }));
 
 import { sfxCritterFlee } from "@/audio/sounds";
-import { spawnCollectBurst } from "@/entities/lightTrail";
+import { spawnCollectBurst } from "@/entities/Light/lightTrail";
 import { updateCritters, resetCritters } from "@/entities/Critter/critters";
 import {
 	tryCollectCritters,
