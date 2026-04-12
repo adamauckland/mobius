@@ -20,7 +20,7 @@ describe("shouldHandlePlayerDeath", () => {
 		).toBe(false);
 	});
 
-	it("ignores deaths after game over", () => {
+	it("ignores deaths after time up", () => {
 		expect(
 			shouldHandlePlayerDeath({
 				killedPlayerIsActive: true,
@@ -29,7 +29,7 @@ describe("shouldHandlePlayerDeath", () => {
 		).toBe(false);
 	});
 
-	it("ignores ghost deaths after game over", () => {
+	it("ignores ghost deaths after time up", () => {
 		expect(
 			shouldHandlePlayerDeath({
 				killedPlayerIsActive: false,

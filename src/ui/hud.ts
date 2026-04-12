@@ -15,7 +15,6 @@ import {
 import { game } from "@/game";
 import { model } from "@/model";
 import { Z_HUD, Z_COUNTDOWN } from "@/ui/zIndex";
-import { togglePause, onPauseChange } from "@/main";
 
 export interface HUDRefs {
 	timerText: Text;
@@ -27,10 +26,16 @@ export interface HUDRefs {
 	dimOverlay: ScreenElement;
 	rewindButton: ScreenElement;
 	setRewindUrgent: (urgent: boolean) => void;
+	setTimerMeter: (fraction: number) => void;
+	setTimerMeterVisible: (visible: boolean) => void;
 	displayedScore: { value: number };
 }
 
-function createHUDFont(size: number, textAlign: TextAlign, color: Color = Color.White): Font {
+function createHUDFont(
+	size: number,
+	textAlign: TextAlign,
+	color: Color = Color.White,
+): Font {
 	return new Font({
 		size,
 		unit: FontUnit.Px,
@@ -41,7 +46,12 @@ function createHUDFont(size: number, textAlign: TextAlign, color: Color = Color.
 	});
 }
 
-function createOverlayFont(size: number, color: Color, lineHeight?: number, shadowBlur = 4): Font {
+function createOverlayFont(
+	size: number,
+	color: Color,
+	lineHeight?: number,
+	shadowBlur = 4,
+): Font {
 	return new Font({
 		size,
 		unit: FontUnit.Px,
@@ -79,11 +89,11 @@ function createTimerDisplay(): Text {
 	const timerText = new Text({
 		text: "0:00.0",
 		font: new Font({
-			size: 48,
+			size: 32,
 			unit: FontUnit.Px,
 			family: '"Sixtyfour", monospace',
 			color: Color.White,
-			textAlign: TextAlign.Center,
+			textAlign: TextAlign.Right,
 			shadow: { blur: 2, offset: vec(1, 1), color: Color.Black },
 		}),
 	});
@@ -93,7 +103,7 @@ function createTimerDisplay(): Text {
 	});
 	timerLabel.graphics.use(timerText);
 	timerLabel.on("preupdate", () => {
-		timerLabel.pos.x = game.screen.resolution.width / 2;
+		timerLabel.pos.x = game.screen.resolution.width - 10;
 	});
 	game.add(timerLabel);
 	return timerText;
@@ -102,7 +112,7 @@ function createTimerDisplay(): Text {
 function createScoreDisplay(): Text {
 	const scoreText = new Text({
 		text: "0",
-		font: createHUDFont(32, TextAlign.Right),
+		font: createHUDFont(48, TextAlign.Center),
 	});
 	const scoreLabel = new ScreenElement({
 		pos: vec(0, 10),
@@ -110,29 +120,10 @@ function createScoreDisplay(): Text {
 	});
 	scoreLabel.graphics.use(scoreText);
 	scoreLabel.on("preupdate", () => {
-		scoreLabel.pos.x = game.screen.resolution.width - 10;
+		scoreLabel.pos.x = game.screen.resolution.width / 2;
 	});
 	game.add(scoreLabel);
 	return scoreText;
-}
-
-function createPauseButton() {
-	const pauseText = new Text({
-		text: "II",
-		font: createHUDFont(32, TextAlign.Left),
-	});
-	const pauseButton = new ScreenElement({
-		pos: vec(10, 10),
-		z: Z_HUD,
-		width: 40,
-		height: 40,
-	});
-	pauseButton.graphics.use(pauseText);
-	pauseButton.on("pointerup", () => togglePause());
-	onPauseChange((isPaused) => {
-		pauseText.text = isPaused ? ">" : "II";
-	});
-	game.add(pauseButton);
 }
 
 function createLivesDisplay(): Text {
@@ -176,7 +167,13 @@ function createLevelIndicator() {
 	game.add(levelLabel);
 }
 
-function createCenteredOverlay(text: string, color: Color, fontSize: number, lineHeight?: number, shadowBlur = 4): ScreenElement {
+function createCenteredOverlay(
+	text: string,
+	color: Color,
+	fontSize: number,
+	lineHeight?: number,
+	shadowBlur = 4,
+): ScreenElement {
 	const textGfx = new Text({
 		text,
 		font: createOverlayFont(fontSize, color, lineHeight, shadowBlur),
@@ -202,10 +199,10 @@ interface RewindButtonHandle {
 
 const REWIND_BLUE = Color.fromHex("#4488ff");
 const REWIND_RED = Color.fromHex("#ff3344");
+const REWIND_RADIUS = 36;
+const REWIND_MARGIN = 20;
 
 function createRewindButton(): RewindButtonHandle {
-	const REWIND_RADIUS = 36;
-	const REWIND_MARGIN = 20;
 	const rewindBgNormal = new Circle({
 		radius: REWIND_RADIUS,
 		color: REWIND_BLUE,
@@ -227,7 +224,7 @@ function createRewindButton(): RewindButtonHandle {
 		}),
 	});
 	const bgOffset = vec(-REWIND_RADIUS, -REWIND_RADIUS);
-	const arrowOffset = vec(1, 4);
+	const arrowOffset = vec(0, 0);
 	const rewindNormalGfx = new GraphicsGroup({
 		members: [
 			{ graphic: rewindBgNormal, offset: bgOffset },
@@ -287,17 +284,103 @@ function createRewindButton(): RewindButtonHandle {
 	return { element: rewindButton, setUrgent };
 }
 
+const TIMER_METER_WIDTH = 5;
+const TIMER_METER_TOP_Y = 70;
+const TIMER_METER_BOTTOM_GAP = 10;
+const TIMER_INDICATOR_HEIGHT = 2;
+const TIMER_INDICATOR_OVERHANG = 4;
+
+interface TimerMeterHandle {
+	setFraction: (fraction: number) => void;
+	setVisible: (visible: boolean) => void;
+}
+
+function createTimerMeter(): TimerMeterHandle {
+	const bgRect = new Rectangle({
+		width: TIMER_METER_WIDTH,
+		height: 1,
+		color: Color.fromHex("#5e676b"),
+	});
+	const bgElement = new ScreenElement({
+		pos: vec(0, 0),
+		z: Z_HUD,
+		anchor: vec(0.5, 0),
+	});
+	bgElement.graphics.use(bgRect);
+
+	const indicatorRect = new Rectangle({
+		width: TIMER_METER_WIDTH + TIMER_INDICATOR_OVERHANG * 2,
+		height: TIMER_INDICATOR_HEIGHT,
+		color: Color.White,
+	});
+	const indicatorElement = new ScreenElement({
+		pos: vec(0, 0),
+		z: Z_HUD + 1,
+		anchor: vec(0.5, 0.5),
+	});
+	indicatorElement.graphics.use(indicatorRect);
+
+	let fraction = 1;
+	let visible = false;
+
+	bgElement.on("preupdate", () => {
+		const x = game.screen.resolution.width - REWIND_MARGIN - REWIND_RADIUS;
+		const top = TIMER_METER_TOP_Y;
+		const bottom =
+			game.screen.resolution.height -
+			REWIND_MARGIN -
+			REWIND_RADIUS * 2 -
+			TIMER_METER_BOTTOM_GAP;
+		const height = Math.max(0, bottom - top);
+
+		bgRect.height = height;
+		bgElement.pos.x = x;
+		bgElement.pos.y = top;
+		bgElement.graphics.isVisible = visible;
+
+		const clamped = Math.max(0, Math.min(1, fraction));
+		indicatorElement.pos.x = x;
+		indicatorElement.pos.y = top + (1 - clamped) * height;
+		indicatorElement.graphics.isVisible = visible;
+	});
+
+	game.add(bgElement);
+	game.add(indicatorElement);
+
+	return {
+		setFraction: (f) => {
+			fraction = f;
+			visible = true;
+		},
+		setVisible: (v) => {
+			visible = v;
+		},
+	};
+}
+
 export function createHUD(): HUDRefs {
 	const dimOverlay = createDimOverlay();
 	const timerText = createTimerDisplay();
 	const scoreText = createScoreDisplay();
-	createPauseButton();
 	const livesText = createLivesDisplay();
+
 	createLevelIndicator();
-	const gameOverLabel = createCenteredOverlay("GAME OVER", Color.Red, 100);
-	const timesUpLabel = createCenteredOverlay("TIME'S UP", Color.fromHex("#ff6600"), 200);
-	const levelCompleteLabel = createCenteredOverlay("LEVEL\nCOMPLETE", Color.fromHex("#00e676"), 100, 120, 16);
+
+	const gameOverLabel = createCenteredOverlay("Time Up", Color.Red, 100);
+	const timesUpLabel = createCenteredOverlay(
+		"TIME'S UP",
+		Color.fromHex("#ff6600"),
+		200,
+	);
+	const levelCompleteLabel = createCenteredOverlay(
+		"LEVEL\nCOMPLETE",
+		Color.fromHex("#00e676"),
+		100,
+		120,
+		16,
+	);
 	const rewind = createRewindButton();
+	const timerMeter = createTimerMeter();
 
 	return {
 		timerText,
@@ -309,6 +392,8 @@ export function createHUD(): HUDRefs {
 		dimOverlay,
 		rewindButton: rewind.element,
 		setRewindUrgent: rewind.setUrgent,
+		setTimerMeter: timerMeter.setFraction,
+		setTimerMeterVisible: timerMeter.setVisible,
 		displayedScore: { value: 0 },
 	};
 }

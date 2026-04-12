@@ -64,6 +64,9 @@ function drainBonusTime(hud: HUDRefs, elapsed: number) {
 		addScore(BONUS_POINTS_PER_TICK);
 	}
 	hud.timerText.text = formatTime(bonusRemaining);
+	if (model.timeLimit > 0) {
+		hud.setTimerMeter(bonusRemaining / model.timeLimit);
+	}
 	if (bonusRemaining <= 0) {
 		bonusCountdown = false;
 		hud.timerText.text = "0:00.0";
@@ -73,6 +76,7 @@ function drainBonusTime(hud: HUDRefs, elapsed: number) {
 function updateCountdownTimer(hud: HUDRefs) {
 	const remaining = Math.max(0, model.timeLimit - elapsedGameTime);
 	hud.timerText.text = formatTime(remaining);
+	hud.setTimerMeter(remaining / model.timeLimit);
 	flashTimerIfLow(hud, remaining);
 }
 

@@ -95,28 +95,6 @@ fontReady.then(() =>
 );
 model.showHUD = true;
 
-// Pause state and toggle — shared between Escape key and HUD button
-export let paused = false;
-let onPauseChanged: ((paused: boolean) => void) | null = null;
-
-export function onPauseChange(cb: (paused: boolean) => void) {
-	onPauseChanged = cb;
-}
-
-export function togglePause() {
-	paused = !paused;
-	if (paused) {
-		game.clock.stop();
-	} else {
-		game.clock.start();
-	}
-	onPauseChanged?.(paused);
-}
-
-document.addEventListener("keydown", (e) => {
-	if (e.key === "Escape") togglePause();
-});
-
 // Editor button on start screen
 const btnEditor = document.getElementById("btn-editor");
 if (btnEditor) {

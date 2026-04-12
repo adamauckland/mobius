@@ -6,16 +6,16 @@ import { zFromY, Z_LAYER_PICKUP } from "@/ui/zIndex";
 import { Actor, Vector } from "excalibur";
 import { spawnScoreLight } from "../Light/lightTrail";
 import { ICollectable } from "./ICollectable";
-import { addScore, collectables, score } from "./state";
-
-// Check if a collectable is at this tile and collect it (permanently)
+import { addScore, collectables } from "./state";
 
 export function tryCollectAtTile(tileIndex: number): boolean {
-	const c = collectables.find((c) => c.tileIndex === tileIndex && !c.collected);
-	if (!c) return false;
-	c.collected = true;
-	spawnScoreLight(c.actor.pos.clone());
-	c.actor.kill();
+	const foundCollectables = collectables.find(
+		(c) => c.tileIndex === tileIndex && !c.collected,
+	);
+	if (!foundCollectables) return false;
+	foundCollectables.collected = true;
+	spawnScoreLight(foundCollectables.actor.pos.clone());
+	foundCollectables.actor.kill();
 	addScore(100);
 	sfxCollect();
 	return true;
@@ -27,12 +27,11 @@ export function getCollectableCount(): { total: number; collected: number } {
 		collected: collectables.filter((c) => c.collected).length,
 	};
 }
-/** Spawn collectables at specific tile indices (for custom maps). */
 
 export function spawnCollectablesAt(indices: number[]) {
-	for (const tileIdx of indices) {
-		const x = tileIdx % GRID_COLS;
-		const y = Math.floor(tileIdx / GRID_COLS);
+	for (const tileIndex of indices) {
+		const x = tileIndex % GRID_COLS;
+		const y = Math.floor(tileIndex / GRID_COLS);
 		const actor = new Actor({
 			pos: new Vector(
 				x * TILE_SIZE + TILE_SIZE / 2,
@@ -49,7 +48,7 @@ export function spawnCollectablesAt(indices: number[]) {
 		};
 		const collectable: ICollectable = {
 			actor,
-			tileIndex: tileIdx,
+			tileIndex: tileIndex,
 			collected: false,
 		};
 		collectables.push(collectable);

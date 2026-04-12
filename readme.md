@@ -58,7 +58,7 @@ Spawn entities                        rocks, parcels, collectables,
 Create HUD                            timer (top-center), score (top-right),
                                       pause button (top-left), lives, level indicator
   ↓
-Create overlays                       GAME OVER (red), LEVEL COMPLETE (green)
+Create overlays                       Time Up (red), LEVEL COMPLETE (green)
   ↓
 Wire callbacks                        wireExitDoor(), setOnPlayerKilled()
   ↓
@@ -148,7 +148,7 @@ Update hearts display
 sfxDeath()
 if lives <= 0:
   model.gameOver = true
-  show GAME OVER overlay + RESTART button
+  show Time Up overlay + RESTART button
 else:
   replayAll()                         reset world, replay ghosts
   start recording active player
