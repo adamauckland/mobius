@@ -25,6 +25,7 @@ import { zFromY, Z_LAYER_PLAYER, Z_RIPPLE } from "@/ui/zIndex";
 import { spawnRewindPixels } from "@/entities/Light/lightTrail";
 import { IPlayerEntry } from "@/interfaces/IPlayerEntry";
 import { gameEventBus } from "@/events/GameEventBus";
+import { canEnterPortal } from "@/rules/canEnterPortal";
 
 let inputLockedUntil = 0;
 
@@ -34,7 +35,7 @@ export function lockInput(durationMs: number) {
 
 // Wire first player's portal callback — only triggers if this player is the active (recording) one
 player.onReachedPortal = () => {
-	if (activeEntry().player === player) {
+	if (canEnterPortal({ isActivePlayer: activeEntry().player === player })) {
 		stopAndSpawnNext();
 		return true;
 	}
@@ -262,7 +263,9 @@ export function stopAndSpawnNext(targetTileIndex?: number) {
 		playerImage,
 	);
 	newPlayer.onReachedPortal = () => {
-		if (activeEntry().player === newPlayer) {
+		if (
+			canEnterPortal({ isActivePlayer: activeEntry().player === newPlayer })
+		) {
 			stopAndSpawnNext();
 			return true;
 		}

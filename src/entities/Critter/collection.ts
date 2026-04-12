@@ -10,6 +10,7 @@ import { addScore } from "../Collectable/collectables";
 import { COLLECT_RADIUS } from "@/entities/Critter/SETTINGS";
 import { critterGroups } from "@/entities/Critter/state";
 import { getCritterCount } from "@/entities/Critter/state";
+import { areAllCrittersCollected } from "@/rules/areAllCrittersCollected";
 
 let allCollectedCallback: (() => void) | null = null;
 let allCollectedFired = false;
@@ -61,8 +62,7 @@ export function tryCollectCritters(): number {
 	}
 
 	if (count > 0 && !allCollectedFired && allCollectedCallback) {
-		const { total, collected } = getCritterCount();
-		if (total > 0 && collected >= total) {
+		if (areAllCrittersCollected(getCritterCount())) {
 			allCollectedFired = true;
 			allCollectedCallback();
 		}

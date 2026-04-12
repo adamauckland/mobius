@@ -26,6 +26,7 @@ import {
 import { getRockAtTile, pickUpRock, dropRock } from "@/entities/Rock/rocks";
 import { game } from "@/game";
 import { dismountBlock } from "@/entities/MovingPlatform/movingPlatform";
+import { canPickUpItem, canDropItemAtTile } from "@/rules/carryRules";
 
 // create graph for dijkstra — deferred until initPathfinding so tiles are populated
 let myDijkstraGraph = new ExcaliburGraph();
@@ -137,8 +138,13 @@ function tryDropCarriedItem(
 	targetTileIndex: number,
 	player: PlayerActor,
 ): boolean {
-	const playerTile = getPlayerTileIndex(player);
-	if (targetTileIndex !== playerTile) return false;
+	const dropState = {
+		targetTileIndex,
+		playerTileIndex: getPlayerTileIndex(player),
+		carryingRock: !!player.carriedRock,
+		carryingParcel: !!player.carriedParcel,
+	};
+	if (!canDropItemAtTile(dropState)) return false;
 
 	if (player.carriedRock) {
 		dropRock(player);
@@ -155,13 +161,16 @@ function tryDropCarriedItem(
 function setArrivalPickup(targetTileIndex: number, player: PlayerActor) {
 	player.onArriveAtTile = null;
 
-	const isCarrying = player.carriedRock || player.carriedParcel;
-	if (isCarrying) return;
+	const carryStateNow = () => ({
+		carryingRock: !!player.carriedRock,
+		carryingParcel: !!player.carriedParcel,
+	});
+	if (!canPickUpItem(carryStateNow())) return;
 
 	const rock = getRockAtTile(targetTileIndex);
 	if (rock) {
 		player.onArriveAtTile = () => {
-			if (!rock.carriedBy && !player.carriedRock && !player.carriedParcel) {
+			if (!rock.carriedBy && canPickUpItem(carryStateNow())) {
 				pickUpRock(rock, player);
 			}
 		};
@@ -171,7 +180,7 @@ function setArrivalPickup(targetTileIndex: number, player: PlayerActor) {
 	const parcel = getParcelAtTile(targetTileIndex);
 	if (parcel) {
 		player.onArriveAtTile = () => {
-			if (!parcel.carriedBy && !player.carriedRock && !player.carriedParcel) {
+			if (!parcel.carriedBy && canPickUpItem(carryStateNow())) {
 				pickUpParcel(parcel, player);
 			}
 		};

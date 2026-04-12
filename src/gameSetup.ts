@@ -52,6 +52,7 @@ import {
 } from "@/entities/Light/lightTrail";
 import { getCritterCount } from "@/entities/Critter/state";
 import { canCompleteLevel } from "@/rules/canCompleteLevel";
+import { shouldHandlePlayerDeath, canRevive } from "@/rules/deathRules";
 import {
 	setOnAllCrittersCollected,
 	resetAllCrittersCollectedFlag,
@@ -338,8 +339,14 @@ function setupExitDoorGating(hud: HUDRefs, doorActors: Actor[]) {
 
 function setupDeathHandler(hud: HUDRefs, wireExitDoor: () => void) {
 	setOnPlayerKilled((killedPlayer) => {
-		if (killedPlayer !== activeEntry().player) return;
-		if (model.gameOver) return;
+		if (
+			!shouldHandlePlayerDeath({
+				killedPlayerIsActive: killedPlayer === activeEntry().player,
+				gameOver: model.gameOver,
+			})
+		) {
+			return;
+		}
 
 		model.lives--;
 		hud.livesText.text = "\u2665".repeat(model.lives);
@@ -347,7 +354,7 @@ function setupDeathHandler(hud: HUDRefs, wireExitDoor: () => void) {
 		killedPlayer.graphics.isVisible = false;
 		spawnDeathExplosion(killedPlayer.pos.clone());
 
-		if (model.lives <= 0) {
+		if (!canRevive({ livesRemaining: model.lives })) {
 			showGameOver(hud);
 			return;
 		}
