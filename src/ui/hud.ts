@@ -153,23 +153,6 @@ function createLivesDisplay(): Text {
 	return livesText;
 }
 
-function createLevelIndicator() {
-	if (model.totalLevels <= 1) return;
-
-	const levelText = new Text({
-		text: `Level ${model.currentLevel + 1}/${model.totalLevels}`,
-		font: createHUDFont(24, TextAlign.Left),
-	});
-
-	const levelLabel = new ScreenElement({
-		pos: vec(10, 10),
-		z: Z_HUD,
-	});
-
-	levelLabel.graphics.use(levelText);
-	game.add(levelLabel);
-}
-
 function createCenteredOverlay(
 	text: string,
 	color: Color,
@@ -366,8 +349,6 @@ export function createHUD(): HUDRefs {
 	const timerText = createTimerDisplay();
 	const scoreText = createScoreDisplay();
 	const livesText = createLivesDisplay();
-
-	createLevelIndicator();
 
 	const gameOverLabel = createCenteredOverlay("TIME UP", Color.Red, 100);
 	const timesUpLabel = createCenteredOverlay(
