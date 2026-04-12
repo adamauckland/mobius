@@ -5,10 +5,11 @@ import { updateMovingBlocks } from "@/entities/MovingPlatform/movingPlatform";
 import { updateMonsters } from "@/entities/Monster/monsters";
 import { updateCritters } from "@/entities/Critter/critters";
 import { tryCollectCritters } from "@/entities/Critter/collection";
-import { getScore, addScore } from "./entities/Collectable/collectables";
+import { getScore, addScore } from "./entities/Collectable/state";
 import { sfxHeartbeat } from "@/audio/sounds";
 import { spawnDeathExplosion } from "@/entities/Light/lightTrail";
 import { activeEntry } from "@/entities/Player/playerManager";
+import { isLowTime } from "@/rules/timerUrgency";
 import type { HUDRefs } from "@/ui/hud";
 
 let gameStarted = false;
@@ -28,11 +29,12 @@ export function resetGameTimer() {
 	lastHeartbeatSec = -1;
 }
 
-export function startBonusCountdown() {
+export function startBonusCountdown(hud?: HUDRefs) {
 	if (model.timeLimit <= 0) return;
 	bonusRemaining = Math.max(0, model.timeLimit - elapsedGameTime);
 	bonusAccumulator = 0;
 	bonusCountdown = true;
+	hud?.setRewindUrgent(false);
 }
 
 function formatTime(ms: number): string {
@@ -75,7 +77,9 @@ function updateCountdownTimer(hud: HUDRefs) {
 }
 
 function flashTimerIfLow(hud: HUDRefs, remaining: number) {
-	if (remaining < 10000) {
+	const urgent = isLowTime(remaining);
+	hud.setRewindUrgent(urgent);
+	if (urgent) {
 		const flash = Math.sin(game.clock.now() * 0.01) > 0;
 		(hud.timerText.font as Font).color = flash ? Color.Red : Color.White;
 		const secs = Math.floor((remaining % MS_PER_MINUTE) / 1000);
@@ -91,6 +95,7 @@ function flashTimerIfLow(hud: HUDRefs, remaining: number) {
 
 function handleTimeUp(hud: HUDRefs, onTimeUp?: () => void) {
 	model.gameOver = true;
+	hud.setRewindUrgent(false);
 	const player = activeEntry().player;
 	player.graphics.isVisible = false;
 	spawnDeathExplosion(player.pos.clone());

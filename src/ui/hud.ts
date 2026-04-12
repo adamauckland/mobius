@@ -26,6 +26,7 @@ export interface HUDRefs {
 	levelCompleteLabel: ScreenElement;
 	dimOverlay: ScreenElement;
 	rewindButton: ScreenElement;
+	setRewindUrgent: (urgent: boolean) => void;
 	displayedScore: { value: number };
 }
 
@@ -194,12 +195,20 @@ function createCenteredOverlay(text: string, color: Color, fontSize: number, lin
 	return label;
 }
 
-function createRewindButton(): ScreenElement {
+interface RewindButtonHandle {
+	element: ScreenElement;
+	setUrgent: (urgent: boolean) => void;
+}
+
+const REWIND_BLUE = Color.fromHex("#4488ff");
+const REWIND_RED = Color.fromHex("#ff3344");
+
+function createRewindButton(): RewindButtonHandle {
 	const REWIND_RADIUS = 36;
 	const REWIND_MARGIN = 20;
 	const rewindBgNormal = new Circle({
 		radius: REWIND_RADIUS,
-		color: Color.fromHex("#4488ff"),
+		color: REWIND_BLUE,
 	});
 	const rewindBgPressed = new Circle({
 		radius: REWIND_RADIUS,
@@ -243,12 +252,22 @@ function createRewindButton(): ScreenElement {
 		REWIND_RADIUS,
 		REWIND_RADIUS,
 	);
+	let urgent = false;
 	rewindButton.on("preupdate", () => {
 		rewindButton.pos.x =
 			game.screen.resolution.width - REWIND_MARGIN - REWIND_RADIUS;
 		rewindButton.pos.y =
 			game.screen.resolution.height - REWIND_MARGIN - REWIND_RADIUS;
+		if (urgent) {
+			const onRed = Math.sin(game.clock.now() * 0.02) > 0;
+			rewindBgNormal.color = onRed ? REWIND_RED : REWIND_BLUE;
+		} else if (rewindBgNormal.color !== REWIND_BLUE) {
+			rewindBgNormal.color = REWIND_BLUE;
+		}
 	});
+	const setUrgent = (next: boolean) => {
+		urgent = next;
+	};
 	rewindButton.on("pointerdown", () => {
 		rewindButton.graphics.use(rewindPressedGfx);
 		rewindButton.scale.x = 0.9;
@@ -265,7 +284,7 @@ function createRewindButton(): ScreenElement {
 		rewindButton.scale.y = 1;
 	});
 	game.add(rewindButton);
-	return rewindButton;
+	return { element: rewindButton, setUrgent };
 }
 
 export function createHUD(): HUDRefs {
@@ -278,7 +297,7 @@ export function createHUD(): HUDRefs {
 	const gameOverLabel = createCenteredOverlay("GAME OVER", Color.Red, 100);
 	const timesUpLabel = createCenteredOverlay("TIME'S UP", Color.fromHex("#ff6600"), 200);
 	const levelCompleteLabel = createCenteredOverlay("LEVEL\nCOMPLETE", Color.fromHex("#00e676"), 100, 120, 16);
-	const rewindButton = createRewindButton();
+	const rewind = createRewindButton();
 
 	return {
 		timerText,
@@ -288,7 +307,8 @@ export function createHUD(): HUDRefs {
 		timesUpLabel,
 		levelCompleteLabel,
 		dimOverlay,
-		rewindButton,
+		rewindButton: rewind.element,
+		setRewindUrgent: rewind.setUrgent,
 		displayedScore: { value: 0 },
 	};
 }

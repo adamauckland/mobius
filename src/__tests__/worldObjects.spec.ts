@@ -34,11 +34,11 @@ vi.mock("excalibur", () => {
 	return { Actor: MockActor, Vector: MockVector };
 });
 
-vi.mock("../resources/resources", () => ({
+vi.mock("@/resources/resources", () => ({
 	rlSS: { getSprite: vi.fn() },
 }));
 
-vi.mock("../game", () => ({
+vi.mock("@/game", () => ({
 	game: {
 		add: vi.fn(),
 		clock: {
@@ -49,13 +49,18 @@ vi.mock("../game", () => ({
 	},
 }));
 
-vi.mock("../zIndex", () => ({
+vi.mock("@/ui/zIndex", () => ({
 	zFromY: (y: number, layer: number) => y * 10 + layer,
 	Z_LAYER_PICKUP: 2,
 	Z_LAYER_ROCK: 4,
 }));
 
-vi.mock("../audio/sounds", () => ({
+vi.mock("@/ui/pathfinding", () => ({
+	rebuildPathfinding: vi.fn(),
+	handleTileClick: vi.fn(),
+}));
+
+vi.mock("@/audio/sounds", () => ({
 	sfxCollect: vi.fn(),
 	sfxPickUpRock: vi.fn(),
 	sfxDropRock: vi.fn(),
@@ -64,14 +69,19 @@ vi.mock("../audio/sounds", () => ({
 	sfxParcelPlaced: vi.fn(),
 }));
 
-vi.mock("../entities/lightTrail", () => ({
+vi.mock("@/entities/Light/lightTrail", () => ({
 	spawnLight: vi.fn(),
 	spawnScoreLight: vi.fn(),
+	spawnCollectBurst: vi.fn(),
 }));
 
-// Mock chap module - Player class (imported by worldObjects for typing)
-vi.mock("../entities/chap", () => ({
+vi.mock("@/entities/Player/PlayerActor", () => ({
+	PlayerActor: class {},
 	Player: class {},
+}));
+
+vi.mock("@/entities", () => ({
+	tileMapRef: { ref: null },
 }));
 
 import {
@@ -87,9 +97,9 @@ import {
 import {
 	tryCollectAtTile,
 	getCollectableCount,
-	getScore,
 	spawnCollectablesAt,
 } from "@/entities/Collectable/collectables";
+import { getScore } from "@/entities/Collectable/state";
 import {
 	getRockAtTile,
 	pickUpRock,

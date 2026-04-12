@@ -71,13 +71,13 @@ vi.mock("excalibur", () => {
 	};
 });
 
-vi.mock("../resources/resources", () => ({
+vi.mock("@/resources/resources", () => ({
 	playerWalkAnimation: { kind: "walk" },
 	playerImage: { kind: "idle" },
 }));
 
 let mockNow = 0;
-vi.mock("../game", () => ({
+vi.mock("@/game", () => ({
 	game: {
 		clock: {
 			now: () => mockNow,
@@ -85,23 +85,29 @@ vi.mock("../game", () => ({
 	},
 }));
 
-vi.mock("../zIndex", () => ({
+vi.mock("@/ui/zIndex", () => ({
 	zFromY: (y: number, layer: number) => y * 10 + layer,
 	Z_LAYER_PLAYER: 5,
 }));
 
-vi.mock("../audio/sounds", () => ({
+vi.mock("@/audio/sounds", () => ({
 	sfxOneWayGate: vi.fn(),
 	sfxPortal: vi.fn(),
 }));
 
-vi.mock("../entities/worldObjects", () => ({
+vi.mock("@/entities/Rock/rocks", () => ({
 	dropRockAtTile: vi.fn(),
+}));
+
+vi.mock("@/entities/Parcel/Parcel", () => ({
 	dropParcelAtTile: vi.fn(),
+}));
+
+vi.mock("@/entities/Collectable/collectables", () => ({
 	tryCollectAtTile: vi.fn(),
 }));
 
-vi.mock("../events/GameEventBus", () => ({
+vi.mock("@/events/GameEventBus", () => ({
 	gameEventBus: {
 		emit: vi.fn(),
 		dispatch: vi.fn(),
@@ -112,13 +118,13 @@ vi.mock("../events/GameEventBus", () => ({
 
 const mockGetMovingBlockNear = vi.fn<(pos: unknown) => unknown>();
 const mockMountBlock = vi.fn<(block: unknown, player: unknown) => void>();
-vi.mock("../entities/movingBlocks", () => ({
+vi.mock("@/entities/MovingPlatform/movingPlatform", () => ({
 	getMovingBlockNear: (pos: unknown) => mockGetMovingBlockNear(pos),
 	mountBlock: (block: unknown, player: unknown) =>
 		mockMountBlock(block, player),
 }));
 
-vi.mock("../model", () => ({
+vi.mock("@/model", () => ({
 	model: { currentTileIndex: 0, movesRemaining: 0 },
 }));
 

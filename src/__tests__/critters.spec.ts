@@ -110,7 +110,7 @@ vi.mock("../audio/sounds", () => ({
 	sfxParcelPlaced: vi.fn(),
 }));
 
-vi.mock("../entities/lightTrail", () => ({
+vi.mock("@/entities/Light/lightTrail", () => ({
 	spawnLight: vi.fn(),
 	spawnScoreLight: vi.fn(),
 	spawnCollectBurst: vi.fn(),
@@ -526,4 +526,5 @@ describe("critters", () => {
 			expect(critter.actor.isKilled()).toBe(false);
 		});
 	});
+
 });

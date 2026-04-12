@@ -1,9 +1,6 @@
-export interface LevelCompletionState {
-	critterTotal: number;
-	critterCollected: number;
-}
+import { ILevelCompletionState } from "./ILevelCompletionState";
 
-export function canCompleteLevel(state: LevelCompletionState): boolean {
+export function canCompleteLevel(state: ILevelCompletionState): boolean {
 	if (state.critterTotal > 0 && state.critterCollected < state.critterTotal) {
 		return false;
 	}

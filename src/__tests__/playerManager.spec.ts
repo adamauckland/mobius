@@ -11,6 +11,7 @@ import { resetRocks } from "@/entities/Rock/rocks";
 import { resetMonsters } from "@/entities/Monster/monsters";
 import { resetBarriers } from "@/entities/Barrier/barriers";
 import { resetMovingBlocks } from "@/entities/MovingPlatform/movingPlatform";
+import { resetCritters } from "@/entities/Critter/critters";
 import { game } from "@/game";
 import { gameEventBus } from "@/events/GameEventBus";
 
@@ -90,7 +91,7 @@ vi.mock("excalibur", () => {
 	};
 });
 
-vi.mock("../game", () => ({
+vi.mock("@/game", () => ({
 	game: {
 		add: vi.fn(),
 		clock: {
@@ -108,60 +109,85 @@ vi.mock("../game", () => ({
 	},
 }));
 
-vi.mock("../resources/resources", () => ({
+vi.mock("@/resources/resources", () => ({
 	rlSS: { getSprite: vi.fn() },
 	playerWalkAnimation: { kind: "walk" },
 	playerImage: { kind: "idle" },
 }));
 
-vi.mock("../sounds", () => ({
+vi.mock("@/audio/sounds", () => ({
 	sfxOneWayGate: vi.fn(),
 	sfxPortal: vi.fn(),
 	sfxPlatformStart: vi.fn(),
 	sfxPlatformStop: vi.fn(),
+	sfxCollect: vi.fn(),
+	sfxPickUpRock: vi.fn(),
+	sfxDropRock: vi.fn(),
+	sfxPickUpParcel: vi.fn(),
+	sfxDropParcel: vi.fn(),
+	sfxParcelPlaced: vi.fn(),
+	sfxCritterFlee: vi.fn(),
 }));
 
-vi.mock("../entities/lightTrail", () => ({
+vi.mock("@/entities/Light/lightTrail", () => ({
 	spawnLight: vi.fn(),
 	spawnScoreLight: vi.fn(),
+	spawnCollectBurst: vi.fn(),
+	spawnRewindPixels: vi.fn(),
 }));
 
-vi.mock("../pathfinding", () => ({
+vi.mock("@/ui/pathfinding", () => ({
 	handleTileClick: vi.fn(),
 	rebuildPathfinding: vi.fn(),
 	resetDijkstraGraph: vi.fn(),
 	initPathfinding: vi.fn(),
 }));
 
-vi.mock("../entities/worldObjects", () => ({
+vi.mock("@/entities/Rock/rocks", () => ({
 	resetRocks: vi.fn(),
-	resetParcels: vi.fn(),
 	getRockAtTile: vi.fn(),
 	pickUpRock: vi.fn(),
 	dropRock: vi.fn(),
+	dropRockAtTile: vi.fn(),
+	spawnRocksAt: vi.fn(),
+	getRocks: vi.fn(() => []),
+}));
+
+vi.mock("@/entities/Parcel/Parcel", () => ({
+	resetParcels: vi.fn(),
 	getParcelAtTile: vi.fn(),
 	pickUpParcel: vi.fn(),
 	dropParcel: vi.fn(),
-	dropRockAtTile: vi.fn(),
 	dropParcelAtTile: vi.fn(),
-	tryCollectAtTile: vi.fn(),
+	spawnParcelsAt: vi.fn(),
+	getParcels: vi.fn(() => []),
 }));
 
-vi.mock("../entities/monsters", () => ({
+vi.mock("@/entities/Collectable/collectables", () => ({
+	tryCollectAtTile: vi.fn(),
+	addScore: vi.fn(),
+	getScore: vi.fn(() => 0),
+}));
+
+vi.mock("@/entities/Monster/monsters", () => ({
 	resetMonsters: vi.fn(),
 }));
 
-vi.mock("../entities/barriers", () => ({
+vi.mock("@/entities/Barrier/barriers", () => ({
 	resetBarriers: vi.fn(),
 }));
 
-vi.mock("../entities/movingBlocks", () => ({
+vi.mock("@/entities/MovingPlatform/movingPlatform", () => ({
 	resetMovingBlocks: vi.fn(),
 	getMovingBlockNear: vi.fn(),
 	mountBlock: vi.fn(),
 }));
 
-vi.mock("../events/GameEventBus", () => ({
+vi.mock("@/entities/Critter/critters", () => ({
+	resetCritters: vi.fn(),
+}));
+
+vi.mock("@/events/GameEventBus", () => ({
 	gameEventBus: {
 		emit: vi.fn(),
 		dispatch: vi.fn(),
@@ -176,7 +202,7 @@ vi.mock("../events/GameEventBus", () => ({
 	},
 }));
 
-vi.mock("../gameSetup", () => ({
+vi.mock("@/gameLoop", () => ({
 	resetGameTimer: vi.fn(),
 }));
 
@@ -220,6 +246,11 @@ describe("playerManager", () => {
 			expect(resetBarriers).toHaveBeenCalled();
 			expect(resetMovingBlocks).toHaveBeenCalled();
 			expect(resetMonsters).toHaveBeenCalled();
+		});
+
+		it("does not reset critters — their state persists across rewinds so the player can herd them across multiple time loops", () => {
+			replayAll();
+			expect(resetCritters).not.toHaveBeenCalled();
 		});
 
 		it("resets each player to their own spawn position", () => {

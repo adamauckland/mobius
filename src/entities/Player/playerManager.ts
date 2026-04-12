@@ -16,7 +16,6 @@ import { game } from "@/game";
 import { handleTileClick } from "@/ui/pathfinding";
 import { resetParcels } from "../Parcel/Parcel";
 import { resetRocks } from "../Rock/rocks";
-import { resetCritters } from "@/entities/Critter/critters";
 import { resetMonsters } from "@/entities/Monster/monsters";
 import { resetBarriers } from "@/entities/Barrier/barriers";
 import { resetGameTimer } from "@/gameLoop";
@@ -116,7 +115,6 @@ export function replayAll() {
 	resetBarriers();
 	resetMovingBlocks();
 	resetMonsters();
-	resetCritters();
 	resetGameTimer();
 	gameEventBus.stopReplay();
 	for (const entry of playerEntries) {
@@ -163,7 +161,6 @@ export function timeRewind() {
 	resetBarriers();
 	resetMovingBlocks();
 	resetMonsters();
-	resetCritters();
 	resetGameTimer();
 	gameEventBus.reset();
 

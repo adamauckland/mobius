@@ -28,10 +28,6 @@ export function spawnTreeOverlays() {
 			const treeSprite = TileSheet.getSprite(3, 0);
 			treeActor.graphics.use(treeSprite);
 			treeActor.graphics.localBounds = new BoundingBox(-8, -32, 8, 0);
-			treeActor.graphics.onPreDraw = () => {
-				const stretch = 1 + Math.sin(game.clock.now() * 0.002) * 0.05;
-				treeActor.scale.y = stretch;
-			};
 			game.add(treeActor);
 		}
 	}

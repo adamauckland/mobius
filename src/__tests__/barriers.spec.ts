@@ -32,11 +32,11 @@ vi.mock("excalibur", () => {
 	return { Actor: MockActor, Vector: MockVector, vec, TileMap: class {} };
 });
 
-vi.mock("../resources/resources", () => ({
+vi.mock("@/resources/resources", () => ({
 	rlSS: { getSprite: vi.fn() },
 }));
 
-vi.mock("../game", () => ({
+vi.mock("@/game", () => ({
 	game: {
 		add: vi.fn(),
 		clock: {
@@ -47,21 +47,24 @@ vi.mock("../game", () => ({
 	},
 }));
 
-vi.mock("../zIndex", () => ({
+vi.mock("@/ui/zIndex", () => ({
 	zFromY: (y: number, layer: number) => y * 10 + layer,
 	Z_LAYER_TREE: 1,
 	Z_LAYER_PICKUP: 2,
 }));
 
-vi.mock("../ui/pathfinding", () => ({
+vi.mock("@/ui/pathfinding", () => ({
 	rebuildPathfinding: vi.fn(),
 }));
 
-vi.mock("../entities/lightTrail", () => ({
+vi.mock("@/entities/Light/lightTrail", () => ({
 	spawnLight: vi.fn(),
+	spawnScoreLight: vi.fn(),
+	spawnCollectBurst: vi.fn(),
+	spawnRewindPixels: vi.fn(),
 }));
 
-vi.mock("../audio/sounds", () => ({
+vi.mock("@/audio/sounds", () => ({
 	sfxSwitch: vi.fn(),
 }));
 

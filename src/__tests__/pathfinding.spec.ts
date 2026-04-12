@@ -78,7 +78,7 @@ vi.mock("@excaliburjs/plugin-pathfinding", () => {
 	};
 });
 
-vi.mock("../game", () => ({
+vi.mock("@/game", () => ({
 	game: {
 		clock: {
 			schedule: vi.fn((_cb: any, _delay: any) => 0),
@@ -88,41 +88,64 @@ vi.mock("../game", () => ({
 	},
 }));
 
-vi.mock("../resources", () => ({
+vi.mock("@/resources/resources", () => ({
 	rlSS: { getSprite: vi.fn() },
-	plrWalk: {},
-	plrImage: {},
+	TileSheet: { getSprite: vi.fn() },
+	playerWalkAnimation: {},
+	playerImage: {},
 }));
 
-vi.mock("../sounds", () => ({
+vi.mock("@/audio/sounds", () => ({
 	sfxOneWayGate: vi.fn(),
 	sfxPortal: vi.fn(),
 	sfxPlatformStart: vi.fn(),
 	sfxPlatformStop: vi.fn(),
+	sfxCollect: vi.fn(),
+	sfxPickUpRock: vi.fn(),
+	sfxDropRock: vi.fn(),
+	sfxPickUpParcel: vi.fn(),
+	sfxDropParcel: vi.fn(),
+	sfxParcelPlaced: vi.fn(),
+	sfxSwitch: vi.fn(),
 }));
 
-vi.mock("../entities/lightTrail", () => ({
+vi.mock("@/entities/Light/lightTrail", () => ({
 	spawnLight: vi.fn(),
 	spawnScoreLight: vi.fn(),
+	spawnCollectBurst: vi.fn(),
+	spawnRewindPixels: vi.fn(),
 }));
 
-vi.mock("../entities/movingBlocks", () => ({
+vi.mock("@/entities/MovingPlatform/movingPlatform", () => ({
 	dismountBlock: vi.fn(() => true),
 	getMovingBlockNear: vi.fn(),
 	mountBlock: vi.fn(),
+	resetMovingBlocks: vi.fn(),
 }));
 
-vi.mock("../entities/worldObjects", () => ({
+vi.mock("@/entities/Rock/rocks", () => ({
 	getRockAtTile: vi.fn(),
 	pickUpRock: vi.fn(),
 	dropRock: vi.fn(),
+	dropRockAtTile: vi.fn(),
+	resetRocks: vi.fn(),
+}));
+
+vi.mock("@/entities/Parcel/Parcel", () => ({
 	getParcelAtTile: vi.fn(),
 	pickUpParcel: vi.fn(),
 	dropParcel: vi.fn(),
-	tryCollectAtTile: vi.fn(),
+	dropParcelAtTile: vi.fn(),
+	resetParcels: vi.fn(),
 }));
 
-vi.mock("../entities/barriers", () => ({}));
+vi.mock("@/entities/Collectable/collectables", () => ({
+	tryCollectAtTile: vi.fn(),
+	addScore: vi.fn(),
+	getScore: vi.fn(() => 0),
+}));
+
+vi.mock("@/entities/Barrier/barriers", () => ({}));
 
 import {
 	initPathfinding,

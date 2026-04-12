@@ -5,24 +5,9 @@ import { GRID_COLS, TILE_SIZE } from "@/tiles/tiledata";
 import { zFromY, Z_LAYER_PICKUP } from "@/ui/zIndex";
 import { Actor, Vector } from "excalibur";
 import { spawnScoreLight } from "../Light/lightTrail";
+import { ICollectable } from "./ICollectable";
+import { addScore, collectables, score } from "./state";
 
-// --- Collectables ---
-
-export interface ICollectable {
-	actor: Actor;
-	tileIndex: number;
-	collected: boolean;
-}
-const collectables: ICollectable[] = [];
-export let score = 0;
-
-export function getScore() {
-	return score;
-}
-
-export function addScore(points: number) {
-	score += points;
-}
 // Check if a collectable is at this tile and collect it (permanently)
 
 export function tryCollectAtTile(tileIndex: number): boolean {
@@ -31,7 +16,7 @@ export function tryCollectAtTile(tileIndex: number): boolean {
 	c.collected = true;
 	spawnScoreLight(c.actor.pos.clone());
 	c.actor.kill();
-	score += 100;
+	addScore(100);
 	sfxCollect();
 	return true;
 }

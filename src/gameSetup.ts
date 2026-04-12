@@ -272,7 +272,7 @@ function triggerLevelComplete(hud: HUDRefs) {
 	hud.levelCompleteLabel.scale.x = 0.3;
 	hud.levelCompleteLabel.scale.y = 0.3;
 	hud.levelCompleteLabel.actions.scaleTo(vec(1, 1), vec(3, 3));
-	startBonusCountdown();
+	startBonusCountdown(hud);
 	restartButton.style.display = "block";
 	if (model.projectJson && model.currentLevel + 1 < model.totalLevels) {
 		continueButton.style.display = "block";

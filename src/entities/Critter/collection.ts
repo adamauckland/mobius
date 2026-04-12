@@ -6,7 +6,7 @@ import {
 	spawnCollectBurst,
 } from "@/entities/Light/lightTrail";
 import { playerEntries } from "@/entities/Player/playerManager";
-import { addScore } from "../Collectable/collectables";
+import { addScore } from "../Collectable/state";
 import { COLLECT_RADIUS } from "@/entities/Critter/SETTINGS";
 import { critterGroups } from "@/entities/Critter/state";
 import { getCritterCount } from "@/entities/Critter/state";
