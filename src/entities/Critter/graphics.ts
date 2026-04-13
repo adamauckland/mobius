@@ -1,4 +1,4 @@
-import { Actor, Vector, Circle } from "excalibur";
+import { Actor, CollisionType, Vector, Circle } from "excalibur";
 import { zFromY, Z_LAYER_SHADOW } from "@/ui/zIndex";
 import {
 	CRITTER_SIZE,
@@ -63,6 +63,7 @@ export function createShadowActor(px: number, py: number): Actor {
 		width: SHADOW_RADIUS_X * 2,
 		height: SHADOW_RADIUS_Y * 2,
 		z: zFromY(py, Z_LAYER_SHADOW),
+		collisionType: CollisionType.PreventCollision,
 	});
 
 	const shadowCircle = new Circle({

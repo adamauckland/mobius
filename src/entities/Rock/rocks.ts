@@ -8,9 +8,26 @@ import { Actor, Vector } from "excalibur";
 import { PlayerActor } from "../Player/PlayerActor";
 
 const rocks: IRock[] = [];
+const blockedRockTiles = new Set<number>();
+let rocksDirty = true;
+
+function markRocksDirty() {
+	rocksDirty = true;
+}
 
 export function getRocks() {
 	return rocks;
+}
+
+export function getBlockedRockTiles(): ReadonlySet<number> {
+	if (rocksDirty) {
+		blockedRockTiles.clear();
+		for (const rock of rocks) {
+			if (!rock.carriedBy) blockedRockTiles.add(rock.tileIndex);
+		}
+		rocksDirty = false;
+	}
+	return blockedRockTiles;
 }
 // Find the rock at a given tile, if any (and not currently carried)
 
@@ -22,6 +39,7 @@ export function getRockAtTile(tileIndex: number): IRock | undefined {
 export function pickUpRock(rock: IRock, player: PlayerActor) {
 	rock.carriedBy = player;
 	player.carriedRock = rock;
+	markRocksDirty();
 	sfxPickUpRock();
 }
 // Drop a rock at the player's current logical tile
@@ -41,6 +59,7 @@ export function dropRockAtTile(player: PlayerActor, tileIndex: number) {
 	const y = Math.floor(tileIndex / GRID_COLS);
 	rock.actor.pos.x = x * TILE_SIZE + TILE_SIZE / 2;
 	rock.actor.pos.y = y * TILE_SIZE + TILE_SIZE / 2;
+	markRocksDirty();
 	sfxDropRock();
 }
 // Reset all rocks to their original positions
@@ -54,6 +73,7 @@ export function resetRocks() {
 		rock.actor.pos.x = x * TILE_SIZE + TILE_SIZE / 2;
 		rock.actor.pos.y = y * TILE_SIZE + TILE_SIZE / 2;
 	}
+	markRocksDirty();
 }
 /** Spawn rocks at specific tile indices (for custom maps). */
 
@@ -80,4 +100,5 @@ export function spawnRocksAt(indices: number[]) {
 		rocks.push(rock);
 		game.add(actor);
 	}
+	markRocksDirty();
 }

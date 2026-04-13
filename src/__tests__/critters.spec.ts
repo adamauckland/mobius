@@ -68,11 +68,19 @@ vi.mock("excalibur", () => {
 		return new MockVector(x, y);
 	}
 
+	const MockCollisionType = {
+		PreventCollision: "PreventCollision",
+		Passive: "Passive",
+		Active: "Active",
+		Fixed: "Fixed",
+	};
+
 	return {
 		Actor: MockActor,
 		Vector: MockVector,
 		Circle: MockCircle,
 		Color: MockColor,
+		CollisionType: MockCollisionType,
 		GraphicsGroup: MockGraphicsGroup,
 		vec: mockVec,
 	};

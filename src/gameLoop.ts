@@ -10,7 +10,7 @@ import { sfxHeartbeat } from "@/audio/sounds";
 import { spawnDeathExplosion } from "@/entities/Light/lightTrail";
 import { activeEntry } from "@/entities/Player/playerManager";
 import { isLowTime } from "@/rules/timerUrgency";
-import type { HUDRefs } from "@/ui/hud";
+import type { IHUDRefs } from "./ui/hud/IHUDRefs";
 
 let gameStarted = false;
 let elapsedGameTime = 0;
@@ -29,7 +29,7 @@ export function resetGameTimer() {
 	lastHeartbeatSec = -1;
 }
 
-export function startBonusCountdown(hud?: HUDRefs) {
+export function startBonusCountdown(hud?: IHUDRefs) {
 	if (model.timeLimit <= 0) return;
 	bonusRemaining = Math.max(0, model.timeLimit - elapsedGameTime);
 	bonusAccumulator = 0;
@@ -44,7 +44,7 @@ function formatTime(ms: number): string {
 	return `${mins}:${secs.toString().padStart(2, "0")}.${tenths}`;
 }
 
-function updateScoreDisplay(hud: HUDRefs) {
+function updateScoreDisplay(hud: IHUDRefs) {
 	const targetScore = getScore();
 	if (hud.displayedScore.value < targetScore) {
 		const gap = targetScore - hud.displayedScore.value;
@@ -55,7 +55,7 @@ function updateScoreDisplay(hud: HUDRefs) {
 	hud.scoreText.text = `${hud.displayedScore.value}`;
 }
 
-function drainBonusTime(hud: HUDRefs, elapsed: number) {
+function drainBonusTime(hud: IHUDRefs, elapsed: number) {
 	bonusAccumulator += elapsed;
 	while (bonusAccumulator >= BONUS_TICK_MS && bonusRemaining > 0) {
 		bonusAccumulator -= BONUS_TICK_MS;
@@ -73,14 +73,14 @@ function drainBonusTime(hud: HUDRefs, elapsed: number) {
 	}
 }
 
-function updateCountdownTimer(hud: HUDRefs) {
+function updateCountdownTimer(hud: IHUDRefs) {
 	const remaining = Math.max(0, model.timeLimit - elapsedGameTime);
 	hud.timerText.text = formatTime(remaining);
 	hud.setTimerMeter(remaining / model.timeLimit);
 	flashTimerIfLow(hud, remaining);
 }
 
-function flashTimerIfLow(hud: HUDRefs, remaining: number) {
+function flashTimerIfLow(hud: IHUDRefs, remaining: number) {
 	const urgent = isLowTime(remaining);
 	hud.setRewindUrgent(urgent);
 	if (urgent) {
@@ -97,7 +97,7 @@ function flashTimerIfLow(hud: HUDRefs, remaining: number) {
 	}
 }
 
-function handleTimeUp(hud: HUDRefs, onTimeUp?: () => void) {
+function handleTimeUp(hud: IHUDRefs, onTimeUp?: () => void) {
 	model.gameOver = true;
 	hud.setRewindUrgent(false);
 	const player = activeEntry().player;
@@ -110,11 +110,11 @@ function handleTimeUp(hud: HUDRefs, onTimeUp?: () => void) {
 	if (onTimeUp) onTimeUp();
 }
 
-function updateElapsedTimer(hud: HUDRefs) {
+function updateElapsedTimer(hud: IHUDRefs) {
 	hud.timerText.text = formatTime(elapsedGameTime);
 }
 
-export function setupGameLoop(hud: HUDRefs, onTimeUp?: () => void) {
+export function setupGameLoop(hud: IHUDRefs, onTimeUp?: () => void) {
 	game.on("postupdate", (evt) => {
 		if (!gameStarted) return;
 

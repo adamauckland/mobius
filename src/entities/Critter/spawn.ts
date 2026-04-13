@@ -1,4 +1,4 @@
-import { Actor, Vector } from "excalibur";
+import { Actor, CollisionType, Vector } from "excalibur";
 import { game } from "@/game";
 import { GRID_COLS, TILE_SIZE } from "@/tiles/tiledata";
 import { zFromY, Z_LAYER_PICKUP } from "@/ui/zIndex";
@@ -43,6 +43,7 @@ export function spawnNewCritter(px: number, py: number, groupIndex: number) {
 		width: CRITTER_SIZE,
 		height: CRITTER_SIZE,
 		z: zFromY(py, Z_LAYER_PICKUP),
+		collisionType: CollisionType.PreventCollision,
 	});
 	const shadow = createShadowActor(px, py);
 	const critter: ICritter = {

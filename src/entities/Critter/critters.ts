@@ -1,4 +1,4 @@
-import { Actor, Vector } from "excalibur";
+import { Actor, CollisionType, Vector } from "excalibur";
 import {
 	TILE_SIZE,
 	GRID_COLS,
@@ -31,47 +31,48 @@ import { isTileBlocked } from "@/entities/Critter/collision";
 import { attachCritterAnimation } from "@/entities/Critter/animation";
 import { createShadowActor } from "@/entities/Critter/graphics";
 
+const playerPosScratch: Vector[] = [];
+const aliveScratch: ICritter[] = [];
+const aliveInfo = { count: 0, centerX: 0, centerY: 0 };
+const accel = { ax: 0, ay: 0 };
+
 function gatherPlayerPositions(): Vector[] {
-	const positions: Vector[] = [];
+	playerPosScratch.length = 0;
 	for (const entry of playerEntries) {
 		if (entry.player.graphics.isVisible) {
-			positions.push(entry.player.pos);
+			playerPosScratch.push(entry.player.pos);
 		}
 	}
-
-	return positions;
+	return playerPosScratch;
 }
 
-function getAliveCrittersWithCenter(group: ICritterGroup): {
-	alive: ICritter[];
-	centerX: number;
-	centerY: number;
-} | null {
-	const alive = group.critters.filter((c) => !c.collected);
-	if (alive.length === 0) return null;
-
+function collectAliveCritters(group: ICritterGroup): boolean {
+	aliveScratch.length = 0;
 	let centerX = 0;
 	let centerY = 0;
-	for (const c of alive) {
+	for (const c of group.critters) {
+		if (c.collected) continue;
+		aliveScratch.push(c);
 		centerX += c.position.x;
 		centerY += c.position.y;
 	}
-	return {
-		alive,
-		centerX: centerX / alive.length,
-		centerY: centerY / alive.length,
-	};
+	const count = aliveScratch.length;
+	if (count === 0) {
+		aliveInfo.count = 0;
+		return false;
+	}
+	aliveInfo.count = count;
+	aliveInfo.centerX = centerX / count;
+	aliveInfo.centerY = centerY / count;
+	return true;
 }
 
-function computeFleeAcceleration(
-	critter: ICritter,
-	playerPositions: Vector[],
-): { ax: number; ay: number } {
-	let ax = 0;
-	let ay = 0;
+function addFleeAcceleration(critter: ICritter, playerPositions: Vector[]): boolean {
 	const playerHalf = TILE_SIZE / 2;
+	let fleeing = false;
 
-	for (const ppos of playerPositions) {
+	for (let i = 0; i < playerPositions.length; i++) {
+		const ppos = playerPositions[i];
 		const nearX = Math.max(
 			ppos.x - playerHalf,
 			Math.min(critter.position.x, ppos.x + playerHalf),
@@ -82,63 +83,55 @@ function computeFleeAcceleration(
 		);
 		const dx = critter.position.x - nearX;
 		const dy = critter.position.y - nearY;
-		const dist = Math.sqrt(dx * dx + dy * dy);
-		if (dist >= FLEE_RADIUS) continue;
+		const distSq = dx * dx + dy * dy;
+		if (distSq >= FLEE_RADIUS * FLEE_RADIUS) continue;
+		fleeing = true;
 
-		if (dist < 0.1) {
+		if (distSq < 0.01) {
 			const cdx = critter.position.x - ppos.x;
 			const cdy = critter.position.y - ppos.y;
-			const cdist = Math.sqrt(cdx * cdx + cdy * cdy);
-			if (cdist > 0.1) {
-				ax += (cdx / cdist) * FLEE_SPEED;
-				ay += (cdy / cdist) * FLEE_SPEED;
+			const cdistSq = cdx * cdx + cdy * cdy;
+			if (cdistSq > 0.01) {
+				const cdist = Math.sqrt(cdistSq);
+				accel.ax += (cdx / cdist) * FLEE_SPEED;
+				accel.ay += (cdy / cdist) * FLEE_SPEED;
 			} else {
-				ax += FLEE_SPEED;
+				accel.ax += FLEE_SPEED;
 			}
 		} else {
+			const dist = Math.sqrt(distSq);
 			const strength = FLEE_SPEED * (1 - dist / FLEE_RADIUS);
-			ax += (dx / dist) * strength;
-			ay += (dy / dist) * strength;
+			accel.ax += (dx / dist) * strength;
+			accel.ay += (dy / dist) * strength;
 		}
 	}
-	return { ax, ay };
+	return fleeing;
 }
 
-function computeSeparationAcceleration(
-	critter: ICritter,
-	alive: ICritter[],
-): { ax: number; ay: number } {
-	let ax = 0;
-	let ay = 0;
-	for (const other of alive) {
+function addSeparationAcceleration(critter: ICritter) {
+	const sepSq = SEPARATION_RADIUS * SEPARATION_RADIUS;
+	for (let i = 0; i < aliveScratch.length; i++) {
+		const other = aliveScratch[i];
 		if (other === critter) continue;
 		const dx = critter.position.x - other.position.x;
 		const dy = critter.position.y - other.position.y;
-		const dist = Math.sqrt(dx * dx + dy * dy);
-		if (dist < SEPARATION_RADIUS && dist > 0.1) {
-			const strength = SEPARATION_STRENGTH * (1 - dist / SEPARATION_RADIUS);
-			ax += (dx / dist) * strength;
-			ay += (dy / dist) * strength;
-		}
+		const distSq = dx * dx + dy * dy;
+		if (distSq >= sepSq || distSq <= 0.01) continue;
+		const dist = Math.sqrt(distSq);
+		const strength = SEPARATION_STRENGTH * (1 - dist / SEPARATION_RADIUS);
+		accel.ax += (dx / dist) * strength;
+		accel.ay += (dy / dist) * strength;
 	}
-	return { ax, ay };
 }
 
-function computeCohesionAcceleration(
-	critter: ICritter,
-	centerX: number,
-	centerY: number,
-): { ax: number; ay: number } {
-	const dcx = centerX - critter.position.x;
-	const dcy = centerY - critter.position.y;
-	const dcDist = Math.sqrt(dcx * dcx + dcy * dcy);
-	if (dcDist > 1) {
-		return {
-			ax: (dcx / dcDist) * COHESION_STRENGTH,
-			ay: (dcy / dcDist) * COHESION_STRENGTH,
-		};
-	}
-	return { ax: 0, ay: 0 };
+function addCohesionAcceleration(critter: ICritter) {
+	const dcx = aliveInfo.centerX - critter.position.x;
+	const dcy = aliveInfo.centerY - critter.position.y;
+	const dcDistSq = dcx * dcx + dcy * dcy;
+	if (dcDistSq <= 1) return;
+	const dcDist = Math.sqrt(dcDistSq);
+	accel.ax += (dcx / dcDist) * COHESION_STRENGTH;
+	accel.ay += (dcy / dcDist) * COHESION_STRENGTH;
 }
 
 function applyVelocity(critter: ICritter, ax: number, ay: number, dt: number) {
@@ -239,24 +232,20 @@ function syncCritterActors(critter: ICritter) {
 
 function updateCritter(
 	critter: ICritter,
-	alive: ICritter[],
-	centerX: number,
-	centerY: number,
 	playerPositions: Vector[],
 	dt: number,
 ) {
-	const flee = computeFleeAcceleration(critter, playerPositions);
-	const isFleeing = flee.ax !== 0 || flee.ay !== 0;
+	accel.ax = 0;
+	accel.ay = 0;
+	const isFleeing = addFleeAcceleration(critter, playerPositions);
 	if (isFleeing && !critter.fleeing) {
 		sfxCritterFlee();
 	}
 	critter.fleeing = isFleeing;
-	const sep = computeSeparationAcceleration(critter, alive);
-	const coh = computeCohesionAcceleration(critter, centerX, centerY);
-	const ax = flee.ax + sep.ax + coh.ax;
-	const ay = flee.ay + sep.ay + coh.ay;
+	addSeparationAcceleration(critter);
+	addCohesionAcceleration(critter);
 
-	applyVelocity(critter, ax, ay, dt);
+	applyVelocity(critter, accel.ax, accel.ay, dt);
 	clampSpeed(critter);
 
 	const { prevX, prevY } = moveCritter(critter, dt);
@@ -273,12 +262,9 @@ export function updateCritters(elapsedMs: number) {
 	const playerPositions = gatherPlayerPositions();
 
 	for (const group of critterGroups) {
-		const result = getAliveCrittersWithCenter(group);
-		if (!result) continue;
-		const { alive, centerX, centerY } = result;
-
-		for (const critter of alive) {
-			updateCritter(critter, alive, centerX, centerY, playerPositions, dt);
+		if (!collectAliveCritters(group)) continue;
+		for (let i = 0; i < aliveScratch.length; i++) {
+			updateCritter(aliveScratch[i], playerPositions, dt);
 		}
 	}
 }
@@ -316,6 +302,7 @@ export function resetCritters() {
 				width: CRITTER_SIZE,
 				height: CRITTER_SIZE,
 				z: zFromY(py, Z_LAYER_PICKUP),
+				collisionType: CollisionType.PreventCollision,
 			});
 			attachCritterAnimation(actor, critter);
 			critter.actor = actor;

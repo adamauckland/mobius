@@ -64,11 +64,11 @@ import {
 	spawnDropZoneOverlays,
 	spawnExitDoorOverlays,
 } from "@/tiles/tileOverlays";
-import { createHUD } from "@/ui/hud";
+import { createHUD } from "@/ui/hud/hud";
 import { runCountdown } from "@/ui/countdown";
 import { resetGameTimer, setupGameLoop, startBonusCountdown } from "@/gameLoop";
 import { initPackBrowser } from "@/ui/packBrowser";
-import type { HUDRefs } from "@/ui/hud";
+import type { IHUDRefs } from "./ui/hud/IHUDRefs";
 import type { Actor } from "excalibur";
 
 export { resetGameTimer };
@@ -263,7 +263,7 @@ function spawnEntities(customMapData: IMapData) {
 	spawnMonstersAt(customMapData.monsters);
 }
 
-function triggerLevelComplete(hud: HUDRefs) {
+function triggerLevelComplete(hud: IHUDRefs) {
 	if (model.gameOver) return;
 	model.gameOver = true;
 	sfxLevelComplete();
@@ -300,7 +300,7 @@ function hideExitDoors(doorActors: Actor[]) {
 	resetAllCrittersCollectedFlag();
 }
 
-function setupExitDoorGating(hud: HUDRefs, doorActors: Actor[]) {
+function setupExitDoorGating(hud: IHUDRefs, doorActors: Actor[]) {
 	const hasCritters = getCritterCount().total > 0;
 
 	if (hasCritters) {
@@ -337,7 +337,7 @@ function setupExitDoorGating(hud: HUDRefs, doorActors: Actor[]) {
 	return wireExitDoor;
 }
 
-function setupDeathHandler(hud: HUDRefs, wireExitDoor: () => void) {
+function setupDeathHandler(hud: IHUDRefs, wireExitDoor: () => void) {
 	setOnPlayerKilled((killedPlayer) => {
 		if (
 			!shouldHandlePlayerDeath({
@@ -368,7 +368,7 @@ function setupDeathHandler(hud: HUDRefs, wireExitDoor: () => void) {
 	});
 }
 
-function showGameOver(hud: HUDRefs) {
+function showGameOver(hud: IHUDRefs) {
 	game.clock.schedule(() => {
 		model.gameOver = true;
 		hud.dimOverlay.graphics.isVisible = true;
