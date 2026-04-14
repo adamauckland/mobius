@@ -167,6 +167,7 @@ describe("loadWorld", () => {
 			movingBlocks: [],
 			timeLimit: 60,
 			critters: [],
+			instructions: null,
 		};
 		loadWorld(map);
 
@@ -204,6 +205,7 @@ describe("loadWorld", () => {
 			movingBlocks: [],
 			timeLimit: 60,
 			critters: [],
+			instructions: null,
 		};
 		loadWorld(map);
 		expect(portalTileIndices).toEqual([1, 2]);
@@ -228,6 +230,7 @@ describe("loadWorld", () => {
 			movingBlocks: [],
 			timeLimit: 60,
 			critters: [],
+			instructions: null,
 		};
 		loadWorld(map);
 		expect(dropZoneTileIndices).toEqual([1, 2]);
@@ -252,6 +255,7 @@ describe("loadWorld", () => {
 			movingBlocks: [],
 			timeLimit: 60,
 			critters: [],
+			instructions: null,
 		};
 		loadWorld(map);
 		expect(customStartTile).toBe(3);
@@ -271,6 +275,7 @@ describe("loadWorld", () => {
 			movingBlocks: [],
 			timeLimit: 60,
 			critters: [],
+			instructions: null,
 		};
 		loadWorld(map);
 		expect(tiles[0]).toBeInstanceOf(Tree);

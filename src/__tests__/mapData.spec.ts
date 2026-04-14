@@ -138,6 +138,7 @@ describe("serializeMap / deserializeMap", () => {
 			movingBlocks: [{ start: 15, end: 25 }],
 			critters: [6],
 			timeLimit: 60000,
+			instructions: "Tap grass to move",
 		};
 		const json = serializeMap(map);
 		const restored = deserializeMap(json);

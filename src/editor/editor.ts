@@ -225,6 +225,7 @@ let toolbar: HTMLDivElement;
 let statusBar: HTMLDivElement;
 let nameInput: HTMLInputElement;
 let timeLimitInput: HTMLInputElement;
+let instructionsInput: HTMLTextAreaElement;
 let imagesReady = false;
 let animFrame = 0;
 
@@ -977,11 +978,14 @@ window._edSetId = (id: number) => {
 function syncMapFromUI() {
 	mapData.name = nameInput.value || "Untitled";
 	mapData.timeLimit = (parseFloat(timeLimitInput.value) || 0) * 1000;
+	const instructions = instructionsInput.value.trim();
+	mapData.instructions = instructions.length > 0 ? instructions : null;
 }
 
 function syncUIFromMap() {
 	nameInput.value = mapData.name;
 	timeLimitInput.value = String(mapData.timeLimit / 1000);
+	instructionsInput.value = mapData.instructions ?? "";
 	updateLevelIndicator();
 	centerCamera();
 }
@@ -1182,6 +1186,11 @@ function buildEditorUI() {
         <input id="editor-timelimit" type="number" min="0" step="5" value="60"
           style="width:60px;font-family:monospace;font-size:14px;padding:4px 6px;background:#34393c;color:#d0e3e9;border:1px solid #5e676b;" />
       </label>
+      <label style="font-size:12px;color:#929fa4;display:flex;align-items:center;gap:4px;">
+        Instructions
+        <textarea id="editor-instructions" rows="2" placeholder="Onboarding text (leave empty for none)"
+          style="width:260px;font-family:monospace;font-size:12px;padding:4px 6px;background:#34393c;color:#d0e3e9;border:1px solid #5e676b;resize:vertical;"></textarea>
+      </label>
       <div style="display:flex;align-items:center;gap:4px;">
         <button id="ed-prev-level" class="ed-lvl-btn">&lt;</button>
         <span id="ed-level-indicator" style="font-size:12px;color:#929fa4;min-width:90px;text-align:center;">Level 1 / 1</span>
@@ -1310,6 +1319,7 @@ function buildEditorUI() {
 	// Other refs
 	nameInput = container.querySelector("#editor-name")!;
 	timeLimitInput = container.querySelector("#editor-timelimit")!;
+	instructionsInput = container.querySelector("#editor-instructions")!;
 	statusBar = container.querySelector("#editor-status")!;
 
 	// Wire buttons

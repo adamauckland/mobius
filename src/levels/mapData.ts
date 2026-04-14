@@ -46,6 +46,7 @@ export function createEmptyMap(cols: number, rows: number): IMapData {
 		movingBlocks: [],
 		critters: [],
 		timeLimit: 60000,
+		instructions: null,
 	};
 }
 
@@ -93,5 +94,9 @@ export function deserializeMap(json: string): IMapData {
 		movingBlocks: Array.isArray(data.movingBlocks) ? data.movingBlocks : [],
 		critters: Array.isArray(data.critters) ? data.critters : [],
 		timeLimit: typeof data.timeLimit === "number" ? data.timeLimit : 60000,
+		instructions:
+			typeof data.instructions === "string" && data.instructions.length > 0
+				? data.instructions
+				: null,
 	};
 }

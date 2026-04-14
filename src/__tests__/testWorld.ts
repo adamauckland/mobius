@@ -36,6 +36,7 @@ export function setupTestWorld() {
 		movingBlocks: [],
 		critters: [],
 		timeLimit: 0,
+		instructions: null,
 	};
 	loadWorld(map);
 }

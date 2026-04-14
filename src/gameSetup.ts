@@ -42,6 +42,10 @@ import { gameEventBus } from "@/events/GameEventBus";
 import { spawnMovingBlocksAt } from "@/entities/MovingPlatform/movingPlatform";
 import { spawnCritterGroupsAt } from "@/entities/Critter/spawn";
 import {
+	spawnInstructionSign,
+	clearInstructionSigns,
+} from "@/entities/InstructionSign/instructionSign";
+import {
 	spawnMonstersAt,
 	setOnPlayerKilled,
 } from "@/entities/Monster/monsters";
@@ -261,6 +265,10 @@ function spawnEntities(customMapData: IMapData) {
 	spawnCritterGroupsAt(customMapData.critters);
 	spawnMovingBlocksAt(customMapData.movingBlocks);
 	spawnMonstersAt(customMapData.monsters);
+	clearInstructionSigns();
+	if (customMapData.instructions) {
+		spawnInstructionSign(customMapData.instructions, customMapData.startTile);
+	}
 }
 
 function triggerLevelComplete(hud: IHUDRefs) {

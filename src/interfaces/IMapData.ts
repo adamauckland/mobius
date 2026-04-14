@@ -13,4 +13,5 @@ export interface IMapData {
 	movingBlocks: { start: number; end: number }[];
 	critters: number[]; // tile indices where critter groups (5 each) spawn
 	timeLimit: number; // ms before time rewind triggers (0 = no limit)
+	instructions: string | null;
 }
