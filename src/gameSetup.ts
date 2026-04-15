@@ -172,6 +172,7 @@ function createEditorButton() {
     font-family: "Sixtyfour", monospace; font-size: 14px; padding: 8px 16px;
     background: #34393c; color: #d0e3e9; border: 1px solid #5e676b;
     cursor: pointer; z-index: 300000; opacity: 0.7;
+    display: none;
   `;
 	backBtn.addEventListener("click", () => {
 		localStorage.setItem("editorMode", "true");
@@ -184,6 +185,24 @@ function createEditorButton() {
 		backBtn.style.opacity = "0.7";
 	});
 	document.body.appendChild(backBtn);
+
+	const packId = localStorage.getItem("editorPackId");
+	const ownerUid = localStorage.getItem("editorPackOwnerUid");
+
+	if (!packId) {
+		// No pack context (e.g. editor "Test" flow) — always show.
+		backBtn.style.display = "block";
+		return;
+	}
+
+	// Pack context — only show for the signed-in owner. Listen for auth
+	// state changes so the button appears as soon as auth resolves.
+	import("@/auth/auth").then(({ onAuthChange }) => {
+		onAuthChange((user) => {
+			const isOwner = !!user && !!ownerUid && user.uid === ownerUid;
+			backBtn.style.display = isOwner ? "block" : "none";
+		});
+	});
 }
 
 function applyTileGraphic(tile: any, tileIndex: number) {

@@ -8,7 +8,8 @@ import {
 import { type IProjectData } from "@/interfaces/IProjectData";
 import { type IMapData } from "@/interfaces/IMapData";
 import { GRID_COLS, GRID_ROWS, TILE_SIZE } from "@/tiles/tiledata";
-import { publishPack } from "@/levelPacks/levelPacks";
+import { publishPack, updatePack } from "@/levelPacks/levelPacks";
+import { getCurrentUser } from "@/auth/auth";
 
 // ---------------------------------------------------------------------------
 // Sprite helpers – draw directly from loaded PNGs
@@ -203,6 +204,8 @@ interface PatrolPlacement {
 let project: IProjectData = { levels: [createEmptyMap(GRID_COLS, GRID_ROWS)] };
 let currentLevelIndex = 0;
 let mapData: IMapData = project.levels[0];
+let currentPackId: string | null = null;
+let currentPackDescription: string = "";
 let levelIndicator: HTMLSpanElement;
 let selectedTool: ToolId = "grass";
 let groupId = 0;
@@ -1072,6 +1075,7 @@ function loadProject() {
 				project = loaded;
 				currentLevelIndex = 0;
 				mapData = project.levels[0];
+				clearPackContext();
 				syncUIFromMap();
 			} catch {
 				alert("Failed to parse project file");
@@ -1115,23 +1119,62 @@ function backToMenu() {
 }
 
 async function publishProject() {
+	const user = getCurrentUser();
+	if (!user) {
+		alert("Please sign in with Google on the start screen to publish a pack.");
+		return;
+	}
+
 	syncMapFromUI();
 	project.levels[currentLevelIndex] = mapData;
-
-	const name = mapData.name || "Untitled";
-	const author = prompt("Your name (shown to other players):", "") ?? "";
-	if (!author) return;
-	const description = prompt("Short description of this level pack:", "") ?? "";
 
 	const publishBtn = container.querySelector(
 		"#ed-publish",
 	) as HTMLButtonElement;
+	const originalLabel = publishBtn.textContent ?? "Share";
+
+	if (currentPackId) {
+		const name = mapData.name || "Untitled";
+		if (!confirm(`Update published pack "${name}" (${currentPackId})?`)) return;
+
+		publishBtn.textContent = "Updating...";
+		publishBtn.disabled = true;
+		try {
+			await updatePack(
+				currentPackId,
+				project,
+				name,
+				currentPackDescription,
+			);
+			alert(`Pack "${name}" updated.`);
+		} catch (err) {
+			alert("Failed to update: " + (err as Error).message);
+		} finally {
+			publishBtn.textContent = originalLabel;
+			publishBtn.disabled = false;
+		}
+		return;
+	}
+
+	const name = mapData.name || "Untitled";
+	const author =
+		prompt("Your name (shown to other players):", user.displayName) ?? "";
+	if (!author) return;
+	const description = prompt("Short description of this level pack:", "") ?? "";
+
 	publishBtn.textContent = "Sharing...";
 	publishBtn.disabled = true;
 
 	try {
 		const packId = await publishPack(project, name, author, description);
 		const shareUrl = `${location.origin}${location.pathname}?pack=${packId}`;
+
+		currentPackId = packId;
+		currentPackDescription = description;
+		localStorage.setItem("editorPackId", packId);
+		localStorage.setItem("editorPackDescription", description);
+		localStorage.setItem("editorPackOwnerUid", user.uid);
+		updatePublishButtonLabel();
 
 		// Copy to clipboard
 		try {
@@ -1144,10 +1187,11 @@ async function publishProject() {
 		}
 	} catch (err) {
 		alert("Failed to publish: " + (err as Error).message);
-	} finally {
-		publishBtn.textContent = "Share";
+		publishBtn.textContent = originalLabel;
 		publishBtn.disabled = false;
+		return;
 	}
+	publishBtn.disabled = false;
 }
 
 function newMap() {
@@ -1156,7 +1200,24 @@ function newMap() {
 	project = { levels: [createEmptyMap(GRID_COLS, GRID_ROWS)] };
 	currentLevelIndex = 0;
 	mapData = project.levels[0];
+	clearPackContext();
 	syncUIFromMap();
+}
+
+function clearPackContext() {
+	currentPackId = null;
+	currentPackDescription = "";
+	localStorage.removeItem("editorPackId");
+	localStorage.removeItem("editorPackDescription");
+	localStorage.removeItem("editorPackOwnerUid");
+	updatePublishButtonLabel();
+}
+
+function updatePublishButtonLabel() {
+	if (!container) return;
+	const btn = container.querySelector("#ed-publish") as HTMLButtonElement | null;
+	if (!btn) return;
+	btn.textContent = currentPackId ? "Update" : "Share";
 }
 
 function centerCamera() {
@@ -1371,7 +1432,15 @@ function buildEditorUI() {
 
 let initialized = false;
 
-export function showEditor() {
+export interface EditorLoadPack {
+	id: string;
+	project: IProjectData;
+	author: string;
+	description: string;
+	ownerUid: string;
+}
+
+export function showEditor(loadPack?: EditorLoadPack) {
 	if (!initialized) {
 		initialized = true;
 		buildEditorUI();
@@ -1389,26 +1458,42 @@ export function showEditor() {
 		if (loaded >= 2) imagesReady = true;
 	}
 
-	// Load saved editor project if available
-	const savedProject = localStorage.getItem("editorProject");
-	if (savedProject) {
-		try {
-			project = deserializeProject(savedProject);
-			currentLevelIndex = parseInt(
-				localStorage.getItem("editorLevel") || "0",
-				10,
-			);
-			if (currentLevelIndex >= project.levels.length) currentLevelIndex = 0;
-		} catch {
+	if (loadPack) {
+		project = loadPack.project;
+		currentLevelIndex = 0;
+		currentPackId = loadPack.id;
+		currentPackDescription = loadPack.description;
+		localStorage.setItem("editorProject", serializeProject(project));
+		localStorage.setItem("editorLevel", "0");
+		localStorage.setItem("editorPackId", loadPack.id);
+		localStorage.setItem("editorPackDescription", loadPack.description);
+		localStorage.setItem("editorPackOwnerUid", loadPack.ownerUid);
+	} else {
+		// Load saved editor project if available
+		const savedProject = localStorage.getItem("editorProject");
+		if (savedProject) {
+			try {
+				project = deserializeProject(savedProject);
+				currentLevelIndex = parseInt(
+					localStorage.getItem("editorLevel") || "0",
+					10,
+				);
+				if (currentLevelIndex >= project.levels.length) currentLevelIndex = 0;
+			} catch {
+				project = { levels: [createEmptyMap(GRID_COLS, GRID_ROWS)] };
+				currentLevelIndex = 0;
+			}
+		} else {
 			project = { levels: [createEmptyMap(GRID_COLS, GRID_ROWS)] };
 			currentLevelIndex = 0;
 		}
-	} else {
-		project = { levels: [createEmptyMap(GRID_COLS, GRID_ROWS)] };
-		currentLevelIndex = 0;
+		currentPackId = localStorage.getItem("editorPackId");
+		currentPackDescription =
+			localStorage.getItem("editorPackDescription") ?? "";
 	}
 	mapData = project.levels[currentLevelIndex];
 	syncUIFromMap();
+	updatePublishButtonLabel();
 
 	container.style.display = "flex";
 	document.getElementById("start-screen")!.style.display = "none";

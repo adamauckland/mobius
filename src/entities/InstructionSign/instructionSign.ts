@@ -77,6 +77,10 @@ function buildPanelGraphic(text: string): GraphicsGroup {
 	});
 }
 
+const HOLD_MS = 4000;
+const DRIFT_VELOCITY_Y = -12;
+const FADE_MS = 3000;
+
 export function spawnInstructionSign(text: string, tileIndex: number) {
 	const center = tileCenter(tileIndex);
 	const sign = new Actor({
@@ -87,6 +91,11 @@ export function spawnInstructionSign(text: string, tileIndex: number) {
 	sign.graphics.use(buildPanelGraphic(text));
 	game.add(sign);
 	signs.push(sign);
+
+	sign.actions.delay(HOLD_MS).callMethod(() => {
+		sign.vel = vec(0, DRIFT_VELOCITY_Y);
+		sign.actions.fade(0, FADE_MS).callMethod(() => sign.kill());
+	});
 }
 
 export function clearInstructionSigns() {

@@ -5,10 +5,21 @@ service cloud.firestore {
     match /levelPacks/{packId} {
       // Anyone can read packs
       allow read: if true;
-      // Anyone can create packs (no auth required for now)
-      allow create: if true;
-      // No updates or deletes
-      allow update, delete: if false;
+      // Signed-in users can create packs they own
+      allow create: if request.auth != null
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.ownerEmail == request.auth.token.email;
+      // Owner can update their own pack; anyone signed-in can claim an unowned pack
+      // (legacy packs have no ownerUid). Writes must stamp the current user.
+      allow update: if request.auth != null
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.ownerEmail == request.auth.token.email
+        && (
+          resource.data.get("ownerUid", "") == ""
+          || resource.data.ownerUid == request.auth.uid
+        );
+      // No deletes
+      allow delete: if false;
     }
   }
 }

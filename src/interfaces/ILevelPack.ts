@@ -8,4 +8,6 @@ export interface ILevelPack {
 	levelCount: number;
 	createdAt: Timestamp | null;
 	projectJson: string;
+	ownerUid: string;
+	ownerEmail: string;
 }
