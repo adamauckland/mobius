@@ -78,18 +78,6 @@ import type { Actor } from "excalibur";
 export { resetGameTimer };
 
 const startScreen = document.getElementById("start-screen")!;
-const restartButton = document.getElementById(
-	"btn-restart",
-) as HTMLButtonElement;
-restartButton.addEventListener("click", () => {
-	// For project mode: re-store the project so the reload picks it up
-	if (model.projectJson) {
-		localStorage.setItem("customProject", model.projectJson);
-		localStorage.setItem("customProjectLevel", String(model.currentLevel));
-		// Don't preserve lives on restart — reset to 3
-	}
-	location.reload();
-});
 const continueButton = document.getElementById(
 	"btn-continue",
 ) as HTMLButtonElement;
@@ -115,7 +103,6 @@ continueButton.addEventListener("click", () => {
 
 	// Hide buttons and start screen so nothing peeks through
 	continueButton.style.display = "none";
-	restartButton.style.display = "none";
 
 	// Persist state and reload
 	localStorage.setItem("customProject", model.projectJson);
@@ -300,7 +287,6 @@ function triggerLevelComplete(hud: IHUDRefs) {
 	hud.levelCompleteLabel.scale.y = 0.3;
 	hud.levelCompleteLabel.actions.scaleTo(vec(1, 1), vec(3, 3));
 	startBonusCountdown(hud);
-	restartButton.style.display = "block";
 	if (model.projectJson && model.currentLevel + 1 < model.totalLevels) {
 		continueButton.style.display = "block";
 	}
@@ -403,7 +389,6 @@ function showGameOver(hud: IHUDRefs) {
 		hud.gameOverLabel.scale.x = 0.3;
 		hud.gameOverLabel.scale.y = 0.3;
 		hud.gameOverLabel.actions.scaleTo(vec(1, 1), vec(3, 3));
-		restartButton.style.display = "block";
 	}, 2000);
 }
 
@@ -450,9 +435,7 @@ function startGame(customMapData: IMapData) {
 		setupClickHandler();
 	});
 
-	setupGameLoop(hud, () => {
-		restartButton.style.display = "block";
-	});
+	setupGameLoop(hud);
 }
 
 // "Play Project" button on start screen — pick a .json file and play from level 1

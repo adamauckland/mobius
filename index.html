@@ -15,14 +15,13 @@
         background: #131617; color: #d0e3e9; font-family: "Sixtyfour", monospace; z-index: 1000;
       }
       #start-screen h1 { font-size: 48px; margin-bottom: 32px; }
-      #btn-restart, #btn-continue {
+      #btn-continue {
         display: none; position: fixed; left: 50%; transform: translate(-50%, -50%);
         font-family: "Sixtyfour", monospace; font-size: 32px; padding: 16px 48px;
         background: #5e676b; color: #d0e3e9; border: none; cursor: pointer; z-index: 300000;
       }
-      #btn-restart { top: 60%; }
       #btn-continue { top: 68%; }
-      #btn-restart:hover, #btn-continue:hover { background: #929fa4; color: #131617; }
+      #btn-continue:hover { background: #929fa4; color: #131617; }
       #level-transition {
         position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
         display: none; flex-direction: column; align-items: center; justify-content: center;
@@ -36,7 +35,7 @@
   </head>
   <body>
     <div id="start-screen">
-      <h1>MOBIUS</h1>
+      <h1>TIME CRITTERS</h1>
       <div style="display: flex; gap: 12px; margin-top: 16px;">
         <button id="btn-play-project" style="display:none;font-family: 'Sixtyfour', monospace; font-size: 18px; padding: 10px 36px; background: #2e7d32; color: #fff; border: none; cursor: pointer;">PLAY PROJECT</button>
         <button id="btn-browse-packs" style="font-family: 'Sixtyfour', monospace; font-size: 18px; padding: 10px 36px; background: #1565c0; color: #fff; border: none; cursor: pointer;">Start</button>
@@ -47,7 +46,6 @@
         <button id="btn-sign-out" style="display:none; font-family: 'Sixtyfour', monospace; font-size: 12px; padding: 6px 14px; background: #34393c; color: #d0e3e9; border: 1px solid #5e676b; cursor: pointer;">Sign out</button>
       </div>
     </div>
-    <button id="btn-restart">Restart</button>
     <button id="btn-continue">Next</button>
     <div id="level-transition">
       <h2 id="transition-subtitle"></h2>
