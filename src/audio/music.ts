@@ -12,11 +12,12 @@ function createAudio(url: string, volume: number): HTMLAudioElement {
 	return el;
 }
 
-function playTrack(url: string, volume = 0.3): void {
+function playTrack(url: string, volume = 0.1): void {
 	if (audio && currentUrl === url) return;
 	stopMusic();
 	audio = createAudio(url, volume);
 	currentUrl = url;
+	audio.volume = 0.1;
 	audio.play().catch(() => {
 		document.addEventListener(
 			"pointerdown",
