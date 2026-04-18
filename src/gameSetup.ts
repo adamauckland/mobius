@@ -50,6 +50,7 @@ import {
 	setOnPlayerKilled,
 } from "@/entities/Monster/monsters";
 import { sfxDeath, sfxLevelComplete, sfxExitDoorOpen } from "@/audio/sounds";
+import { playLevelMusic, playEndMusic } from "@/audio/music";
 import {
 	spawnDeathExplosion,
 	spawnExitDoorReveal,
@@ -281,6 +282,7 @@ function triggerLevelComplete(hud: IHUDRefs) {
 	if (model.gameOver) return;
 	model.gameOver = true;
 	sfxLevelComplete();
+	playEndMusic();
 	hud.dimOverlay.graphics.isVisible = true;
 	hud.levelCompleteLabel.graphics.isVisible = true;
 	hud.levelCompleteLabel.scale.x = 0.3;
@@ -382,6 +384,7 @@ function setupDeathHandler(hud: IHUDRefs, wireExitDoor: () => void) {
 }
 
 function showGameOver(hud: IHUDRefs) {
+	playEndMusic();
 	game.clock.schedule(() => {
 		model.gameOver = true;
 		hud.dimOverlay.graphics.isVisible = true;
@@ -399,6 +402,7 @@ function startGame(customMapData: IMapData) {
 	hideStartScreen();
 	fadeLevelTransition();
 	createEditorButton();
+	playLevelMusic();
 
 	const tilemap = createTilemap();
 	spawnTreeOverlays();
