@@ -1,5 +1,5 @@
 import {
-	Actor,
+	ScreenElement,
 	CollisionType,
 	Color,
 	Font,
@@ -9,12 +9,10 @@ import {
 	Text,
 	TextAlign,
 	BaseAlign,
-	Vector,
 	vec,
 } from "excalibur";
 import { game } from "@/game";
-import { GRID_COLS, TILE_SIZE } from "@/tiles/tiledata";
-import { Z_RIPPLE } from "@/ui/zIndex";
+import { Z_HUD } from "@/ui/zIndex";
 
 const PANEL_PADDING_X = 6;
 const PANEL_PADDING_Y = 4;
@@ -22,8 +20,9 @@ const FONT_SIZE = 6;
 const PANEL_COLOR = Color.fromRGB(0, 0, 0, 0.75);
 const BORDER_COLOR = Color.fromHex("#ffee88");
 const TEXT_COLOR = Color.White;
+const PANEL_MARGIN = 8;
 
-const signs: Actor[] = [];
+const signs: ScreenElement[] = [];
 
 function createSignFont(): Font {
 	return new Font({
@@ -37,28 +36,44 @@ function createSignFont(): Font {
 	});
 }
 
+function measureLineWidth(line: string, font: Font): number {
+	const probe = new Text({ text: line, font });
+	return probe.width;
+}
+
+function wrapText(text: string, font: Font, maxWidth: number): string {
+	const lines: string[] = [];
+	for (const rawLine of text.split("\n")) {
+		const words = rawLine.split(" ");
+		let currentLine = "";
+		for (const word of words) {
+			const testLine = currentLine ? `${currentLine} ${word}` : word;
+			if (measureLineWidth(testLine, font) > maxWidth && currentLine) {
+				lines.push(currentLine);
+				currentLine = word;
+			} else {
+				currentLine = testLine;
+			}
+		}
+		if (currentLine) lines.push(currentLine);
+	}
+	return lines.join("\n");
+}
+
 function measureWidestLine(text: string, font: Font): number {
 	let widest = 0;
 	for (const line of text.split("\n")) {
-		const probe = new Text({ text: line, font });
-		if (probe.width > widest) widest = probe.width;
+		const w = measureLineWidth(line, font);
+		if (w > widest) widest = w;
 	}
 	return widest;
 }
 
-function tileCenter(tileIndex: number): Vector {
-	const tx = tileIndex % GRID_COLS;
-	const ty = Math.floor(tileIndex / GRID_COLS);
-	return new Vector(
-		tx * TILE_SIZE + TILE_SIZE / 2,
-		ty * TILE_SIZE + TILE_SIZE / 2,
-	);
-}
-
-function buildPanelGraphic(text: string): GraphicsGroup {
+function buildPanelGraphic(text: string, maxWidth: number): GraphicsGroup {
 	const font = createSignFont();
-	const label = new Text({ text, font });
-	const widestLine = measureWidestLine(text, font);
+	const wrapped = wrapText(text, font, maxWidth - PANEL_PADDING_X * 2);
+	const label = new Text({ text: wrapped, font });
+	const widestLine = measureWidestLine(wrapped, font);
 	const width = Math.max(label.width, widestLine) + PANEL_PADDING_X * 2;
 	const height = label.height + PANEL_PADDING_Y * 2;
 	const background = new Rectangle({
@@ -81,14 +96,17 @@ const HOLD_MS = 4000;
 const DRIFT_VELOCITY_Y = -12;
 const FADE_MS = 3000;
 
-export function spawnInstructionSign(text: string, tileIndex: number) {
-	const center = tileCenter(tileIndex);
-	const sign = new Actor({
-		pos: center,
-		z: Z_RIPPLE,
+export function spawnInstructionSign(text: string, _tileIndex: number) {
+	const screenWidth = game.screen.resolution.width;
+	const screenHeight = game.screen.resolution.height;
+	const maxPanelWidth = screenWidth - PANEL_MARGIN * 2;
+
+	const sign = new ScreenElement({
+		pos: vec(screenWidth / 2, screenHeight / 2),
+		z: Z_HUD - 2,
 		collisionType: CollisionType.PreventCollision,
 	});
-	sign.graphics.use(buildPanelGraphic(text));
+	sign.graphics.use(buildPanelGraphic(text, maxPanelWidth));
 	game.add(sign);
 	signs.push(sign);
 

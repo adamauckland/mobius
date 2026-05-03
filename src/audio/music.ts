@@ -43,6 +43,7 @@ export function playEndMusic(volume = 0.3): void {
 
 export function stopMusic(): void {
 	if (!audio) return;
+
 	audio.pause();
 	audio.currentTime = 0;
 	audio = null;
