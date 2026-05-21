@@ -16,6 +16,7 @@ let capturedAudios: Array<{
 	src: string;
 	loop: boolean;
 	volume: number;
+	muted: boolean;
 	currentTime: number;
 }>;
 
@@ -30,6 +31,7 @@ beforeEach(() => {
 			src: string;
 			loop = false;
 			volume = 1;
+			muted = false;
 			currentTime = 0;
 			play = mockPlay;
 			pause = mockPause;
@@ -51,70 +53,101 @@ function latestAudio() {
 }
 
 describe("music", () => {
-	it("playMenuMusic plays the menu track", async () => {
-		const { playMenuMusic } = await import("@/audio/music");
-		playMenuMusic();
+	it("playMenu plays the menu track", async () => {
+		const { music } = await import("@/audio/music");
+		music.playMenu();
 		expect(latestAudio().src).toBe("menu-track.mp3");
 		expect(latestAudio().volume).toBe(0.3);
 		expect(latestAudio().loop).toBe(true);
 		expect(mockPlay).toHaveBeenCalled();
 	});
 
-	it("playLevelMusic plays the level track", async () => {
-		const { playLevelMusic } = await import("@/audio/music");
-		playLevelMusic();
+	it("playLevel plays the level track", async () => {
+		const { music } = await import("@/audio/music");
+		music.playLevel();
 		expect(latestAudio().src).toBe("level-track.mp3");
 		expect(latestAudio().volume).toBe(0.3);
 	});
 
-	it("playEndMusic plays the end track", async () => {
-		const { playEndMusic } = await import("@/audio/music");
-		playEndMusic();
+	it("playEnd plays the end track", async () => {
+		const { music } = await import("@/audio/music");
+		music.playEnd();
 		expect(latestAudio().src).toBe("end-track.mp3");
 		expect(latestAudio().volume).toBe(0.3);
 	});
 
+	it("is muted by default", async () => {
+		const { music } = await import("@/audio/music");
+		expect(music.isMuted()).toBe(true);
+		music.playMenu();
+		expect(latestAudio().muted).toBe(true);
+	});
+
+	it("setMuted(false) unmutes the current track", async () => {
+		const { music } = await import("@/audio/music");
+		music.playMenu();
+		expect(latestAudio().muted).toBe(true);
+		music.setMuted(false);
+		expect(music.isMuted()).toBe(false);
+		expect(latestAudio().muted).toBe(false);
+	});
+
+	it("tracks started after setMuted(false) play unmuted", async () => {
+		const { music } = await import("@/audio/music");
+		music.setMuted(false);
+		music.playMenu();
+		expect(latestAudio().muted).toBe(false);
+	});
+
+	it("setMuted(true) mutes the current track", async () => {
+		const { music } = await import("@/audio/music");
+		music.setMuted(false);
+		music.playMenu();
+		music.setMuted(true);
+		expect(latestAudio().muted).toBe(true);
+	});
+
 	it("calling the same track function twice does not restart it", async () => {
-		const { playMenuMusic } = await import("@/audio/music");
-		playMenuMusic();
-		playMenuMusic();
+		const { music } = await import("@/audio/music");
+		music.playMenu();
+		music.playMenu();
 		expect(mockPlay).toHaveBeenCalledTimes(1);
 		expect(capturedAudios).toHaveLength(1);
 	});
 
 	it("switching tracks stops the previous one", async () => {
-		const { playMenuMusic, playLevelMusic } = await import("@/audio/music");
-		playMenuMusic();
-		playLevelMusic();
+		const { music } = await import("@/audio/music");
+		music.playMenu();
+		music.playLevel();
 		expect(mockPause).toHaveBeenCalledTimes(1);
 		expect(capturedAudios).toHaveLength(2);
 		expect(latestAudio().src).toBe("level-track.mp3");
 	});
 
 	it("accepts a custom volume", async () => {
-		const { playLevelMusic } = await import("@/audio/music");
-		playLevelMusic(0.5);
+		const { music } = await import("@/audio/music");
+		music.playLevel(0.5);
 		expect(latestAudio().volume).toBe(0.5);
 	});
 
-	it("stopMusic pauses and resets playback", async () => {
-		const { playMenuMusic, stopMusic } = await import("@/audio/music");
-		playMenuMusic();
-		stopMusic();
+	it("stop pauses and resets playback", async () => {
+		const { music } = await import("@/audio/music");
+		music.playMenu();
+		music.stop();
 		expect(mockPause).toHaveBeenCalled();
 		expect(latestAudio().currentTime).toBe(0);
 	});
 
-	it("stopMusic does nothing if music was never started", async () => {
-		const { stopMusic } = await import("@/audio/music");
-		expect(() => stopMusic()).not.toThrow();
+	it("stop does nothing if music was never started", async () => {
+		const { music } = await import("@/audio/music");
+		expect(() => music.stop()).not.toThrow();
 	});
 
-	it("can restart a track after stopMusic", async () => {
-		const { playMenuMusic, stopMusic } = await import("@/audio/music");
-		playMenuMusic();
-		stopMusic();
-		playMenuMusic();
+	it("can restart a track after stop", async () => {
+		const { music } = await import("@/audio/music");
+		music.playMenu();
+		music.stop();
+		music.playMenu();
 		expect(mockPlay).toHaveBeenCalledTimes(2);
 	});
 
@@ -122,8 +155,8 @@ describe("music", () => {
 		mockPlay = vi.fn().mockRejectedValue(new Error("autoplay blocked"));
 		const mockAddEventListener = vi.fn();
 		vi.stubGlobal("document", { addEventListener: mockAddEventListener });
-		const { playMenuMusic } = await import("@/audio/music");
-		playMenuMusic();
+		const { music } = await import("@/audio/music");
+		music.playMenu();
 		await vi.waitFor(() => {
 			expect(mockAddEventListener).toHaveBeenCalledWith(
 				"pointerdown",
@@ -134,16 +167,15 @@ describe("music", () => {
 	});
 
 	it("full lifecycle: menu → level → end", async () => {
-		const { playMenuMusic, playLevelMusic, playEndMusic } =
-			await import("@/audio/music");
-		playMenuMusic();
+		const { music } = await import("@/audio/music");
+		music.playMenu();
 		expect(latestAudio().src).toBe("menu-track.mp3");
 
-		playLevelMusic();
+		music.playLevel();
 		expect(mockPause).toHaveBeenCalledTimes(1);
 		expect(latestAudio().src).toBe("level-track.mp3");
 
-		playEndMusic();
+		music.playEnd();
 		expect(mockPause).toHaveBeenCalledTimes(2);
 		expect(latestAudio().src).toBe("end-track.mp3");
 	});

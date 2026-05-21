@@ -5,7 +5,7 @@ import { game } from "@/game";
 import { model } from "@/model";
 import "@/gameSetup";
 import { startCustomMap, startProjectLevel } from "@/gameSetup";
-import { playMenuMusic } from "@/audio/music";
+import { music } from "@/audio/music";
 
 // Load resources, then handle custom map / editor mode / project play
 const loader = new Loader();
@@ -33,7 +33,7 @@ fontReady.then(() =>
 	game
 		.start(loader)
 		.then(() => {
-			playMenuMusic();
+			music.playMenu();
 
 			// Check if we should auto-start a project level (from editor "Test" or "Continue" button)
 			const projectJson = localStorage.getItem("customProject");
